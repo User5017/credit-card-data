@@ -66,10 +66,14 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Palette and mark rules: thin 2px lines, hairline grid, fixed series colors, legend for 2+ series, table twin.
 
 ## GitHub accounts (two, on purpose)
-- `User5017` owns the repo and the Pages site. Its CLI token has no `workflow` scope, so it cannot push files under `.github/workflows/`.
-- `SamuelJWebber` (the user's 2020 real-name account) is an admin collaborator and the **active** `gh` account, with `workflow` scope. Push workflow changes as this account. `gh auth status` shows both; `gh auth switch --user <name>` flips.
+- `User5017` owns the repo and the Pages site (https://user5017.github.io/credit-card-data/). Its CLI token has no
+  `workflow` scope, so it cannot push files under `.github/workflows/`.
+- `SamuelJWebber` (the user's 2020 real-name account) is an admin collaborator and the **active** `gh` account, with
+  `workflow` scope. Push everything as this account. `gh auth status` shows both; `gh auth switch --user <name>` flips.
 - In Git Bash, prefix `gh api` calls with `MSYS_NO_PATHCONV=1` or omit the leading slash, or the path becomes `C:/Program Files/Git/...`.
-- Open question for the user: transfer the repo to SamuelJWebber if that is the account on their LinkedIn. Pages URL would change.
+- Transfer to SamuelJWebber: wanted, deferred by the user on 2026-09-07. A transfer request was initiated and may still
+  be pending in the GitHub UI. When it goes through, update the owner in: src/carddash/http.py, src/carddash/render.py,
+  checks/verify_g19.py, README.md, this section, the git remote, and the OneDrive README-moved.md note. Pages URL changes.
 
 ## Verification standard
 "Should work" is not done. Done means: the test passes, the command ran, and the output was shown,

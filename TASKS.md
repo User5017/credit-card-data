@@ -26,6 +26,7 @@ Status: `todo` | `doing` | `done YYYY-MM-DD` | `blocked (why)`.
 - Post-drafting routine after each refresh (human posts).
 
 ## Open items and known gaps
+- Repo transfer User5017 -> SamuelJWebber: wanted, deferred (2026-09-07). Checklist of references to update is in CLAUDE.md under "GitHub accounts".
 - FRED account created 2026-09-07 (credentials in `C:\Users\samwe\code\fred-account.txt`, outside the repo). `FRED_API_KEY` is set in the local `.env` (gitignored) and as an Actions secret; the fetcher uses the official API when the key is present and falls back to keyless fredgraph.csv otherwise.
 - Golden entries are re-verified against the G.19 release page itself with `uv run python checks/verify_g19.py` (no FRED, no LLM). Run it whenever golden.yaml changes.
 - SLOOS demand series id not yet identified (only standards loaded).
