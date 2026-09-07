@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-07T18:40:55Z",
+  "generated_at": "2026-09-07T18:42:23Z",
   "sources": {
     "fred": {
       "source": "fred",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-09-30",
-      "pulled_at": "2026-09-07T18:40:55Z",
+      "pulled_at": "2026-09-07T18:42:23Z",
       "rows": 5386,
       "n_series": 14,
       "n_revisions": 0
@@ -16,7 +16,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-09-07T18:40:55Z",
+      "pulled_at": "2026-09-07T18:42:23Z",
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
