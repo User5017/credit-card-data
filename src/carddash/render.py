@@ -15,6 +15,7 @@ import duckdb
 import pandas as pd
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+from .fetchers import tccp
 from .loader import read_facts, read_revisions
 from .paths import Paths
 from .schema import PERIOD_WORDS, SERIES_KEY
@@ -22,7 +23,7 @@ from .series import load_series, series_index
 
 VENDOR = Path(__file__).parent / "vendor"
 
-SOURCE_LABELS = {"fred": "Federal Reserve Board, via FRED"}
+SOURCE_LABELS = {"fred": "Federal Reserve Board, via FRED", "tccp": "CFPB Terms of Credit Card Plans survey"}
 STATUS_LABELS = {
     "ok": "OK",
     "stale": "Stale",
@@ -91,6 +92,22 @@ PANELS = [
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Accounts assessed interest", period_type="Q"),
                 ],
             },
+            {
+                # first cross-source chart: the terms issuers advertise (TCCP) against the rate revolvers pay (G.19)
+                "id": "offered_vs_paid",
+                "title": "Card APR offered vs APR paid",
+                "unit": "pct",
+                "step": True,
+                "since": "2022-01-01",
+                "series": [
+                    S("tccp_purchase_apr_max_median", "TCCP_ALL", "Offered: median highest purchase APR (TCCP)",
+                      period_type="H", source="tccp"),
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Paid: APR on accounts assessed interest (G.19)",
+                      period_type="Q"),
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Offered minus paid", period_type="Q",
+                      view="v_offered_vs_paid", field="spread_pct_pts"),
+                ],
+            },
         ],
     },
     {
@@ -131,10 +148,17 @@ PANELS = [
 ]
 
 
-def _connect(facts: pd.DataFrame, views_sql: Path) -> duckdb.DuckDBPyConnection:
+def _connect(facts: pd.DataFrame, views_sql: Path, products_csv: Path | None = None) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
     con.register("facts_df", facts)
     con.execute("CREATE TABLE facts AS SELECT * FROM facts_df")
+    if products_csv is not None and products_csv.exists():
+        # the TCCP sub-grain raw table, schema pinned so no view ever depends on CSV type sniffing
+        cols = ", ".join(f"'{c}': '{t}'" for c, t in tccp.PRODUCT_TYPES.items())
+        con.execute(
+            f"CREATE TABLE tccp_products AS SELECT * FROM read_csv(?, header = true, columns = {{{cols}}})",
+            [str(products_csv)],
+        )
     sql = "\n".join(
         line for line in views_sql.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("--")
     )
@@ -305,7 +329,7 @@ def render(paths: Paths) -> Path:
     health = health_doc.get("sources", {})
     revisions = read_revisions(paths.revisions_csv)
 
-    con = _connect(facts, paths.views_sql)
+    con = _connect(facts, paths.views_sql, paths.tccp_products_csv)
     panels = []
     for panel in PANELS:
         charts = [_chart_payload(con, spec, meta_idx, health) for spec in panel["charts"]]

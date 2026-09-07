@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T18:05:06Z",
+  "generated_at": "2026-09-07T18:40:23Z",
   "sources": {
     "fred": {
       "source": "fred",
@@ -9,6 +9,16 @@
       "pulled_at": "2026-09-07T18:05:06Z",
       "rows": 5386,
       "n_series": 14,
+      "n_revisions": 0
+    },
+    "tccp": {
+      "source": "tccp",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2025-12-31",
+      "pulled_at": "2026-09-07T18:40:23Z",
+      "rows": 82,
+      "n_series": 15,
       "n_revisions": 0
     }
   }

@@ -8,6 +8,6 @@ Rules: idempotent; pulls full history; writes the raw download under raw_dir/lat
 never touches facts.csv or DuckDB (the loader does); parses by header text, never by column position.
 """
 
-from . import fred
+from . import fred, tccp
 
-FETCHERS = {fred.SOURCE: fred}
+FETCHERS = {fred.SOURCE: fred, tccp.SOURCE: tccp}

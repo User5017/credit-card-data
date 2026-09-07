@@ -43,3 +43,8 @@ def test_render_produces_self_contained_page(tmp_paths, fixture_facts):
     assert "latest period 2026 Q2" in by_id["card_apr"]["footer"]
     # charts with no data in the fixtures still render (empty), never crash
     assert by_id["sloos_cards"]["n_points"] == 0
+    # the first cross-source chart: TCCP (semiannual) and G.19 (quarterly) lines plus the as-of spread from the view
+    ovp = by_id["offered_vs_paid"]
+    assert len(ovp["series"]) == 3 and ovp["n_points"] > 10
+    assert any(v is not None for v in ovp["data"][3])
+    assert "CFPB Terms of Credit Card Plans" in ovp["footer"] and "Federal Reserve Board" in ovp["footer"]

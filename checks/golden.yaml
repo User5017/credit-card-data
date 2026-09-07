@@ -6,6 +6,10 @@
 # Spot-check log:
 #   2026-09-07  all nine values matched the G.19 HTML tables parsed directly from the Fed's page
 #               (checks/verify_g19.py), independent of FRED. June 2026 is marked preliminary ('p') on the page.
+#   2026-09-07  tccp: the CFPB's February 2024 report count (15 issuers above 30% in H1 2023) reproduced exactly.
+#               Its large-issuer tier medians for poor (28.49) and great (22.99) also reproduce when the H2 2023
+#               top-25 list is applied to H1 2023, good differs by 0.04 and the small-issuer medians by up to
+#               0.4 points, because the CFPB's own H1 2023 top-25 list is not in the public file. Not golden.
 
 - id: g19_revolving_sa_2024_12
   metric: revolving_credit_sa
@@ -123,3 +127,18 @@
   check_live: true
   origin: "Fed G.19 release of 2026-08-07, Credit card plans, Accounts assessed interest, 'Q2 2026' column"
   origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+# TCCP has no HTML release table: the xlsx is the release. The CFPB's February 2024 report on the H1 2023 file is the
+# one page that states numbers, and its issuer count is the one that reproduces without the CFPB's private top-25 list.
+- id: tccp_issuers_over_30pct_2023_h1
+  metric: tccp_issuers_max_apr_over_30_count
+  entity: TCCP_ALL
+  tier: all
+  period_type: H
+  period_end: 2023-06-30
+  source: tccp
+  expected: 15
+  tolerance: 0
+  check_live: true
+  origin: "CFPB report 'Credit card data: Small issuers offer lower rates' (2024-02-16), on the January-June 2023 survey: 'A total of 15 issuers, including nine of the largest credit card issuers in the country, reported at least one product with a maximum purchase APR over 30%'"
+  origin_url: https://www.consumerfinance.gov/data-research/research-reports/credit-card-data-small-issuers-offer-lower-rates/

@@ -38,6 +38,8 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Pull the full history every run. Idempotent. Save the raw download under `raw_dir/latest/` before parsing.
 - Parse by header text, never by column position. Fail loudly on anything unexpected.
 - Never write facts.csv, health.json, or DuckDB. The loader does that.
+- Send the pipeline's own User-Agent (src/carddash/http.py). The CFPB's edge blocks browser-like agents sent from
+  scripts and accepts ours. Never fake a browser.
 - Before writing a parser: download the real file, print its headers and first rows, then write the parser.
   Check the raw file in under tests/fixtures/<source>/ and write a test that parses it.
 - Every fetcher ships with: a fixture test, at least one golden entry in checks/golden.yaml that traces to
@@ -56,6 +58,9 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Committed: data/facts.csv, data/revisions.csv, data/health.json, data/raw/<source>/latest/*, docs/.
   Git history of facts.csv is the vintage log.
 - Never commit a .duckdb file. DuckDB is rebuilt in memory from facts.csv each run.
+- Sub-grain raw tables (TCCP card products) live at data/raw/<source>/<table>.csv, written by the fetcher next to
+  latest/, committed, and loaded into the DuckDB session by render._connect so views can use them. Their facts
+  come from sql/<source>_facts.sql, which the fetcher runs in memory: aggregation choices stay in SQL.
 - Keep this repo out of OneDrive.
 
 ## Rendering

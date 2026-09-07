@@ -27,7 +27,7 @@ or login. No LLM in the numeric path for structured sources. No client-side filt
 | Fetcher | Sources | Cadence | Transport | Verified |
 |---|---|---|---|---|
 | `fred` | Fed G.19 consumer credit and card APR; H.8 bank card loans; charge-off and delinquency rates; SLOOS card standards | M, W, Q | fredgraph.csv (keyless) or FRED API with key | 2026-09-07 |
-| `tccp` | CFPB Terms of Credit Card Plans | H | xlsx at files.consumerfinance.gov (`cfpb_tccp-data_YYYY-MM-DD.xlsx`) | 2026-09-07, latest H2 2025 |
+| `tccp` | CFPB Terms of Credit Card Plans | H | one xlsx per half-year, linked from the survey page (names vary: `cfpb_tccp-data_2025-12-31.xlsx`, `..._2023-07-01_2023_12-31.xlsx`, re-uploads get a suffix), current layout from H1 2023 | 2026-09-07, loaded H1 2023 to H2 2025 |
 | `phillyfed` | Philadelphia Fed large-bank credit card data (FR Y-14M) | Q | direct CSV, URL embeds the quarter | 2026-09-07, latest 2026 Q1 |
 | `nyfed_hhdc` | NY Fed Household Debt and Credit | Q | xlsx, quarter in the file name | not yet |
 | `fdic` | FDIC BankFind API financials (call-report card loans, charge-offs, past due, per bank) | Q | JSON, no key | 2026-09-07 |
@@ -86,7 +86,8 @@ covers Y-14 filers only, NY Fed is an Equifax panel. Every chart footnote comes 
 ### 4.4 Sub-grain sources
 
 Sources finer than the fact key keep a raw table and feed facts through a view: TCCP is one row per card
-product with a set of target tiers (`tccp_products`); complaints are company x issue x state; call reports
+product with a set of target tiers (`tccp_products`, committed as data/raw/tccp/tccp_products.csv, rebuilt from the
+snapshots every run, facts from sql/tccp_facts.sql); complaints are company x issue x state; call reports
 are per charter (`entity = CERT:<n>`, rolled up to issuer in a view). Aggregation choices live in SQL.
 
 ### 4.5 Cadence alignment
@@ -126,8 +127,9 @@ is published, and then the job exits non-zero so GitHub sends an email. A run ne
 
 ## 6. Derived metrics (sql/views.sql)
 
-`v_latest`, `v_growth` (YoY by exact year shift, 52 weeks for weekly). Coming with their sources:
-`v_offered_vs_paid`, `v_apr_spread_large_small`, `v_revolve_share`, `v_sponsor_bank_growth`.
+`v_latest`, `v_growth` (YoY by exact year shift, 52 weeks for weekly), `v_offered_vs_paid` (TCCP median highest
+purchase APR matched as-of to the G.19 rate on accounts assessed interest, keyed on the G.19 series). Coming with
+their sources: `v_apr_spread_large_small`, `v_revolve_share`, `v_sponsor_bank_growth`.
 
 ## 7. Rendering
 
