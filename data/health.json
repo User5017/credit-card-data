@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-07T20:52:33Z",
+  "generated_at": "2026-09-07T21:43:10Z",
   "sources": {
     "fred": {
       "source": "fred",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-09-30",
-      "pulled_at": "2026-09-07T20:09:44Z",
+      "pulled_at": "2026-09-07T21:43:10Z",
       "rows": 5386,
       "n_series": 14,
       "n_revisions": 0
@@ -16,7 +16,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-07T20:52:33Z",
+      "pulled_at": "2026-09-07T21:43:10Z",
       "rows": 1200,
       "n_series": 12,
       "n_revisions": 0
@@ -26,7 +26,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-07T20:09:44Z",
+      "pulled_at": "2026-09-07T21:43:10Z",
       "rows": 2804,
       "n_series": 51,
       "n_revisions": 0
@@ -36,7 +36,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-09-07T20:09:44Z",
+      "pulled_at": "2026-09-07T21:43:10Z",
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
