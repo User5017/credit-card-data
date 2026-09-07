@@ -101,13 +101,19 @@ def _num(s: str) -> float | None:
         return None
 
 
-def column_for(period_end: dt.date, period_type: str) -> str:
+def columns_for(period_end: dt.date, period_type: str) -> list[str]:
+    """Candidate column labels, most specific first. A quarter-end month can appear as its month, its
+    quarter, or (December) its year; the level tables show the end-of-period value under each."""
+    y, m = period_end.year, period_end.month
     if period_type == "M":
-        if period_end.month == 12:
-            return str(period_end.year)  # year-end level appears under the annual column
-        return f"{MONTHS[period_end.month - 1]} {period_end.year}"
+        cands = [f"{MONTHS[m - 1]} {y}"]
+        if m % 3 == 0:
+            cands.append(f"Q{m // 3} {y}")
+        if m == 12:
+            cands.append(str(y))
+        return cands
     if period_type == "Q":
-        return f"Q{(period_end.month - 1) // 3 + 1} {period_end.year}"
+        return [f"Q{(m - 1) // 3 + 1} {y}"]
     raise ValueError(period_type)
 
 
@@ -122,11 +128,16 @@ def main() -> int:
             continue
         label, kind = ROW_FOR_METRIC[e["metric"]]
         row = find_row(tables, label, kind)
-        col = column_for(dt.date.fromisoformat(str(e["period_end"])), e["period_type"])
-        got = _num(row.get(col, "")) if row else None
+        cands = columns_for(dt.date.fromisoformat(str(e["period_end"])), e["period_type"])
+        col, got = None, None
+        for c in cands:
+            got = _num(row.get(c, "")) if row else None
+            if got is not None:
+                col = c
+                break
         if got is None:
-            # the page only shows the last three months; older months are not checkable here
-            print(f"SKIP {e['id']}: column {col!r} not on the current page")
+            # the page only shows the last three months and quarter/year ends; older months are not checkable here
+            print(f"SKIP {e['id']}: none of {cands} on the current page")
             continue
         ok = abs(got - float(e["expected"])) <= float(e.get("tolerance", 0))
         bad += 0 if ok else 1
