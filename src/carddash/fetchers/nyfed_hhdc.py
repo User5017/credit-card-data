@@ -19,10 +19,16 @@ Publication facts, verified 2026-09-07:
   quarter's last month, 2003-03-01) before switching to 'YY:Qn'; the credit-limit sheet interleaves an unlabelled
   row of HE Revolving values after every quarter row; the balance sheet ends with a revision footnote; the two
   delinquency-flow sheets carry the header on row 5, not row 4. Quarters must be consecutive within a sheet. Any
-  row that is not a quarter but has a value in a column we read fails the parse.
-- 'Credit Card' in this report means bankcards on credit reports; retail cards sit in 'Other'. The delinquency
-  flows are four-quarter moving sums: balances newly 30+ (90+) days late in the quarter over balances that were
-  current or less than 30 (90) days late the quarter before, an annualized share (press release footnote).
+  row that is not a quarter but has a value in a column we read fails the parse, and so does an empty or
+  non-numeric cell in a quarter row: every read column is full in the 2025Q2, 2026Q1 and 2026Q2 releases.
+- 'Credit Card' in this report means bankcards on credit reports; retail cards sit in 'Other' (report PDF
+  HHDC_2026Q2.pdf p. 2: 'Other balances, which include retail cards and consumer finance loans', and the data
+  dictionary on p. 45). The delinquency flows are four-quarter moving sums: balances newly 30+ (90+) days late in
+  the quarter over balances that were current or less than 30 (90) days late the quarter before, an annualized
+  share (press release footnote).
+- Between the 2026Q1 and 2026Q2 releases the 2026Q1 card balance moved from 1,252 to 1,242 billion and limits by
+  10 billion; the flows did not move, and nothing changed between the 2025Q2 and 2026Q2 files. Revisions are rare
+  and large, so the newest-quarter balance golden entry is fixture-only and the flow entries are checked live.
 - The limit sheet repeats the card balance to fewer decimals (up to $5 billion apart from 2009Q4 to 2012Q1, exact
   from 2012Q2 on); it is loaded once, from the balance sheet. The age sheet's 'all' column is computed over borrowers with a known birth year and
   differs from the loan-type sheet (6.9995 vs 6.97 for 2026Q2), so it is not loaded; the headline flow comes from
@@ -39,6 +45,7 @@ here, with the factor sitting next to the unit text it is checked against; nothi
 from __future__ import annotations
 
 import datetime as dt
+import math
 import re
 from pathlib import Path
 
@@ -169,8 +176,12 @@ def discover_latest(session, today: dt.date, max_back: int = MAX_WALK_BACK) -> t
     tried = []
     for _ in range(max_back + 1):
         resp = session.get(file_url(year, q))
-        resp.raise_for_status()
-        if looks_like_xlsx(resp.content):
+        if resp.status_code == 404:  # not how the site answers today, but it would only mean 'not published yet'
+            found = False
+        else:
+            resp.raise_for_status()  # anything else that is not 200 is a real outage (the session already retried)
+            found = looks_like_xlsx(resp.content)
+        if found:
             return year, q, resp.content
         tried.append(f"{year}Q{q}")
         year, q = previous_quarter(year, q)
@@ -188,18 +199,22 @@ def _cell(row: tuple, j: int):
     return row[j] if j < len(row) else None
 
 
-def _num(v, header: str, name: str, row: int) -> float | None:
-    """A numeric cell -> float; an empty cell -> None (no fact row); anything else fails."""
-    if v is None or (isinstance(v, str) and not v.strip()):
-        return None
-    if isinstance(v, bool):
-        raise ValueError(f"{name} row {row}, {header!r}: expected a number, got {v!r}")
-    if isinstance(v, (int, float)):
-        return float(v)
+def _num(v, header: str, name: str, row: int) -> float:
+    """A numeric cell -> float. An empty, boolean, text or non-finite cell fails: a quarter row must carry a value.
+
+    A silently dropped quarter would leave a 182-day gap, below the loader's continuity warning, so it must not
+    be tolerated here.
+    """
+    bad = ValueError(f"{name} row {row}, {header!r}: expected a number, got {v!r}")
+    if v is None or isinstance(v, bool) or (isinstance(v, str) and not v.strip()):
+        raise bad
     try:
-        return float(str(v).strip().replace(",", ""))
+        x = float(v) if isinstance(v, (int, float)) else float(str(v).strip().replace(",", ""))
     except ValueError:
-        raise ValueError(f"{name} row {row}, {header!r}: expected a number, got {v!r}") from None
+        raise bad from None
+    if not math.isfinite(x):
+        raise bad
+    return x
 
 
 def read_sheets(path: Path) -> dict[str, list[tuple]]:
@@ -263,7 +278,7 @@ def parse_sheet(rows: list[tuple], spec: dict, name: str) -> pd.DataFrame:
     pos = _column_positions(rows[h], headers, name)
     factor = float(spec["factor"])
     quarters: list[tuple[int, int]] = []
-    values: list[dict[str, float | None]] = []
+    values: list[dict[str, float]] = []
     for i, row in enumerate(rows[h + 1 :], start=h + 2):  # i is the 1-based row number in the sheet
         label = _cell(row, 0)
         try:
@@ -281,11 +296,7 @@ def parse_sheet(rows: list[tuple], spec: dict, name: str) -> pd.DataFrame:
                 f"{name} row {i}: {quarter[0]}Q{quarter[1]} follows {prev[0]}Q{prev[1]}, quarters must be consecutive"
             )
         quarters.append(quarter)
-        rec = {}
-        for hd, j in pos.items():
-            v = _num(_cell(row, j), hd, name, i)
-            rec[hd] = None if v is None else v * factor
-        values.append(rec)
+        values.append({hd: _num(_cell(row, j), hd, name, i) * factor for hd, j in pos.items()})
     if not quarters:
         raise ValueError(f"{name}: no quarter rows after the header")
     index = pd.Index([pd.Timestamp(quarter_end(*q)) for q in quarters], name="period_end")
@@ -312,7 +323,7 @@ def parse_workbook(path: Path, expected_quarter: tuple[int, int] | None = None) 
 
 
 def to_facts(tables: dict[str, pd.DataFrame], pulled_at: str) -> pd.DataFrame:
-    """Wide tables -> facts rows for every column in SHEET_SPEC. Empty cells simply have no fact row."""
+    """Wide tables -> facts rows for every column in SHEET_SPEC, one per quarter (parse_sheet allows no gaps)."""
     frames = []
     for spec in SHEET_SPEC:
         wide = tables[spec["title"]]
@@ -330,7 +341,7 @@ def to_facts(tables: dict[str, pd.DataFrame], pulled_at: str) -> pd.DataFrame:
                     "pulled_at": pulled_at,
                 }
             )
-            frames.append(df.dropna(subset=["value"])[FACT_COLUMNS])
+            frames.append(df[FACT_COLUMNS])
     return pd.concat(frames, ignore_index=True)
 
 

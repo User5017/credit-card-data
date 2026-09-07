@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+import requests
 from openpyxl import Workbook
 
 from carddash.fetchers import nyfed_hhdc as hhdc
@@ -74,22 +75,28 @@ def test_quarter_arithmetic_and_url():
 
 
 class FakeSession:
-    """Answers 200 for every URL, as the NY Fed's site does. The body says whether the file exists."""
+    """Answers 200 for every URL, as the NY Fed's site does. The body says whether the file exists.
 
-    def __init__(self, available: dict[str, bytes]):
+    `statuses` overrides the status for a URL, to play a site that answers a real 404 or a 5xx.
+    """
+
+    def __init__(self, available: dict[str, bytes], statuses: dict[str, int] | None = None):
         self.available = available
+        self.statuses = statuses or {}
         self.calls: list[str] = []
 
     def get(self, url):
         self.calls.append(url)
         body = self.available.get(url, HTML_404)
+        status = self.statuses.get(url, 200)
 
         class R:
             content = body
-            status_code = 200
+            status_code = status
 
             def raise_for_status(self):
-                pass
+                if status >= 400:
+                    raise requests.HTTPError(f"{status} for {url}")
 
         return R()
 
@@ -112,6 +119,17 @@ def test_discovery_walks_back_from_the_current_quarter():
 def test_discovery_fails_loudly_when_nothing_is_found():
     with pytest.raises(ValueError, match="no HHD_C_Report workbook found for any of"):
         hhdc.discover_latest(FakeSession({}), dt.date(2026, 9, 7), max_back=3)
+
+
+def test_discovery_treats_a_real_404_as_not_published_but_raises_on_5xx():
+    """The site answers 200 + HTML today; a real 404 must just mean 'walk back', anything else is an outage."""
+    book = HHDC_FIXTURE.read_bytes()
+    session = FakeSession({hhdc.file_url(2026, 2): book}, statuses={hhdc.file_url(2026, 3): 404})
+    assert hhdc.discover_latest(session, dt.date(2026, 9, 7))[:2] == (2026, 2)
+    assert len(session.calls) == 2
+    outage = FakeSession({hhdc.file_url(2026, 2): book}, statuses={hhdc.file_url(2026, 3): 503})
+    with pytest.raises(requests.HTTPError, match="503"):
+        hhdc.discover_latest(outage, dt.date(2026, 9, 7))
 
 
 def test_fetch_end_to_end_with_a_fake_site(tmp_path, meta):
@@ -277,6 +295,9 @@ def _edit(fragment, fn):
         ("Number of Accounts", lambda rows: rows[3].__setitem__(2, "Cards"), "headers missing"),
         ("Number of Accounts", lambda rows: rows[3].__setitem__(1, "Credit Card"), "appears 2 times"),
         ("Percent of Balance 90", lambda rows: rows[5].__setitem__(2, "n/a"), "expected a number, got 'n/a'"),
+        ("Percent of Balance 90", lambda rows: rows[5].__setitem__(2, None), "expected a number, got None"),
+        ("Percent of Balance 90", lambda rows: rows[5].__setitem__(2, "nan"), "expected a number, got 'nan'"),
+        ("Percent of Balance 90", lambda rows: rows[5].__setitem__(2, True), "expected a number, got True"),
         ("New Delinquent", lambda rows: rows[6].__setitem__(0, "26:Q3"), "2026Q3 follows 2026Q1, quarters must be consecutive"),
         ("by Age", lambda rows: rows[4].__setitem__(0, "26:Q1"), "quarters must be consecutive"),
         ("New Seriously", lambda rows: rows.insert(7, ["2026Q3", 1.0, 2.0]), "column A is '2026Q3', not a quarter"),
