@@ -300,6 +300,17 @@ def refresh_source(
     if stats["n_added"] and not old.empty:
         health.messages.append(f"{stats['n_added']} new row(s)")
 
+    # Unchanged values keep the pulled_at of the run that first loaded them, so facts.csv only changes
+    # when data changes and its git history reads as a vintage log rather than a daily heartbeat.
+    if not old.empty:
+        prev = old[KEY_COLUMNS + ["value", "pulled_at"]].rename(columns={"value": "_old_value", "pulled_at": "_old_pulled"})
+        merged = new.merge(prev, on=KEY_COLUMNS, how="left")
+        unchanged = merged["_old_value"].notna() & (
+            (merged["value"] - merged["_old_value"]).abs() <= np.maximum(1e-9, 1e-9 * merged["_old_value"].abs())
+        )
+        merged.loc[unchanged, "pulled_at"] = merged.loc[unchanged, "_old_pulled"]
+        new = coerce_facts(merged[FACT_COLUMNS])
+
     facts = pd.concat([facts[facts["source"] != source], new], ignore_index=True)
 
     for msg in staleness(new, meta, today):

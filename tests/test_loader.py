@@ -84,6 +84,17 @@ def test_revision_is_logged():
     assert facts.loc[facts["period_end"] == pd.Timestamp("2026-07-28"), "value"].iloc[0] == 17.5
 
 
+def test_unchanged_rows_keep_original_pulled_at():
+    prev = _facts(BASE, PULL1)
+    revised = dict(BASE)
+    revised["2026-08-28"] = 99.0
+    facts, h, _ = _run(prev, _facts(revised, PULL2))
+    by_period = facts.set_index("period_end")["pulled_at"]
+    assert by_period[pd.Timestamp("2026-08-28")] == PULL2  # changed value: new pull stamp
+    assert by_period[pd.Timestamp("2026-01-28")] == PULL1  # unchanged value: original stamp kept
+    assert h.status == "ok"
+
+
 def test_wholesale_change_is_suspect_and_not_loaded():
     prev = _facts(TWELVE)
     doubled = {k: v * 2 for k, v in TWELVE.items()}

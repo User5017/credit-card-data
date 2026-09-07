@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-07T17:34:59Z",
+  "generated_at": "2026-09-07T17:36:11Z",
   "sources": {
     "fred": {
       "source": "fred",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-09-30",
-      "pulled_at": "2026-09-07T17:34:59Z",
+      "pulled_at": "2026-09-07T17:36:11Z",
       "rows": 5386,
       "n_series": 14,
       "n_revisions": 0

@@ -91,13 +91,15 @@ def _download(session, sid: str, raw_dir: Path, api_key: str | None) -> pd.DataF
             },
         )
         resp.raise_for_status()
-        (raw_dir / f"{sid}.json").write_text(resp.text, encoding="utf-8")
+        (raw_dir / f"{sid}.csv").unlink(missing_ok=True)  # one snapshot per series, whichever transport
+        (raw_dir / f"{sid}.json").write_text(resp.text, encoding="utf-8", newline="\n")
         return parse_api_json(resp.text)
     resp = session.get(FREDGRAPH_URL.format(sid=sid))
     resp.raise_for_status()
     if not resp.text.lstrip().lower().startswith(("observation_date", "date")):
         raise ValueError(f"{sid}: fredgraph returned something that is not a CSV (first bytes: {resp.text[:60]!r})")
-    (raw_dir / f"{sid}.csv").write_text(resp.text, encoding="utf-8")
+    (raw_dir / f"{sid}.json").unlink(missing_ok=True)
+    (raw_dir / f"{sid}.csv").write_text(resp.text, encoding="utf-8", newline="\n")
     return parse_fredgraph(resp.text)
 
 

@@ -26,7 +26,8 @@ Status: `todo` | `doing` | `done YYYY-MM-DD` | `blocked (why)`.
 - Post-drafting routine after each refresh (human posts).
 
 ## Open items and known gaps
-- FRED runs keyless via fredgraph.csv. A FRED_API_KEY secret switches the fetcher to the official API; obtaining one needs a FRED account created in a browser.
+- FRED account created 2026-09-07 (credentials in `C:\Users\samwe\code\fred-account.txt`, outside the repo). `FRED_API_KEY` is set in the local `.env` (gitignored) and as an Actions secret; the fetcher uses the official API when the key is present and falls back to keyless fredgraph.csv otherwise.
+- Golden entries are re-verified against the G.19 release page itself with `uv run python checks/verify_g19.py` (no FRED, no LLM). Run it whenever golden.yaml changes.
 - SLOOS demand series id not yet identified (only standards loaded).
 - NY Fed SCE download may sit behind a terms click: verify before grading A.
 - FDIC charge-off fields may be year-to-date: de-cumulate by quarter if so (check one bank by hand).
