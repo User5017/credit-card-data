@@ -67,6 +67,13 @@ def test_api_json_snapshot_is_date_independent():
     assert fred.normalize_api_json(a) == fred.normalize_api_json(b)
     assert '"date":"2020-01-01","value":"1.5"' in fred.normalize_api_json(a)
     assert fred.parse_api_json(fred.normalize_api_json(a))["value"].tolist() == [1.5]
+    # the same number formatted two ways by different FRED servers must snapshot identically
+    c = a.replace('"1.5"', '"1247630.0500000000"')
+    d = a.replace('"1.5"', '"1247630.05"')
+    assert fred.normalize_api_json(c) == fred.normalize_api_json(d)
+    assert '"value":"1247630.05"' in fred.normalize_api_json(c)
+    assert '"value":"1000"' in fred.normalize_api_json(a.replace('"1.5"', '"1000.000"'))  # no scientific notation
+    assert '"value":"."' in fred.normalize_api_json(a.replace('"1.5"', '"."'))
 
 
 def test_api_json_parse():

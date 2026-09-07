@@ -12,6 +12,7 @@ from __future__ import annotations
 import io
 import json
 import os
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import pandas as pd
@@ -73,6 +74,13 @@ def normalize_api_json(text: str) -> str:
     for ob in payload.get("observations", []):
         for k in _REQUEST_ECHO_FIELDS:
             ob.pop(k, None)
+        # FRED servers format the same number differently ('1247630.0500000000' vs '1247630.05'); canonicalize
+        v = ob.get("value")
+        if isinstance(v, str) and v not in (".", ""):
+            try:
+                ob["value"] = format(Decimal(v).normalize(), "f")
+            except InvalidOperation:
+                pass
     return json.dumps(payload, separators=(",", ":")) + "\n"
 
 
