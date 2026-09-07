@@ -58,6 +58,24 @@ def parse_api_json(text: str) -> pd.DataFrame:
     return out.dropna(subset=["value"]).reset_index(drop=True)
 
 
+_REQUEST_ECHO_FIELDS = ("realtime_start", "realtime_end")
+
+
+def normalize_api_json(text: str) -> str:
+    """Drop the request-date echo fields the API stamps on every response and every observation.
+
+    They always equal the request date for a non-vintage request, so they carry no data; leaving them in
+    would change every raw snapshot every day and bury real revisions in the git history.
+    """
+    payload = json.loads(text)
+    for k in _REQUEST_ECHO_FIELDS:
+        payload.pop(k, None)
+    for ob in payload.get("observations", []):
+        for k in _REQUEST_ECHO_FIELDS:
+            ob.pop(k, None)
+    return json.dumps(payload, separators=(",", ":")) + "\n"
+
+
 def to_facts(obs: pd.DataFrame, meta: pd.Series, pulled_at: str) -> pd.DataFrame:
     """Observations for one series -> facts rows, using the series.csv metadata row."""
     ptype = meta["period_type"]
@@ -92,7 +110,7 @@ def _download(session, sid: str, raw_dir: Path, api_key: str | None) -> pd.DataF
         )
         resp.raise_for_status()
         (raw_dir / f"{sid}.csv").unlink(missing_ok=True)  # one snapshot per series, whichever transport
-        (raw_dir / f"{sid}.json").write_text(resp.text, encoding="utf-8", newline="\n")
+        (raw_dir / f"{sid}.json").write_text(normalize_api_json(resp.text), encoding="utf-8", newline="\n")
         return parse_api_json(resp.text)
     resp = session.get(FREDGRAPH_URL.format(sid=sid))
     resp.raise_for_status()

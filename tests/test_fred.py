@@ -61,6 +61,14 @@ def test_fredgraph_rejects_html():
     raise AssertionError("expected ValueError on HTML input")
 
 
+def test_api_json_snapshot_is_date_independent():
+    a = '{"realtime_start":"2026-09-07","realtime_end":"2026-09-07","count":1,"observations":[{"realtime_start":"2026-09-07","realtime_end":"2026-09-07","date":"2020-01-01","value":"1.5"}]}'
+    b = a.replace("2026-09-07", "2026-09-08")
+    assert fred.normalize_api_json(a) == fred.normalize_api_json(b)
+    assert '"date":"2020-01-01","value":"1.5"' in fred.normalize_api_json(a)
+    assert fred.parse_api_json(fred.normalize_api_json(a))["value"].tolist() == [1.5]
+
+
 def test_api_json_parse():
     text = '{"observations":[{"date":"2020-01-01","value":"1.5"},{"date":"2020-02-01","value":"."}]}'
     obs = fred.parse_api_json(text)

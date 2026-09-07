@@ -65,6 +65,12 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   pull date, and the scope notes from series.csv. Step charts for period data; never interpolate.
 - Palette and mark rules: thin 2px lines, hairline grid, fixed series colors, legend for 2+ series, table twin.
 
+## GitHub accounts (two, on purpose)
+- `User5017` owns the repo and the Pages site. Its CLI token has no `workflow` scope, so it cannot push files under `.github/workflows/`.
+- `SamuelJWebber` (the user's 2020 real-name account) is an admin collaborator and the **active** `gh` account, with `workflow` scope. Push workflow changes as this account. `gh auth status` shows both; `gh auth switch --user <name>` flips.
+- In Git Bash, prefix `gh api` calls with `MSYS_NO_PATHCONV=1` or omit the leading slash, or the path becomes `C:/Program Files/Git/...`.
+- Open question for the user: transfer the repo to SamuelJWebber if that is the account on their LinkedIn. Pages URL would change.
+
 ## Verification standard
 "Should work" is not done. Done means: the test passes, the command ran, and the output was shown,
 with the golden number compared against its release page.
