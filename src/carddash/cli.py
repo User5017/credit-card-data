@@ -114,7 +114,22 @@ def cmd_health(paths: Paths, fail_on_red: bool) -> int:
     return 1 if (fail_on_red and red) else 0
 
 
+def load_dotenv(path) -> None:
+    """Load KEY=VALUE lines from a local .env (never committed) into the environment, without overriding."""
+    import os
+
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
 def main(argv: list[str] | None = None) -> int:
+    load_dotenv(REPO_ROOT / ".env")
     p = argparse.ArgumentParser(prog="carddash")
     sub = p.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("refresh", help="fetch every source, validate, load, render")

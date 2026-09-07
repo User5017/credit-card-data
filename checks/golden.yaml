@@ -3,7 +3,9 @@
 # - tests/test_golden.py runs every entry against the checked-in fixtures (deterministic).
 # - The live refresh checks only entries with check_live: true. Keep those on periods old enough
 #   that routine revisions will not move them; a mismatch turns the source amber, not red.
-# Spot-checked by hand against the G.19 page: (fill in your initials and date when you do it)
+# Spot-check log:
+#   2026-09-07  all nine values matched the G.19 HTML tables parsed directly from the Fed's page
+#               (checks/verify_g19.py), independent of FRED. June 2026 is marked preliminary ('p') on the page.
 
 - id: g19_revolving_sa_2024_12
   metric: revolving_credit_sa
