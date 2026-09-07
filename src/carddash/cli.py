@@ -42,7 +42,7 @@ def read_health(paths: Paths) -> dict[str, SourceHealth]:
 def write_health(paths: Paths, health: dict[str, SourceHealth], generated_at: str) -> None:
     paths.data.mkdir(parents=True, exist_ok=True)
     doc = {"generated_at": generated_at, "sources": {k: v.to_dict() for k, v in sorted(health.items())}}
-    paths.health_json.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    paths.health_json.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def cmd_refresh(paths: Paths, sources: list[str] | None, do_render: bool) -> int:

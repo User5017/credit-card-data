@@ -336,7 +336,7 @@ def render(paths: Paths) -> Path:
     )
     paths.docs.mkdir(parents=True, exist_ok=True)
     out = paths.docs / "index.html"
-    out.write_text(html, encoding="utf-8")
+    out.write_text(html, encoding="utf-8", newline="\n")
     (paths.docs / "data").mkdir(exist_ok=True)
     if paths.facts_csv.exists():
         shutil.copyfile(paths.facts_csv, paths.docs / "data" / "facts.csv")
