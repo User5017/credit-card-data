@@ -38,6 +38,8 @@ def test_render_produces_self_contained_page(tmp_paths, fixture_facts):
     by_id = {c["id"]: c for c in payload["charts"]}
     assert by_id["revolving_level"]["n_points"] > 600
     assert by_id["card_apr"]["n_points"] > 100
-    assert by_id["revolving_yoy"]["n_points"] > 500  # v_growth view works
+    assert 400 < by_id["revolving_yoy"]["n_points"] < 700  # v_growth view works and the 'since' cut applies
+    assert by_id["card_apr"]["period_type"] == "Q"
+    assert "latest period 2026 Q2" in by_id["card_apr"]["footer"]
     # charts with no data in the fixtures still render (empty), never crash
     assert by_id["sloos_cards"]["n_points"] == 0

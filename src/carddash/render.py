@@ -65,6 +65,7 @@ PANELS = [
                 "title": "Revolving consumer credit, year-over-year change",
                 "unit": "pct",
                 "step": False,
+                "since": "1980-01-01",  # the 1968-1975 base is tiny and its triple-digit growth hides everything after
                 "series": [S("revolving_credit_sa", "ALL_HOLDERS", "YoY change", view="v_growth", field="yoy_pct")],
             },
             {
@@ -143,32 +144,55 @@ def _connect(facts: pd.DataFrame, views_sql: Path) -> duckdb.DuckDBPyConnection:
     return con
 
 
-def _series_rows(con, s: dict) -> list[tuple]:
+def _series_rows(con, s: dict, since: str | None = None) -> list[tuple]:
     sql = (
         f"SELECT CAST(period_end AS DATE) AS d, {s['field']} AS v FROM {s['view']} "
         "WHERE metric = ? AND entity = ? AND tier = ? AND period_type = ? AND source = ? "
-        f"AND {s['field']} IS NOT NULL ORDER BY d"
+        f"AND {s['field']} IS NOT NULL"
     )
-    return con.execute(sql, [s["metric"], s["entity"], s["tier"], s["period_type"], s["source"]]).fetchall()
+    params = [s["metric"], s["entity"], s["tier"], s["period_type"], s["source"]]
+    if since:
+        sql += " AND period_end >= ?"
+        params.append(since)
+    return con.execute(sql + " ORDER BY d", params).fetchall()
 
 
 def _epoch(d: dt.date) -> int:
     return int(dt.datetime(d.year, d.month, d.day, tzinfo=dt.timezone.utc).timestamp())
 
 
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def period_label(d: dt.date, period_type: str) -> str:
+    """Human label for a period_end: 'Jun 2026', '2026 Q2', '2026 H1', '2026', or the ISO date."""
+    if period_type == "M":
+        return f"{MONTHS[d.month - 1]} {d.year}"
+    if period_type == "Q":
+        return f"{d.year} Q{(d.month - 1) // 3 + 1}"
+    if period_type == "H":
+        return f"{d.year} H{1 if d.month <= 6 else 2}"
+    if period_type == "A":
+        return str(d.year)
+    return d.isoformat()
+
+
 def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
     per_series = []
     all_rows = []
+    since = spec.get("since")
     for s in spec["series"]:
-        rows = _series_rows(con, s)
+        rows = _series_rows(con, s, since)
         all_rows.append(rows)
         m = meta_idx.get((s["metric"], s["entity"], s["tier"], s["period_type"], s["source"]))
         src_health = health.get(s["source"], {})
         per_series.append(
             {
                 "label": s["label"],
+                "period_type": s["period_type"],
                 "cadence": PERIOD_WORDS.get(s["period_type"], s["period_type"]),
-                "last_period": rows[-1][0].isoformat() if rows else None,
+                "last_period": period_label(rows[-1][0], s["period_type"]) if rows else None,
+                "last_period_iso": rows[-1][0].isoformat() if rows else None,
                 "source_label": SOURCE_LABELS.get(s["source"], s["source"]),
                 "source_url": (m["source_url"] if m is not None else ""),
                 "scope_note": (m["scope_note"] if m is not None else ""),
@@ -186,23 +210,28 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
 
     sources = sorted({p["source_label"] for p in per_series})
     cadences = sorted({p["cadence"] for p in per_series})
-    last = max((p["last_period"] for p in per_series if p["last_period"]), default=None)
+    with_data = [p for p in per_series if p["last_period_iso"]]
+    last = max(with_data, key=lambda p: p["last_period_iso"])["last_period"] if with_data else None
     pulled = max((p["pulled_at"] for p in per_series if p["pulled_at"]), default=None)
     footer = f"Source: {', '.join(sources)} · {', '.join(cadences)}"
     if last:
         footer += f" · latest period {last}"
     if pulled:
         footer += f" · pulled {pulled[:10]}"
+    if since:
+        footer += f" · shown from {since[:4]}"
     notes = []
     for p in per_series:
         if p["scope_note"] and p["scope_note"] not in notes:
             notes.append(p["scope_note"])
+    period_types = {p["period_type"] for p in per_series}
     return {
         "id": spec["id"],
         "title": spec["title"],
         "unit": spec["unit"],
         "unit_label": UNIT_LABELS.get(spec["unit"], spec["unit"]),
         "step": spec["step"],
+        "period_type": period_types.pop() if len(period_types) == 1 else None,
         "series": per_series,
         "data": data,
         "footer": footer,
@@ -211,7 +240,20 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
     }
 
 
-def _health_rows(health: dict) -> list[dict]:
+def _latest_by_source(facts: pd.DataFrame, meta_idx: dict) -> dict[str, str]:
+    """source -> 'Jun 2026 (Revolving consumer credit (SA))' for the series with the newest period."""
+    out = {}
+    if facts.empty:
+        return out
+    for source, grp in facts.groupby("source"):
+        row = grp.loc[grp["period_end"].idxmax()]
+        m = meta_idx.get((row["metric"], row["entity"], row["tier"], row["period_type"], row["source"]))
+        name = m["display_name"] if m is not None else row["metric"]
+        out[str(source)] = f"{period_label(row['period_end'].date(), row['period_type'])} ({name})"
+    return out
+
+
+def _health_rows(health: dict, latest_by_source: dict[str, str]) -> list[dict]:
     rows = []
     for source, h in sorted(health.items()):
         rows.append(
@@ -220,7 +262,7 @@ def _health_rows(health: dict) -> list[dict]:
                 "label": SOURCE_LABELS.get(source, source),
                 "status": h.get("status", "failed"),
                 "status_label": STATUS_LABELS.get(h.get("status", "failed"), h.get("status")),
-                "last_period_end": h.get("last_period_end") or "none",
+                "last_period_end": latest_by_source.get(source) or h.get("last_period_end") or "none",
                 "pulled_at": (h.get("pulled_at") or "never")[:16].replace("T", " "),
                 "rows": h.get("rows", 0),
                 "n_series": h.get("n_series", 0),
@@ -281,7 +323,7 @@ def render(paths: Paths) -> Path:
     tpl = env.get_template("index.html.j2")
     html = tpl.render(
         generated_at=generated_at,
-        health=_health_rows(health),
+        health=_health_rows(health, _latest_by_source(facts, meta_idx)),
         health_generated=health_doc.get("generated_at", "never"),
         panels=panels,
         recent_revisions=_recent_revisions(revisions, meta_idx),

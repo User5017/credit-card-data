@@ -149,13 +149,22 @@ th:first-child, td:first-child { text-align: left; }
     if (unit === 'usd_bn') return '$' + x.toLocaleString('en-US') + 'bn';
     return x.toLocaleString('en-US');
   }
-  function isoDate(ts) { return new Date(ts * 1e3).toISOString().slice(0, 10); }
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtPeriod(ts, pt) {
+    if (ts == null) return '–';
+    var d = new Date(ts * 1e3), y = d.getUTCFullYear(), m = d.getUTCMonth();
+    if (pt === 'M') return MONTHS[m] + ' ' + y;
+    if (pt === 'Q') return y + ' Q' + (Math.floor(m / 3) + 1);
+    if (pt === 'H') return y + ' H' + (m < 6 ? 1 : 2);
+    if (pt === 'A') return String(y);
+    return d.toISOString().slice(0, 10);
+  }
   var HEIGHT = 250;
 
   D.charts.forEach(function (c) {
     var el = document.querySelector('[data-chart="' + c.id + '"]');
     if (!el) return;
-    var series = [{}];
+    var series = [{ label: 'Period', value: function (u, ts) { return fmtPeriod(ts, c.period_type); } }];
     c.series.forEach(function (s, i) {
       var cfg = {
         label: s.label,
@@ -173,7 +182,11 @@ th:first-child, td:first-child { text-align: left; }
       height: HEIGHT,
       tzDate: tz,
       series: series,
-      scales: { x: { time: true } },
+      // y always includes zero so a rate chart is never zoomed into a misleading window
+      scales: { x: { time: true }, y: { range: function (u, dmin, dmax) {
+        var lo = Math.min(0, dmin), hi = Math.max(0, dmax), pad = (hi - lo) * 0.06 || 1;
+        return [lo < 0 ? lo - pad : 0, hi + pad];
+      } } },
       axes: [
         { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { stroke: v('--grid'), width: 1 } },
         { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { show: false }, size: 64,
@@ -192,7 +205,7 @@ th:first-child, td:first-child { text-align: left; }
       c.series.forEach(function (s) { html += '<th>' + s.label + '</th>'; });
       html += '</tr></thead><tbody>';
       for (var i = n - 1; i >= start; i--) {
-        html += '<tr><td>' + isoDate(xs[i]) + '</td>';
+        html += '<tr><td>' + fmtPeriod(xs[i], c.period_type) + '</td>';
         for (var k = 1; k < c.data.length; k++) html += '<td>' + fmtVal(c.data[k][i], c.unit) + '</td>';
         html += '</tr>';
       }
