@@ -29,7 +29,7 @@ or login. No LLM in the numeric path for structured sources. No client-side filt
 | `fred` | Fed G.19 consumer credit and card APR; H.8 bank card loans; charge-off and delinquency rates; SLOOS card standards | M, W, Q | fredgraph.csv (keyless) or FRED API with key | 2026-09-07 |
 | `tccp` | CFPB Terms of Credit Card Plans | H | one xlsx per half-year, linked from the survey page (names vary: `cfpb_tccp-data_2025-12-31.xlsx`, `..._2023-07-01_2023_12-31.xlsx`, re-uploads get a suffix), current layout from H1 2023 | 2026-09-07, loaded H1 2023 to H2 2025 |
 | `phillyfed` | Philadelphia Fed large-bank credit card data (FR Y-14M) | Q | two CSVs per release (Balances, Originations), each with the full history; URL embeds the quarter, fetcher walks back from the current quarter | 2026-09-07, loaded 2012 Q3 to 2026 Q1 |
-| `nyfed_hhdc` | NY Fed Household Debt and Credit | Q | xlsx, quarter in the file name | not yet |
+| `nyfed_hhdc` | NY Fed Household Debt and Credit (Consumer Credit Panel/Equifax) | Q | one xlsx per release with the full history (`HHD_C_Report_2026Q2.xlsx`); the file name embeds the data quarter, fetcher walks back from the current quarter; data sheets found by title, not sheet name | 2026-09-07, loaded 2003 Q1 to 2026 Q2 (age split from 2000 Q1) |
 | `fdic` | FDIC BankFind API financials (call-report card loans, charge-offs, past due, per bank) | Q | JSON, no key | 2026-09-07 |
 
 Corrections from the review: FFIEC bulk download is an ASP.NET form that returns 403 to scripts, so the FDIC API

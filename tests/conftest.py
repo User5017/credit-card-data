@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from carddash.fetchers import fred, phillyfed, tccp
+from carddash.fetchers import fred, nyfed_hhdc, phillyfed, tccp
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
 from carddash.series import load_series
@@ -50,12 +50,22 @@ def phillyfed_facts() -> pd.DataFrame:
     return coerce_facts(phillyfed.parse_release(paths, PULLED_AT, expected_quarter=PHILLYFED_FIXTURE_QUARTER))
 
 
+HHDC_FIXTURE_QUARTER = (2026, 2)  # the release the checked-in HHD_C_Report_2026Q2.xlsx is
+HHDC_FIXTURE = FIXTURES / "nyfed_hhdc" / "HHD_C_Report_2026Q2.xlsx"
+
+
 @pytest.fixture(scope="session")
-def fixture_facts(meta, tccp_products, phillyfed_facts) -> pd.DataFrame:
+def hhdc_facts() -> pd.DataFrame:
+    """Facts from the checked-in 2026 Q2 NY Fed Household Debt and Credit workbook, parsed once per session."""
+    return coerce_facts(nyfed_hhdc.parse_release(HHDC_FIXTURE, PULLED_AT, expected_quarter=HHDC_FIXTURE_QUARTER))
+
+
+@pytest.fixture(scope="session")
+def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
-            [facts_from_fred_fixtures(meta), facts_from_tccp_fixtures(tccp_products), phillyfed_facts],
+            [facts_from_fred_fixtures(meta), facts_from_tccp_fixtures(tccp_products), phillyfed_facts, hhdc_facts],
             ignore_index=True,
         )
     )

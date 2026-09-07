@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T20:09:44Z",
+  "generated_at": "2026-09-07T20:52:33Z",
   "sources": {
     "fred": {
       "source": "fred",
@@ -9,6 +9,16 @@
       "pulled_at": "2026-09-07T20:09:44Z",
       "rows": 5386,
       "n_series": 14,
+      "n_revisions": 0
+    },
+    "nyfed_hhdc": {
+      "source": "nyfed_hhdc",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-06-30",
+      "pulled_at": "2026-09-07T20:52:33Z",
+      "rows": 1200,
+      "n_series": 12,
       "n_revisions": 0
     },
     "phillyfed": {

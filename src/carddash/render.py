@@ -27,6 +27,7 @@ SOURCE_LABELS = {
     "fred": "Federal Reserve Board, via FRED",
     "tccp": "CFPB Terms of Credit Card Plans survey",
     "phillyfed": "Federal Reserve Bank of Philadelphia, Large Bank Credit Card and Mortgage Data (FR Y-14M)",
+    "nyfed_hhdc": "Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit (Consumer Credit Panel/Equifax)",
 }
 STATUS_LABELS = {
     "ok": "OK",
