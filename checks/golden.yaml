@@ -1,0 +1,123 @@
+# Hand-copied headline numbers the pipeline must reproduce.
+# Each entry traces to a public RELEASE PAGE (origin_url), never to the machine-readable feed itself.
+# - tests/test_golden.py runs every entry against the checked-in fixtures (deterministic).
+# - The live refresh checks only entries with check_live: true. Keep those on periods old enough
+#   that routine revisions will not move them; a mismatch turns the source amber, not red.
+# Spot-checked by hand against the G.19 page: (fill in your initials and date when you do it)
+
+- id: g19_revolving_sa_2024_12
+  metric: revolving_credit_sa
+  entity: ALL_HOLDERS
+  tier: all
+  period_type: M
+  period_end: 2024-12-31
+  source: fred
+  expected: 1297.0
+  tolerance: 0.06
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, table 'Consumer credit outstanding', Revolving, seasonally adjusted, '2024' year-end column, billions of dollars"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_revolving_sa_2025_12
+  metric: revolving_credit_sa
+  entity: ALL_HOLDERS
+  tier: all
+  period_type: M
+  period_end: 2025-12-31
+  source: fred
+  expected: 1324.3
+  tolerance: 0.06
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, Revolving, SA, '2025' year-end column (same value shown under Q4 2025)"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_revolving_sa_2026_03
+  metric: revolving_credit_sa
+  entity: ALL_HOLDERS
+  tier: all
+  period_type: M
+  period_end: 2026-03-31
+  source: fred
+  expected: 1338.0
+  tolerance: 0.06
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, Revolving, SA, 'Q1 2026' column (quarter-end level)"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_revolving_sa_2026_05
+  metric: revolving_credit_sa
+  entity: ALL_HOLDERS
+  tier: all
+  period_type: M
+  period_end: 2026-05-31
+  source: fred
+  expected: 1344.3
+  tolerance: 0.06
+  check_live: false
+  origin: "Fed G.19 release of 2026-08-07, Revolving, SA, 'May 2026' column. Recent month, will be revised; fixture-only."
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_revolving_sa_2026_06
+  metric: revolving_credit_sa
+  entity: ALL_HOLDERS
+  tier: all
+  period_type: M
+  period_end: 2026-06-30
+  source: fred
+  expected: 1351.1
+  tolerance: 0.06
+  check_live: false
+  origin: "Fed G.19 release of 2026-08-07, Revolving, SA, 'Jun 2026' column. Recent month, will be revised; fixture-only."
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_card_apr_all_2026_q1
+  metric: card_apr_all_accounts
+  entity: COMBANKS_ALL
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: fred
+  expected: 21.00
+  tolerance: 0.006
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, 'Terms of credit', Credit card plans, All accounts, 'Q1 2026' column, percent"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_card_apr_all_2026_q2
+  metric: card_apr_all_accounts
+  entity: COMBANKS_ALL
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: fred
+  expected: 20.94
+  tolerance: 0.006
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, Credit card plans, All accounts, 'Q2 2026' column (survey month May 2026)"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_card_apr_assessed_2026_q1
+  metric: card_apr_assessed_interest
+  entity: COMBANKS_ALL
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: fred
+  expected: 21.52
+  tolerance: 0.006
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, Credit card plans, Accounts assessed interest, 'Q1 2026' column"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_card_apr_assessed_2026_q2
+  metric: card_apr_assessed_interest
+  entity: COMBANKS_ALL
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: fred
+  expected: 22.15
+  tolerance: 0.006
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, Credit card plans, Accounts assessed interest, 'Q2 2026' column"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm

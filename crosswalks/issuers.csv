@@ -1,0 +1,2 @@
+issuer_id,display_name,sec_cik,fdic_certs,valid_from,valid_to,merged_into,note
+WEBBANK,WebBank,,34404,,,,"Utah industrial bank; sponsor bank for fintech card programs. FDIC cert verified 2026-09-07 via api.fdic.gov."

@@ -1,0 +1,7 @@
+tier,display_name,score_low,score_high,note
+deep_subprime,Deep subprime,,579,"CFPB convention: below 580. Sources with a 'below 600' bucket map here approximately; see per-source notes when added."
+subprime,Subprime,580,619,CFPB convention 580-619.
+near_prime,Near-prime,620,659,CFPB convention 620-659.
+prime,Prime,660,719,CFPB convention 660-719.
+superprime,Superprime,720,,CFPB convention 720 and above.
+all,All tiers,,,Used when the source does not split by credit tier.

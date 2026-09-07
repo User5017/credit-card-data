@@ -1,0 +1,3 @@
+# Sources listed here are allowed to load once even if the restatement detector fires.
+# The loader removes a source from the list after it loads. Commit the change; the next run consumes it.
+accept_restatement: []

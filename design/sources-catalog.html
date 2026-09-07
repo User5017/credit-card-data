@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Data Sources</title>
+<style>
+  :root{--bg:#fafaf7;--fg:#1c1c1a;--muted:#6b6b66;--line:#e3e2dc;--card:#fff;--accent:#1f4e79;
+        --a:#1b7f4b;--ab:#e4f4ea;--b:#8a6d00;--bb:#fbf1cc;--c:#9c3b1f;--cb:#fbe4dc;--paid:#555;--paidb:#ececec}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:36px 28px 80px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--muted);margin:0 0 28px;font-size:16px}
+  h2{font-size:20px;margin:44px 0 6px;padding-top:18px;border-top:1px solid var(--line)}
+  h2 small{color:var(--muted);font-weight:400;font-size:14px;margin-left:8px}
+  .lead{color:var(--muted);margin:0 0 14px}
+  .tbl{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+  table{border-collapse:collapse;width:100%;min-width:960px;font-size:13.5px}
+  th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;
+     padding:10px 12px;border-bottom:1px solid var(--line);background:#f4f3ee;position:sticky;top:0}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.src{font-weight:600;min-width:170px}
+  td.src span{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+  td.keys{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#333;white-space:nowrap}
+  .g{display:inline-block;font-weight:700;font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .gA{background:var(--ab);color:var(--a)} .gB{background:var(--bb);color:var(--b)} .gC{background:var(--cb);color:var(--c)}
+  .gP{background:var(--paidb);color:var(--paid)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 0;font-size:13px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .box h3{margin:0 0 6px;font-size:15px}
+  .box ul{margin:0;padding-left:18px} .box li{margin:3px 0}
+  .box p{margin:8px 0 0;color:var(--muted);font-size:13px}
+  .cal td:first-child{font-weight:600;white-space:nowrap;color:var(--accent)}
+  .note{background:#fff8e1;border:1px solid #f1e2a6;border-radius:8px;padding:10px 14px;margin:14px 0;font-size:14px}
+  a{color:var(--accent)}
+  .v{color:var(--c);font-size:12px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Public credit card data — the joinable inventory</h1>
+<p class="sub">Everything that publishes on a fixed cadence, what it contains, how it's fetched, and which keys let it join. Verified Sep 7, 2026.</p>
+
+<div class="legend">
+  <span><span class="g gA">A</span> fetch is scripted once, runs forever (API / CSV / XBRL)</span>
+  <span><span class="g gB">B</span> structured but needs a parser or per-issuer mapping</span>
+  <span><span class="g gC">C</span> PDF / inconsistent HTML — hand-touched or LLM-extracted</span>
+  <span><span class="g gP">$</span> paid — listed only as what you'd be replicating</span>
+</div>
+
+<!-- ============ LAYER 1 ============ -->
+<h2>1 · Balances &amp; growth <small>where the lending is</small></h2>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Card-relevant content</th><th>Cadence · lag</th><th>Access</th><th>Join keys</th><th>Grade</th></tr>
+<tr><td class="src">Fed G.19 Consumer Credit<span>Federal Reserve Board</span></td>
+<td>Revolving credit outstanding, by holder (banks, credit unions, finance cos, securitized pools). Also carries the two card APR series (all accounts; accounts assessed interest).</td>
+<td>Monthly · ~5th business day, ~5 wk lag. APR series quarterly.</td><td>Fed Data Download Program CSV / FRED API</td><td class="keys">month · holder</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">NY Fed Household Debt &amp; Credit<span>Consumer Credit Panel / Equifax</span></td>
+<td>Card balances, new-account originations and limits, delinquency transition rates, by <b>age</b> and <b>state</b>.</td>
+<td>Quarterly · ~5 wk after quarter</td><td>Excel download</td><td class="keys">quarter · age · state</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">FFIEC Call Reports<span>every US bank</span></td>
+<td>Per-bank credit card loans outstanding, card charge-offs and recoveries, 30/90+ past due. Includes the <b>fintech sponsor banks</b> (WebBank, Celtic, Cross River, Sutton, Coastal Community, Lead, The Bancorp) — the public shadow of fintech card and BNPL books.</td>
+<td>Quarterly · ~30 days after quarter</td><td>FFIEC CDR bulk download / FDIC BankFind API</td><td class="keys">quarter · RSSD_ID</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">FR Y-9C<span>bank holding companies</span></td>
+<td>Same card items at holding-company level — catches card books split across charters.</td>
+<td>Quarterly · ~40 days</td><td>Chicago Fed bulk / FFIEC</td><td class="keys">quarter · RSSD_ID</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Fed charge-off &amp; delinquency rates<span>commercial banks, aggregated from call reports</span></td>
+<td>Credit card charge-off and delinquency rates, top-100 banks vs all others, back to 1985.</td>
+<td>Quarterly · ~8 wk</td><td>Fed CSV / FRED</td><td class="keys">quarter · bank_size</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">FDIC Quarterly Banking Profile</td>
+<td>Industry-aggregate card loan growth, NCO, past-due. Redundant with call reports but pre-aggregated.</td>
+<td>Quarterly · ~8 wk</td><td>FDIC CSV/API</td><td class="keys">quarter</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Issuer 10-Q / 10-K + earnings supplements<span>JPM, C, BAC, WFC, USB, COF, AXP, SYF, BFC</span></td>
+<td>Purchase volume, card loans, yield, NCO, and — for some — interchange and rewards. <b>Synchrony</b> reports by platform (Health &amp; Wellness/CareCredit, Home &amp; Auto, Digital, Diversified &amp; Value, Lifestyle) each with balances and yield: growth-by-category with the APR attached. Bread by partner vertical.</td>
+<td>Quarterly · earnings weeks 2–3 of Jan/Apr/Jul/Oct</td><td>SEC XBRL frames API (standard tags) · supplements are HTML/PDF</td><td class="keys">quarter · CIK · segment</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">TransUnion / Equifax / Experian industry reports</td>
+<td>Originations by risk tier, average new limit, average balance, delinquency by tier. The only regular <i>by-tier</i> origination view outside the CFPB biennial.</td>
+<td>Quarterly · ~6 wk</td><td>Free PDFs (registration)</td><td class="keys">quarter · credit_tier</td><td><span class="g gC">C</span></td></tr>
+</table></div>
+
+<!-- ============ LAYER 2 ============ -->
+<h2>2 · Pricing <small>what APR and fees are charged</small></h2>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Card-relevant content</th><th>Cadence · lag</th><th>Access</th><th>Join keys</th><th>Grade</th></tr>
+<tr><td class="src">CFPB Terms of Credit Card Plans (TCCP)<span>150+ issuers incl. top 25; history to 1990</span></td>
+<td>Per card: purchase APR min/max, targeted credit tiers, annual fee, late fee, rewards flag, secured flag, availability. Source of the finding that large issuers price 8–10 pts above small ones at the same score. Latest file: Jul–Dec 2025. Still collecting in 2026 (instructions updated May 2026).</td>
+<td>Semiannual · H1 and H2 files, ~3–4 mo lag</td><td>CSV download + data dictionary</td><td class="keys">half · issuer_name · tier</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Philadelphia Fed Large Bank Credit Card Data<span>built from FR Y-14M; the largest issuers</span></td>
+<td>Account-level aggregates: balances, credit limits, utilization, share revolving vs paying in full vs minimum, originations, delinquency — all <b>by credit-score bucket</b>. Q1 2026 edition out. <span class="v">verify: APR distribution field</span></td>
+<td>Quarterly · ~10 wk</td><td>Excel download + interactive explorer</td><td class="keys">quarter · score_bucket</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">G.19 APR series<span>within the monthly release</span></td>
+<td>Average APR: all accounts, and accounts actually assessed interest. The single headline rate.</td>
+<td>Quarterly (Feb/May/Aug/Nov releases)</td><td>Fed DDP / FRED</td><td class="keys">quarter</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Realized portfolio yield<span>from 10-Qs and trust 10-Ds (§3, §4)</span></td>
+<td>What stated APR becomes after transactors and promo rates dilute it. Stated-vs-realized gap is its own metric.</td>
+<td>Quarterly / monthly</td><td>see §3, §4</td><td class="keys">period · CIK / trust</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">CFPB Credit Card Agreement Database</td>
+<td>Every issuer's current cardholder agreement. Penalty APR triggers, fee grids, arbitration terms. LLM-extractable to a structured table.</td>
+<td>Quarterly</td><td>PDFs, bulk zip</td><td class="keys">quarter · issuer_name</td><td><span class="g gC">C</span></td></tr>
+</table></div>
+
+<!-- ============ LAYER 3 ============ -->
+<h2>3 · Issuer economics <small>interchange earned, rewards paid</small></h2>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Card-relevant content</th><th>Cadence · lag</th><th>Access</th><th>Join keys</th><th>Grade</th></tr>
+<tr><td class="src">Issuer 10-Q / 10-K — economics lines<span>AXP, COF, SYF, BFC (DFS now inside COF; standalone filings ended 2025)</span></td>
+<td><b>Amex:</b> discount revenue ÷ billed business = interchange yield; Card Member rewards expense. <b>Capital One:</b> interchange gross, rewards, purchase volume. <b>Synchrony:</b> interchange revenue, loyalty program cost. <b>Bread:</b> similar. JPM/Citi/BofA report card income <i>net</i> of rewards — usable but coarser. Gives the <b>give-back ratio</b> (rewards ÷ interchange) per issuer per quarter.</td>
+<td>Quarterly · earnings</td><td>SEC XBRL (mix of standard and issuer-custom tags) · supplements</td><td class="keys">quarter · CIK</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Visa USA interchange schedule</td>
+<td>Interchange rate by merchant category × card tier (Traditional / Signature / Signature Preferred / Infinite) × channel. Nobody compiles it longitudinally.</td>
+<td>Semiannual · April and October</td><td>Public PDF</td><td class="keys">half · MCC_group · card_tier</td><td><span class="g gC">C</span></td></tr>
+<tr><td class="src">Mastercard US interchange schedule</td><td>Same, Mastercard tiers (Core / World / World Elite).</td>
+<td>Semiannual · April and October</td><td>Public PDF</td><td class="keys">half · MCC_group · card_tier</td><td><span class="g gC">C</span></td></tr>
+<tr><td class="src">CFPB Consumer Credit Card Market Report<span>biennial; 7th edition Dec 30 2025, data through 2024</span></td>
+<td>The anchor. By credit tier: APR, fees, rewards earned and redeemed, promo/deferred-interest usage. <b>New in 2025: cardholder spend by merchant category</b>, promo rate analysis, disputes. $1.2T debt, $3.6T purchase volume (2024).</td>
+<td>Biennial · December of odd years</td><td>PDF (charts + some tables)</td><td class="keys">year · credit_tier · merchant_category</td><td><span class="g gC">C</span></td></tr>
+<tr><td class="src">Merchants Payments Coalition / CMSPI swipe-fee estimate</td><td>Total US credit and debit interchange paid by merchants, by network.</td>
+<td>Annual · spring</td><td>PDF / press release</td><td class="keys">year · network</td><td><span class="g gC">C</span></td></tr>
+<tr><td class="src">Fed Reg II debit interchange report</td><td>Debit only — context for the credit side (what a capped rate looks like).</td>
+<td>Biennial → annual</td><td>Fed PDF + tables</td><td class="keys">year</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Nilson Report</td><td>Purchase volume and outstandings by issuer, by network, top-50 rankings. The thing the tables above reconstruct for free.</td>
+<td>Biweekly</td><td>Subscription</td><td class="keys">—</td><td><span class="g gP">$</span></td></tr>
+</table></div>
+
+<!-- ============ LAYER 4 ============ -->
+<h2>4 · Credit performance <small>the high-frequency layer</small></h2>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Card-relevant content</th><th>Cadence · lag</th><th>Access</th><th>Join keys</th><th>Grade</th></tr>
+<tr><td class="src">Issuer monthly credit metrics 8-Ks<span>COF, SYF, BFC, AXP</span></td>
+<td>Net charge-off rate and 30+ delinquency rate, monthly, per issuer. Capital One May 2026: domestic card NCO 4.82%, 30+ DQ 3.33%. Amex files US consumer and small-business card write-offs and delinquencies. The earliest public read on the cycle each month.</td>
+<td>Monthly · ~15th, 2 wk lag</td><td>EDGAR full-text search / 8-K exhibit HTML</td><td class="keys">month · CIK</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Credit card ABS 10-D noteholder statements<span>Chase Issuance, Amex Credit Account, COMET, Citibank CCIT, Discover Card Execution Note, BA Master, Synchrony Master Note; subprime: Mission Lane, Continental Finance</span></td>
+<td>Per trust per month: gross yield, monthly payment rate, charge-off, delinquency buckets, excess spread, principal receivables. 20+ years of history. Subprime trusts give the near-prime/subprime read the big issuers don't.</td>
+<td>Monthly · ~15th–20th</td><td>EDGAR 10-D exhibits — format varies by trust (HTML/PDF)</td><td class="keys">month · trust → issuer</td><td><span class="g gC">C</span></td></tr>
+<tr><td class="src">Fed Senior Loan Officer Survey (SLOOS)</td>
+<td>Net share of banks tightening card standards, changing limits/minimum scores, and card demand — split prime vs subprime borrowers.</td>
+<td>Quarterly · early Feb/May/Aug/Nov</td><td>Fed HTML tables + CSV</td><td class="keys">quarter · prime_flag</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">NY Fed SCE Credit Access Survey</td>
+<td>Card application rates, rejection rates, involuntary limit cuts, discouraged applicants — by score and income.</td>
+<td>Every 4 months (Feb/Jun/Oct)</td><td>Excel download</td><td class="keys">wave · score_band · income</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Call reports / Fed charge-off series</td><td>See §1 — the quarterly per-bank baseline the monthly 8-Ks lead.</td><td>Quarterly</td><td>—</td><td class="keys">quarter · RSSD_ID</td><td><span class="g gA">A</span></td></tr>
+</table></div>
+
+<!-- ============ LAYER 5 ============ -->
+<h2>5 · Spending &amp; categories <small>what the cards are buying</small></h2>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Card-relevant content</th><th>Cadence · lag</th><th>Access</th><th>Join keys</th><th>Grade</th></tr>
+<tr><td class="src">BEA Personal Consumption Expenditures — detail tables<span>Tables 2.4.5U / 2.4.6U</span></td>
+<td>~200 spending lines (down to veterinary services, pets, streaming, gambling), nominal and real. Growth by category is here.</td>
+<td>Monthly · last week of month, ~4 wk lag</td><td>BEA API (free key)</td><td class="keys">month · PCE_line</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Census Monthly Retail Trade (MARTS / MRTS)</td>
+<td>Retail sales by NAICS category — gas stations, grocery, restaurants, nonstore/e-commerce, etc.</td>
+<td>Monthly · ~15th, 2 wk lag (advance)</td><td>Census API</td><td class="keys">month · NAICS</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Census Quarterly E-Commerce</td><td>E-commerce share of retail — the card-not-present mix, which drives interchange tier.</td>
+<td>Quarterly · ~7 wk</td><td>Census API</td><td class="keys">quarter</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">BLS Consumer Expenditure Survey</td>
+<td>Spending by category × <b>income quintile</b>, age, region, housing tenure. Who spends on what.</td>
+<td>Annual · September (+ midyear tables)</td><td>BLS tables / API</td><td class="keys">year · category · cohort</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Atlanta Fed Survey &amp; Diary of Consumer Payment Choice</td>
+<td>Every payment for 3 days per respondent: amount, merchant type, instrument (credit / debit / cash / ACH). Gives <b>card acceptance and card share by category</b> — the bridge from "spending" to "card spending."</td>
+<td>Annual · ~summer</td><td>Public-use microdata (CSV)</td><td class="keys">year · merchant_type · instrument</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Fed Payments Study</td><td>Card transaction counts and values, credit vs debit, in-person vs remote.</td>
+<td>Triennial + annual supplements</td><td>Fed PDF + data tables</td><td class="keys">year · instrument</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Visa / Mastercard 10-Q operating metrics</td><td>US credit payments volume and transaction counts.</td>
+<td>Quarterly · earnings</td><td>SEC filings / supplements</td><td class="keys">quarter · network</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Affirm / PayPal / Block / Klarna earnings</td><td>BNPL GMV and loan growth — the substitution threat to revolving card balances.</td>
+<td>Quarterly</td><td>SEC filings / supplements</td><td class="keys">quarter · CIK</td><td><span class="g gB">B</span></td></tr>
+<tr><td class="src">Bank of America Institute — Consumer Checkpoint</td><td>Card spend growth by category from BofA's own customer base. The only free <i>monthly card-spend-by-category</i> read.</td>
+<td>Monthly · ~2nd week</td><td>PDF</td><td class="keys">month · category</td><td><span class="g gC">C</span></td></tr>
+</table></div>
+
+<!-- ============ LAYER 6 ============ -->
+<h2>6 · Consumer voice <small>what people say and expect</small></h2>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Card-relevant content</th><th>Cadence · lag</th><th>Access</th><th>Join keys</th><th>Grade</th></tr>
+<tr><td class="src">CFPB Consumer Complaint Database</td>
+<td>Every complaint: product / sub-product / issue, company, state, date, company response. <b>Narratives stopped Aug 14, 2026</b> — structured fields continue daily. Historical narratives are archived (DataLumos).</td>
+<td>Daily</td><td>Socrata API / CSV</td><td class="keys">date · company · state · issue</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">NY Fed Survey of Consumer Expectations</td><td>Probability of missing a minimum payment; credit access expectations.</td>
+<td>Monthly</td><td>Excel download</td><td class="keys">month · demographics</td><td><span class="g gA">A</span></td></tr>
+<tr><td class="src">Fed SHED<span>Economic Well-Being of US Households</span></td><td>Card ownership, share carrying a balance, use of BNPL — by income, race, age.</td>
+<td>Annual · May</td><td>PDF + public-use microdata</td><td class="keys">year · demographics</td><td><span class="g gB">B</span></td></tr>
+</table></div>
+
+<!-- ============ JOIN MAP ============ -->
+<h2>How they join</h2>
+<p class="lead">Time is the spine; everything joins on month or quarter. Four other dimensions need a one-time crosswalk you build and maintain — that crosswalk is the actual asset.</p>
+<div class="grid">
+  <div class="box"><h3>Issuer</h3>
+    <ul><li><code>RSSD_ID</code> (call reports, Y-9C)</li><li><code>CIK</code> (10-Q, 8-K, XBRL)</li><li>Trust name (10-D)</li><li>Institution name (TCCP)</li><li>Company name (complaints)</li></ul>
+    <p>~30 issuers. Build once, touch on M&amp;A (Discover → Capital One).</p></div>
+  <div class="box"><h3>Credit tier</h3>
+    <ul><li>CFPB: superprime 720+ · prime 660–719 · near-prime 620–659 · subprime 580–619 · deep subprime &lt;580</li><li>Philly Fed: FICO buckets</li><li>TCCP: issuer-declared target tiers</li><li>TU / Equifax: VantageScore bands</li><li>SLOOS / SCE: prime vs subprime, self-reported score</li></ul></div>
+  <div class="box"><h3>Merchant category</h3>
+    <ul><li>BEA PCE line</li><li>Census NAICS</li><li>Visa/MC merchant category (MCC groups)</li><li>Atlanta Fed merchant type</li><li>CFPB 2025 report categories</li><li>BofA categories</li></ul>
+    <p>Approximate by nature — Amazon, Walmart, Costco smear across lines. State the tolerance and move on.</p></div>
+  <div class="box"><h3>Geography / cohort</h3>
+    <ul><li>State: NY Fed, complaints</li><li>Age: NY Fed, BLS, SCE</li><li>Income: BLS, SCE, SHED</li></ul></div>
+</div>
+
+<!-- ============ CALENDAR ============ -->
+<h2>Publication calendar</h2>
+<div class="tbl"><table class="cal">
+<tr><th>When</th><th>What drops</th></tr>
+<tr><td>Daily</td><td>CFPB complaints</td></tr>
+<tr><td>~5th business day</td><td>G.19 revolving credit (APR series in Feb/May/Aug/Nov)</td></tr>
+<tr><td>~2nd week</td><td>BofA Consumer Checkpoint · NY Fed SCE</td></tr>
+<tr><td>~15th</td><td>Issuer monthly 8-Ks (COF, SYF, BFC, AXP) · trust 10-Ds · Census retail sales</td></tr>
+<tr><td>Last week</td><td>BEA PCE detail tables</td></tr>
+<tr><td>Wk 2–3 of Jan/Apr/Jul/Oct</td><td>Issuer earnings + supplements · Visa/MC · BNPL</td></tr>
+<tr><td>~30 days after quarter</td><td>Call reports · Y-9C</td></tr>
+<tr><td>~5–6 wk after quarter</td><td>NY Fed Household Debt &amp; Credit · TU/Equifax industry reports</td></tr>
+<tr><td>Early Feb/May/Aug/Nov</td><td>SLOOS</td></tr>
+<tr><td>~8–10 wk after quarter</td><td>FDIC QBP · Fed charge-off series · Philly Fed Y-14 card data</td></tr>
+<tr><td>Feb / Jun / Oct</td><td>NY Fed SCE Credit Access</td></tr>
+<tr><td>April &amp; October</td><td>Visa and Mastercard interchange schedules</td></tr>
+<tr><td>Twice yearly</td><td>CFPB TCCP file (H1 / H2)</td></tr>
+<tr><td>Annual</td><td>SHED (May) · Atlanta Fed payment diary (summer) · BLS CE (Sept) · MPC swipe-fee estimate (spring)</td></tr>
+<tr><td>Biennial</td><td>CFPB Consumer Credit Card Market Report (December, odd years)</td></tr>
+</table></div>
+
+<!-- ============ GAPS ============ -->
+<h2>What is not public</h2>
+<div class="grid">
+  <div class="box"><h3>Net interchange for the big three banks</h3><p>JPM, Citi, BofA report card income already net of rewards. You can bound it, not observe it. Amex, Capital One, Synchrony, Bread are the ones that show their work.</p></div>
+  <div class="box"><h3>Rewards cost by credit tier</h3><p>Only in the CFPB biennial. Between editions you interpolate from issuer mix.</p></div>
+  <div class="box"><h3>Realized APR by tier</h3><p>Philly Fed (score buckets) and the biennial. TCCP gives <i>offered</i> ranges, not what's actually paid.</p></div>
+  <div class="box"><h3>Anything account-level</h3><p>Y-14M raw data is regulatory-only. Philly Fed is the closest public shadow.</p></div>
+  <div class="box"><h3>Card spend by merchant category, monthly</h3><p>Only BofA's PDF, and only their customers. Total spend by category (BEA/Census) is the proxy, bridged through Atlanta Fed card-share.</p></div>
+  <div class="box"><h3>Pricing by state</h3><p>No public source. Balances and complaints by state, yes; APR by state, no.</p></div>
+</div>
+
+<!-- ============ V1 ============ -->
+<h2>Dashboard v1 — grade-A only, monthly refresh</h2>
+<p class="lead">Nine feeds, all scripted, zero PDFs. Enough to run the growth / pricing / performance story every month before touching a parser.</p>
+<div class="grid">
+  <div class="box"><h3>Growth panel</h3><ul><li>G.19 revolving, by holder</li><li>NY Fed balances by age &amp; state</li><li>Call reports: top-15 card banks + 8 sponsor banks, card loans QoQ</li></ul></div>
+  <div class="box"><h3>Pricing panel</h3><ul><li>G.19 APR, both series</li><li>TCCP: median APR by issuer size × tier, and the large–small spread over time</li><li>Philly Fed: utilization, revolve share, by score bucket</li></ul></div>
+  <div class="box"><h3>Performance panel</h3><ul><li>Fed charge-off series, top-100 vs rest</li><li>Call-report NCO per bank</li><li>SLOOS standards + SCE rejection rates</li></ul></div>
+  <div class="box"><h3>Spend panel</h3><ul><li>BEA PCE top-30 lines, 12-mo growth</li><li>Census retail by NAICS</li></ul></div>
+</div>
+<div class="note"><b>v2 adds the two B-grade feeds that carry the most signal:</b> the four issuers' monthly 8-K metrics (a 6-week lead on the quarterly data) and the 10-Q economics lines for AXP / COF / SYF / BFC (yield, interchange, rewards, and the give-back ratio). <b>v3</b> is the PDF layer — trusts, network schedules, the biennial — where the parsers earn their keep.</div>
+
+<h2>Links</h2>
+<ul style="font-size:14px;line-height:1.8">
+<li><a href="https://www.federalreserve.gov/releases/g19/current/">Fed G.19</a> · <a href="https://www.newyorkfed.org/microeconomics/hhdc">NY Fed Household Debt &amp; Credit</a> · <a href="https://cdr.ffiec.gov/public/">FFIEC CDR</a> · <a href="https://www.federalreserve.gov/releases/chargeoff/">Fed charge-off rates</a> · <a href="https://www.fdic.gov/analysis/quarterly-banking-profile">FDIC QBP</a></li>
+<li><a href="https://www.consumerfinance.gov/data-research/credit-card-data/terms-credit-card-plans-survey/">CFPB TCCP</a> · <a href="https://www.philadelphiafed.org/surveys-and-data/large-bank-credit-card-and-mortgage-data">Philly Fed Large Bank Card Data</a> · <a href="https://www.consumerfinance.gov/credit-cards/agreements/">CFPB Agreement Database</a></li>
+<li><a href="https://files.consumerfinance.gov/f/documents/cfpb_consumer-credit-card-market-report_2025.pdf">CFPB 2025 Consumer Credit Card Market Report</a> · <a href="https://usa.visa.com/support/merchant/library/visa-merchant-business-news-digest.html">Visa interchange</a> · <a href="https://www.mastercard.us/en-us/business/overview/support/merchant-interchange-rates.html">Mastercard interchange</a></li>
+<li><a href="https://efts.sec.gov/LATEST/search-index?q=%22net%20charge-off%22&amp;forms=8-K">EDGAR full-text search</a> · <a href="https://www.sec.gov/edgar/sec-api-documentation">SEC XBRL API</a> · <a href="https://www.federalreserve.gov/data/sloos.htm">SLOOS</a> · <a href="https://www.newyorkfed.org/microeconomics/sce/credit-access">SCE Credit Access</a></li>
+<li><a href="https://apps.bea.gov/api/signup/">BEA API</a> · <a href="https://www.census.gov/retail/index.html">Census retail</a> · <a href="https://www.bls.gov/cex/">BLS CE</a> · <a href="https://www.atlantafed.org/banking-and-payments/consumer-payments/survey-and-diary-of-consumer-payment-choice">Atlanta Fed payment diary</a> · <a href="https://institute.bankofamerica.com/economic-insights/consumer-checkpoint.html">BofA Consumer Checkpoint</a></li>
+<li><a href="https://www.consumerfinance.gov/data-research/consumer-complaints/">CFPB complaints</a> · <a href="https://www.consumerfinancemonitor.com/2026/08/18/cfpb-ends-publication-of-consumer-complaint-narratives-and-data-visualizations/">Narratives discontinued (Aug 2026)</a> · <a href="https://www.datalumos.org/datalumos/project/219041/version/V2/view">DataLumos archive</a> · <a href="https://www.federalreserve.gov/consumerscommunities/shed.htm">SHED</a></li>
+</ul>
+</div>
+</body>
+</html>

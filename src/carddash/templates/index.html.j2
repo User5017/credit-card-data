@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US Credit Card Data</title>
+<style>
+{{ uplot_css | safe }}
+:root {
+  color-scheme: light;
+  --bg: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,.10);
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,.10);
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+header h1 { font-size: 26px; margin: 0 0 4px; }
+header p { color: var(--ink2); margin: 0; }
+h2 { font-size: 19px; margin: 36px 0 4px; }
+.lede { color: var(--ink2); margin: 0 0 14px; }
+a { color: var(--series-1); }
+.health { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.health li { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; flex: none; }
+.st-ok .dot { background: var(--good); }
+.st-stale .dot, .st-restated .dot, .st-golden_mismatch .dot { background: var(--warning); }
+.st-failed .dot, .st-suspect .dot { background: var(--critical); }
+.health small { color: var(--ink2); display: block; margin-top: 2px; }
+.health details { margin-top: 6px; }
+.health details ul { margin: 4px 0 0; padding-left: 18px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
+figure.card { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 14px 10px; min-width: 0; }
+figure h3 { font-size: 15px; margin: 0; font-weight: 600; }
+.unit { color: var(--muted); font-size: 12px; }
+.plot { width: 100%; margin-top: 8px; }
+figure footer { color: var(--muted); font-size: 12px; margin-top: 6px; }
+details { font-size: 12px; color: var(--ink2); margin-top: 6px; }
+summary { cursor: pointer; }
+table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 12px; margin-top: 6px; }
+td, th { padding: 2px 8px; text-align: right; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+.uplot .u-legend { font-size: 12px; color: var(--ink2); }
+.changes { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+.changes ul { margin: 4px 0 0; padding-left: 18px; }
+.method li { margin-bottom: 4px; }
+.stamp { color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>US credit card data</h1>
+  <p>Balances, pricing and performance from public sources, refreshed daily and checked against the releases they come from.</p>
+  <p class="stamp">Generated {{ generated_at }} · {{ n_series }} series · {{ n_facts }} observations · <a href="{{ repo_url }}">code and data</a></p>
+</header>
+
+<h2>Source health</h2>
+<p class="lede">Each source is fetched in full every run. A failed source keeps its previous data and is flagged here; a chart is never silently stale.</p>
+<ul class="health">
+{% for s in health %}
+  <li class="st-{{ s.status }}">
+    <span class="status"><span class="dot" aria-hidden="true"></span>{{ s.label }} · {{ s.status_label }}</span>
+    <small>latest period {{ s.last_period_end }} · pulled {{ s.pulled_at }} · {{ s.n_series }} series, {{ s.rows }} rows</small>
+    {% if s.messages %}
+    <details><summary>{{ s.messages | length }} note{{ 's' if s.messages | length != 1 else '' }}</summary>
+      <ul>{% for m in s.messages %}<li>{{ m }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </li>
+{% else %}
+  <li class="st-failed"><span class="status"><span class="dot"></span>No sources loaded yet</span></li>
+{% endfor %}
+</ul>
+
+<h2>What changed</h2>
+<div class="changes">
+  {% if recent_revisions %}
+  <div>Values revised by the source in the latest run (largest first):</div>
+  <ul>
+  {% for r in recent_revisions %}
+    <li>{{ r.name }}, {{ r.period_end }}: {{ '%.4g' | format(r.old) }} → {{ '%.4g' | format(r.new) }} ({{ '%.2f' | format(r.rel) }}%)</li>
+  {% endfor %}
+  </ul>
+  {% else %}
+  <div>No revisions larger than 0.1% in the latest run.</div>
+  {% endif %}
+</div>
+
+{% for panel in panels %}
+<section class="panel">
+  <h2>{{ panel.name }}</h2>
+  <p class="lede">{{ panel.blurb }}</p>
+  <div class="grid">
+  {% for c in panel.charts %}
+    <figure class="card" id="{{ c.id }}">
+      <figcaption><h3>{{ c.title }}</h3><span class="unit">{{ c.unit_label }}</span></figcaption>
+      <div class="plot" data-chart="{{ c.id }}"></div>
+      <footer>{{ c.footer }}</footer>
+      {% if c.notes %}
+      <details><summary>About this series</summary>
+        <ul>{% for n in c.notes %}<li>{{ n }}</li>{% endfor %}</ul>
+      </details>
+      {% endif %}
+      <details><summary>Table (last 36)</summary><div data-table="{{ c.id }}"></div></details>
+    </figure>
+  {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+<h2>Data and method</h2>
+<ul class="method">
+  <li><a href="data/facts.csv">Download every series as one CSV</a> (metric, entity, tier, period_end, period_type, value, source, pulled_at).</li>
+  <li>Every period is dated to its last day: month end, quarter end, or the Wednesday for weekly bank data. A quarterly survey taken in May is shown at June 30.</li>
+  <li>Step charts hold each reading across its own period. Nothing is interpolated between readings.</li>
+  <li>SA means seasonally adjusted. Series are labeled SA or NSA and are never compared across that line.</li>
+  <li>Different sources measure different populations. G.19 covers all lenders; the H.8, charge-off and APR series cover commercial banks only. Notes under each chart say which.</li>
+  <li>Sources: Board of Governors of the Federal Reserve System (G.19 Consumer Credit, H.8 Assets and Liabilities of Commercial Banks, Charge-Off and Delinquency Rates, Senior Loan Officer Opinion Survey), retrieved from FRED, Federal Reserve Bank of St. Louis.</li>
+</ul>
+</main>
+
+<script>{{ uplot_js | safe }}</script>
+<script>window.CARDDASH = {{ payload_json | safe }};</script>
+<script>
+(function () {
+  var D = window.CARDDASH;
+  var css = getComputedStyle(document.documentElement);
+  function v(name) { return css.getPropertyValue(name).trim(); }
+  function tz(ts) { return uPlot.tzDate(new Date(ts * 1e3), 'Etc/UTC'); }
+  function fmtVal(x, unit) {
+    if (x == null || isNaN(x)) return '–';
+    if (unit === 'pct') return x.toFixed(2) + '%';
+    if (unit === 'usd_bn') return '$' + x.toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'bn';
+    return x.toLocaleString('en-US');
+  }
+  function fmtAxis(x, unit) {
+    if (unit === 'pct') return x + '%';
+    if (unit === 'usd_bn') return '$' + x.toLocaleString('en-US') + 'bn';
+    return x.toLocaleString('en-US');
+  }
+  function isoDate(ts) { return new Date(ts * 1e3).toISOString().slice(0, 10); }
+  var HEIGHT = 250;
+
+  D.charts.forEach(function (c) {
+    var el = document.querySelector('[data-chart="' + c.id + '"]');
+    if (!el) return;
+    var series = [{}];
+    c.series.forEach(function (s, i) {
+      var cfg = {
+        label: s.label,
+        stroke: v('--series-' + (i + 1)) || '#2a78d6',
+        width: 2,
+        spanGaps: true,
+        points: { show: false },
+        value: function (u, val) { return fmtVal(val, c.unit); }
+      };
+      if (c.step) cfg.paths = uPlot.paths.stepped({ align: -1 });
+      series.push(cfg);
+    });
+    var opts = {
+      width: el.clientWidth || 600,
+      height: HEIGHT,
+      tzDate: tz,
+      series: series,
+      scales: { x: { time: true } },
+      axes: [
+        { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { stroke: v('--grid'), width: 1 } },
+        { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { show: false }, size: 64,
+          values: function (u, vals) { return vals.map(function (x) { return fmtAxis(x, c.unit); }); } }
+      ],
+      cursor: { drag: { x: true, y: false } },
+      legend: { show: true }
+    };
+    var u = new uPlot(opts, c.data, el);
+    window.addEventListener('resize', function () { u.setSize({ width: el.clientWidth, height: HEIGHT }); });
+
+    var t = document.querySelector('[data-table="' + c.id + '"]');
+    if (t) {
+      var xs = c.data[0], n = xs.length, start = Math.max(0, n - 36);
+      var html = '<table><thead><tr><th>Period</th>';
+      c.series.forEach(function (s) { html += '<th>' + s.label + '</th>'; });
+      html += '</tr></thead><tbody>';
+      for (var i = n - 1; i >= start; i--) {
+        html += '<tr><td>' + isoDate(xs[i]) + '</td>';
+        for (var k = 1; k < c.data.length; k++) html += '<td>' + fmtVal(c.data[k][i], c.unit) + '</td>';
+        html += '</tr>';
+      }
+      t.innerHTML = html + '</tbody></table>';
+    }
+  });
+})();
+</script>
+</body>
+</html>
