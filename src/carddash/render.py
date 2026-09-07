@@ -23,7 +23,11 @@ from .series import load_series, series_index
 
 VENDOR = Path(__file__).parent / "vendor"
 
-SOURCE_LABELS = {"fred": "Federal Reserve Board, via FRED", "tccp": "CFPB Terms of Credit Card Plans survey"}
+SOURCE_LABELS = {
+    "fred": "Federal Reserve Board, via FRED",
+    "tccp": "CFPB Terms of Credit Card Plans survey",
+    "phillyfed": "Federal Reserve Bank of Philadelphia, Large Bank Credit Card and Mortgage Data (FR Y-14M)",
+}
 STATUS_LABELS = {
     "ok": "OK",
     "stale": "Stale",
@@ -32,7 +36,15 @@ STATUS_LABELS = {
     "failed": "Failed",
     "suspect": "Suspect, not loaded",
 }
-UNIT_LABELS = {"usd_bn": "Billions of dollars", "pct": "Percent", "count": "Count", "index": "Index"}
+UNIT_LABELS = {
+    "usd_bn": "Billions of dollars",
+    "usd": "Dollars",
+    "millions": "Millions",
+    "pct": "Percent",
+    "count": "Count",
+    "score": "Credit score",
+    "index": "Index",
+}
 
 
 def S(metric, entity, label, tier="all", period_type="M", source="fred", view="facts", field="value"):

@@ -3,7 +3,9 @@ deep_subprime,Deep subprime,,579,"CFPB convention: below 580. Sources with a 'be
 subprime,Subprime,580,619,CFPB convention 580-619.
 near_prime,Near-prime,620,659,CFPB convention 620-659.
 prime,Prime,660,719,CFPB convention 660-719.
-superprime,Superprime,720,,"CFPB convention 720 and above. Also the TCCP survey's '720 or greater' targeted-tier bucket, an exact match."
+superprime,Superprime,720,,"CFPB convention 720 and above. Also the TCCP survey's '720 or greater' targeted-tier bucket and the Philly Fed Y-14 '>=720 Credit Score' bucket, both exact matches."
 620_719,Scores 620 to 719,620,719,"TCCP survey targeted-tier bucket: CFPB near-prime and prime combined. Issuers report one median APR for the band."
 le619,Scores 619 or less,,619,"TCCP survey targeted-tier bucket: CFPB subprime and deep subprime combined. Issuers report one median APR for the band."
-all,All tiers,,,Used when the source does not split by credit tier.
+lt660,Scores below 660,,659,"Philly Fed Y-14 '<660 Credit Score' bucket: CFPB near-prime, subprime and deep subprime combined. Used for purchase volume per account, median original credit limit, and the share of new accounts and commitments."
+660_719,Scores 660 to 719,660,719,"Philly Fed Y-14 '660-719 Credit Score' bucket: CFPB prime, an exact match. The TCCP band 620_719 is wider (near-prime plus prime); the two are not the same population."
+all,All tiers,,,"Used when the source does not split by credit tier. Philly Fed balances, utilization and delinquency are published for the whole Y-14 panel only, so they carry tier all."

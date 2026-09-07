@@ -28,7 +28,7 @@ or login. No LLM in the numeric path for structured sources. No client-side filt
 |---|---|---|---|---|
 | `fred` | Fed G.19 consumer credit and card APR; H.8 bank card loans; charge-off and delinquency rates; SLOOS card standards | M, W, Q | fredgraph.csv (keyless) or FRED API with key | 2026-09-07 |
 | `tccp` | CFPB Terms of Credit Card Plans | H | one xlsx per half-year, linked from the survey page (names vary: `cfpb_tccp-data_2025-12-31.xlsx`, `..._2023-07-01_2023_12-31.xlsx`, re-uploads get a suffix), current layout from H1 2023 | 2026-09-07, loaded H1 2023 to H2 2025 |
-| `phillyfed` | Philadelphia Fed large-bank credit card data (FR Y-14M) | Q | direct CSV, URL embeds the quarter | 2026-09-07, latest 2026 Q1 |
+| `phillyfed` | Philadelphia Fed large-bank credit card data (FR Y-14M) | Q | two CSVs per release (Balances, Originations), each with the full history; URL embeds the quarter, fetcher walks back from the current quarter | 2026-09-07, loaded 2012 Q3 to 2026 Q1 |
 | `nyfed_hhdc` | NY Fed Household Debt and Credit | Q | xlsx, quarter in the file name | not yet |
 | `fdic` | FDIC BankFind API financials (call-report card loans, charge-offs, past due, per bank) | Q | JSON, no key | 2026-09-07 |
 

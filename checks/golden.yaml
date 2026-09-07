@@ -10,6 +10,10 @@
 #               Its large-issuer tier medians for poor (28.49) and great (22.99) also reproduce when the H2 2023
 #               top-25 list is applied to H1 2023, good differs by 0.04 and the small-issuer medians by up to
 #               0.4 points, because the CFPB's own H1 2023 top-25 list is not in the public file. Not golden.
+#   2026-09-07  phillyfed: eight numbers from the Q1 2026 Insights Report narrative reproduced from the 26Q1 CSVs
+#               (balances, utilization ratio, 30+ DPD by balances, general-purpose APR, originations, 10th-percentile
+#               origination score for Q1 2026 and Q4 2025, sub-660 share of new accounts). Also checked, not golden:
+#               originations +8.7% y/y (105.53 / 97.12), purchase volume +6.4% y/y, commitments +4.2% y/y.
 
 - id: g19_revolving_sa_2024_12
   metric: revolving_credit_sa
@@ -142,3 +146,110 @@
   check_live: true
   origin: "CFPB report 'Credit card data: Small issuers offer lower rates' (2024-02-16), on the January-June 2023 survey: 'A total of 15 issuers, including nine of the largest credit card issuers in the country, reported at least one product with a maximum purchase APR over 30%'"
   origin_url: https://www.consumerfinance.gov/data-research/research-reports/credit-card-data-small-issuers-offer-lower-rates/
+
+# Philly Fed: the quarterly Insights Report narrative states the headline numbers for the newest quarter, rounded to
+# one decimal. The CSV carries two decimals, so the tolerance is 0.06. The panel can be restated when a bank crosses
+# the Y-14 threshold; a mismatch here is the amber signal for that.
+- id: phillyfed_balances_2026_q1
+  metric: y14_card_balances
+  entity: Y14_CARD_FILERS
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: phillyfed
+  expected: 948.7
+  tolerance: 0.06
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report (2026-07-13): 'Total credit card balances at the large banks stood at $948.7 billion as of the first quarter of 2026'"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
+
+- id: phillyfed_utilization_2026_q1
+  metric: y14_card_utilization_rate
+  entity: Y14_CARD_FILERS
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: phillyfed
+  expected: 19.1
+  tolerance: 0.06
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report: 'the overall rate of credit utilization is now at its lowest level in three years, at 19.1 percent' (balances / commitments)"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
+
+- id: phillyfed_dq30_balances_2026_q1
+  metric: y14_card_dq30_rate_balances
+  entity: Y14_CARD_FILERS
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: phillyfed
+  expected: 3.3
+  tolerance: 0.06
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report: 'The proportion of outstanding card balances 30+ days past due stands at 3.3 percent'"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
+
+- id: phillyfed_purchase_apr_gp_2026_q1
+  metric: y14_card_purchase_apr_general_purpose
+  entity: Y14_CARD_FILERS
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: phillyfed
+  expected: 24.0
+  tolerance: 0.06
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report: 'the average interest rate on general-purpose cards currently at 24.0 percent'"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
+
+- id: phillyfed_originations_2026_q1
+  metric: y14_card_originations
+  entity: Y14_CARD_FILERS
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: phillyfed
+  expected: 105.5
+  tolerance: 0.06
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report: 'The dollar volume of credit card originations rose by a robust 8.7 percent year over year in the first quarter of 2026 to $105.5 billion'"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
+
+- id: phillyfed_orig_score_p10_2026_q1
+  metric: y14_card_orig_credit_score_p10
+  entity: Y14_CARD_FILERS
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: phillyfed
+  expected: 619
+  tolerance: 0
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report: 'The 10th percentile credit score for new accounts dropped to 619 in the first quarter'"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
+
+- id: phillyfed_orig_score_p10_2025_q4
+  metric: y14_card_orig_credit_score_p10
+  entity: Y14_CARD_FILERS
+  tier: all
+  period_type: Q
+  period_end: 2025-12-31
+  source: phillyfed
+  expected: 628
+  tolerance: 0
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report: 10th percentile origination score 'down from 628 in the previous quarter'"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
+
+- id: phillyfed_new_accounts_lt660_share_2026_q1
+  metric: y14_card_new_accounts_share
+  entity: Y14_CARD_FILERS
+  tier: lt660
+  period_type: Q
+  period_end: 2026-03-31
+  source: phillyfed
+  expected: 19.2
+  tolerance: 0.06
+  check_live: true
+  origin: "Philadelphia Fed Q1 2026 Insights Report: 'consumers with credit scores below 660 represented nearly one in five new accounts (19.2 percent)'"
+  origin_url: https://www.philadelphiafed.org/surveys-and-data/2026-q1-large-bank
