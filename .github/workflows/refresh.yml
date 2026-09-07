@@ -10,6 +10,7 @@ on:
     paths-ignore:
       - "data/**"
       - "docs/**"
+      - "**.md"   # task-board and design notes alone do not need a refresh run
 
 permissions:
   contents: write
