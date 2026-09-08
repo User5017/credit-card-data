@@ -91,7 +91,21 @@ th:first-child, td:first-child { text-align: left; }
   <li>No data loaded yet.</li>
 {% endfor %}
 </ul>
-<p class="stamp"><a href="latest.txt">Plain-text version</a> of these readings, for pasting into a post. Charts open on the last {{ default_years }} years; the button on each card shows the full history. Shaded bands are NBER recessions.</p>
+<h2>Thesis watch</h2>
+<p class="lede">A dated analysis note reads the whole page together and names the readings that would prove it wrong.
+They are checked here on every refresh.</p>
+<div class="changes">
+  <div><span class="status st-{{ 'ok' if thesis_holds else 'failed' }}"><span class="dot" aria-hidden="true"></span>{{ 'Holds' if thesis_holds else 'Broken' }}</span>
+    &middot; <em>{{ thesis_claim }}</em> <span class="note">Stated {{ thesis_date }} in <a href="https://github.com/User5017/credit-card-data/blob/main/{{ thesis_note }}">{{ thesis_note }}</a>.</span></div>
+  <ul>
+  {% for t in thesis %}
+    <li><strong>{{ '✓' if t.holds else ('✗' if t.holds is false else '?') }} {{ t.label }}:</strong>
+      {{ t.text }}{% if t.holds is false %} &mdash; this test has broken{% endif %}. <span class="note">{{ t.why }}</span></li>
+  {% endfor %}
+  </ul>
+</div>
+
+<p class="stamp"><a href="latest.txt">Plain-text version</a> of these readings and the thesis watch, for pasting into a post. Charts open on the last {{ default_years }} years; the button on each card shows the full history. Shaded bands are NBER recessions.</p>
 
 {% for panel in panels %}
 <section class="panel">

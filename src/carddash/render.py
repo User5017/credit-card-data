@@ -670,6 +670,35 @@ PANELS = [
     },
 ]
 
+
+# The thesis watch. design/thesis-2026-09-08.html argues that the 2022-24 loss surge was a vintage event rather than
+# a credit cycle, and that the repricing that came with it is structural. It names the readings that would prove that
+# wrong. They are evaluated here on every refresh so the claim cannot quietly rot: each test carries the series it
+# reads, the direction that keeps the thesis alive, and the threshold. Changing a threshold means rewriting the note.
+THESIS_NOTE = "design/thesis-2026-09-08.html"
+THESIS_DATE = "2026-09-08"
+THESIS_CLAIM = "US card credit is re-segmenting, not cycling: the 2022-24 loss surge was a vintage event, and the repricing that came with it is structural."
+THESIS_TESTS = [
+    {
+        "label": "Flow into 90+ day delinquency stays below 7.5%",
+        "series": S("hhdc_card_transition_dq90", "CCP_ALL", "", period_type="Q", source="nyfed_hhdc"),
+        "op": "<", "threshold": 7.5, "unit": "pct",
+        "why": "A break above this would mean the loosening that began in late 2025 was larger than the small line sizes suggest, and that this is a cycle after all.",
+    },
+    {
+        "label": "Card charge-off rate stays below 4.2%",
+        "series": S("card_nco_rate_sa", "COMBANKS_ALL", "", period_type="Q"),
+        "op": "<", "threshold": 4.2, "unit": "pct",
+        "why": "Losses reaccelerating while unemployment is near 4% would break the argument that the surge was a vintage event that has washed out.",
+    },
+    {
+        "label": "Card APR margin over prime stays above 14 points",
+        "series": S("card_apr_assessed_interest", "COMBANKS_ALL", "", period_type="Q", view="v_apr_spread", field="spread_over_prime"),
+        "op": ">", "threshold": 14.0, "unit": "pp",
+        "why": "The margin falling back toward its 2015-19 level of 10.7 points would mean the repricing was cyclical, not structural.",
+    },
+]
+
 # The latest-readings block: (series key, label, kind). kind: level (dollar amount, change in percent on the year),
 # rate (percent, change in points, compared with the 2015-2019 average), net (a net balance in percent, no benchmark).
 HEADLINES = [
@@ -925,6 +954,32 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict, golden: dict, 
 # ---------- the latest-readings block ----------
 
 
+def thesis_status(con, today: dt.date) -> list[dict]:
+    """Evaluate each falsification test against the newest ended period. No judgement here: a test either holds or
+    it does not, and a test whose series has no data says so rather than passing by default."""
+    out = []
+    for test in THESIS_TESTS:
+        rows = [r for r in _series_rows(con, test["series"]) if r[0] <= today]
+        if not rows:
+            out.append({**{k: test[k] for k in ("label", "op", "threshold", "unit", "why")},
+                        "value": None, "period": None, "holds": None, "text": "no data"})
+            continue
+        period_end, value = rows[-1]
+        value = float(value)
+        holds = value < test["threshold"] if test["op"] == "<" else value > test["threshold"]
+        suffix = " pp" if test["unit"] == "pp" else "%"
+        out.append(
+            {
+                **{k: test[k] for k in ("label", "op", "threshold", "unit", "why")},
+                "value": value,
+                "period": period_label(period_end, test["series"]["period_type"]),
+                "holds": holds,
+                "text": f"{value:.2f}{suffix} in {period_label(period_end, test['series']['period_type'])}",
+            }
+        )
+    return out
+
+
 def _fmt_value(v: float, kind: str) -> str:
     if kind == "level":
         return f"${v:,.0f}bn"
@@ -989,9 +1044,15 @@ def headlines(facts: pd.DataFrame, today: dt.date) -> list[dict]:
     return out
 
 
-def headlines_text(items: list[dict], generated_at: str) -> str:
+def headlines_text(items: list[dict], generated_at: str, thesis: list[dict] | None = None) -> str:
     lines = [f"US credit card data, latest readings ({generated_at})", ""]
     lines += [f"- {h['label']}: {h['text']}" for h in items]
+    if thesis:
+        state = "holds" if all(t["holds"] for t in thesis if t["holds"] is not None) else "BROKEN"
+        lines += ["", f"Thesis of {THESIS_DATE} ({state}): {THESIS_CLAIM}"]
+        for t in thesis:
+            mark = "ok " if t["holds"] else ("BROKEN" if t["holds"] is False else "no data")
+            lines.append(f"- [{mark}] {t['label']} -> {t['text']}")
     lines += ["", "Source: https://user5017.github.io/credit-card-data/ (public data, checked against the releases)"]
     return "\n".join(lines) + "\n"
 
@@ -1132,11 +1193,13 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
     for panel in PANELS:
         charts = [_chart_payload(con, spec, meta_idx, health, golden, today) for spec in panel["charts"]]
         panels.append({"name": panel["name"], "blurb": panel["blurb"], "charts": charts})
+    thesis = thesis_status(con, today)
     con.close()
 
     run = health_doc.get("generated_at")  # the stamp every row and revision of the latest refresh carries
     generated_at = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     latest = headlines(facts, today)
+    thesis_holds = all(t["holds"] for t in thesis if t["holds"] is not None)
     payload = {
         "generated_at": generated_at,
         "default_years": DEFAULT_YEARS,
@@ -1154,6 +1217,11 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
         health_generated=(run or "never")[:16].replace("T", " "),
         panels=panels,
         headlines=latest,
+        thesis=thesis,
+        thesis_holds=thesis_holds,
+        thesis_note=THESIS_NOTE,
+        thesis_date=THESIS_DATE,
+        thesis_claim=THESIS_CLAIM,
         run=run,
         revisions=_run_revisions(revisions, meta_idx, run),
         new_periods=_new_periods(facts, run),
@@ -1171,7 +1239,7 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
     paths.docs.mkdir(parents=True, exist_ok=True)
     out = paths.docs / "index.html"
     out.write_text(html, encoding="utf-8", newline="\n")
-    (paths.docs / "latest.txt").write_text(headlines_text(latest, generated_at[:10]), encoding="utf-8", newline="\n")
+    (paths.docs / "latest.txt").write_text(headlines_text(latest, generated_at[:10], thesis), encoding="utf-8", newline="\n")
     (paths.docs / "data").mkdir(exist_ok=True)
     if paths.facts_csv.exists():
         shutil.copyfile(paths.facts_csv, paths.docs / "data" / "facts.csv")

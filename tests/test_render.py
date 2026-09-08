@@ -23,7 +23,7 @@ from carddash.render import (
     render,
 )
 from carddash.schema import coerce_facts
-from conftest import FIXTURES, PULLED_AT
+from conftest import FIXTURES, PULLED_AT, REPO
 
 RUN1 = "2026-09-06T00:00:00Z"
 RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
@@ -346,6 +346,49 @@ def test_a_period_that_has_not_ended_is_never_the_latest(tmp_paths, fixture_fact
     assert sloos["series"][0]["last_period"] == "2026 Q2" and "latest period 2026 Q2" in sloos["footer"]
     assert sloos["data"][0][-1] > 4_000_000_000  # the row itself is still drawn, it is just not called latest
     assert "2099" not in html.split("<h2>What changed</h2>")[0]  # neither the readings nor the cards call 2099 latest
+
+
+def test_thesis_watch_evaluates_every_falsification_test(page, tmp_paths, fixture_facts):
+    """The dated note names thresholds; the page checks them from the data and cannot pass one by default."""
+    html, payload = page
+    from carddash.render import THESIS_TESTS, _connect, thesis_status
+
+    con = _connect(fixture_facts, REPO / "sql" / "views.sql", REPO / "data" / "raw" / "tccp" / "tccp_products.csv",
+                   REPO / "crosswalks" / "issuers.csv")
+    try:
+        status = thesis_status(con, TODAY)
+    finally:
+        con.close()
+    assert len(status) == len(THESIS_TESTS) == 3
+    by_label = {t["label"]: t for t in status}
+    flow = by_label["Flow into 90+ day delinquency stays below 7.5%"]
+    assert flow["value"] == pytest.approx(6.97) and flow["period"] == "2026 Q2" and flow["holds"] is True
+    nco = by_label["Card charge-off rate stays below 4.2%"]
+    assert nco["value"] == pytest.approx(3.82) and nco["holds"] is True
+    spread = by_label["Card APR margin over prime stays above 14 points"]
+    assert spread["value"] == pytest.approx(15.40, abs=0.01) and spread["holds"] is True and spread["unit"] == "pp"
+    assert all(t["why"] for t in status)
+    # the page and the text file both carry it
+    assert "Thesis watch" in html and "st-ok" in html.split("Thesis watch")[1][:400]
+    assert "design/thesis-2026-09-08.html" in html
+    text = (tmp_paths.docs / "latest.txt").read_text(encoding="utf-8")
+    assert "Thesis of 2026-09-08 (holds)" in text and text.count("- [ok ]") == 3
+
+
+def test_a_broken_thesis_test_says_so(tmp_paths, fixture_facts):
+    """Push the charge-off rate above its threshold: the page must report the test broken, not quietly pass."""
+    facts = fixture_facts.copy()
+    latest = facts[(facts["metric"] == "card_nco_rate_sa") & (facts["entity"] == "COMBANKS_ALL")]["period_end"].max()
+    hit = (facts["metric"] == "card_nco_rate_sa") & (facts["entity"] == "COMBANKS_ALL") & (facts["period_end"] == latest)
+    facts.loc[hit, "value"] = 5.5
+    write_facts(coerce_facts(facts), tmp_paths.facts_csv)
+    tmp_paths.health_json.write_text(json.dumps(_health(RUN2, ALL_SOURCES)), encoding="utf-8")
+    html = render(tmp_paths, today=TODAY).read_text(encoding="utf-8")
+    watch = html.split("Thesis watch")[1][:1400]
+    assert "st-failed" in watch and "Broken" in watch
+    assert "this test has broken" in watch
+    text = (tmp_paths.docs / "latest.txt").read_text(encoding="utf-8")
+    assert "(BROKEN)" in text and "- [BROKEN]" in text
 
 
 def test_rel_display_is_capped_when_the_old_value_is_zero():
