@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T18:42:01Z",
+  "generated_at": "2026-09-08T19:12:51Z",
   "sources": {
     "fdic": {
       "source": "fdic",
@@ -43,6 +43,16 @@
       "pulled_at": "2026-09-10T00:03:10Z",
       "rows": 2006,
       "n_series": 52,
+      "n_revisions": 0
+    },
+    "nyfed_sce_monthly": {
+      "source": "nyfed_sce_monthly",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-08-31",
+      "pulled_at": "2026-09-08T19:12:51Z",
+      "rows": 5724,
+      "n_series": 36,
       "n_revisions": 0
     },
     "phillyfed": {

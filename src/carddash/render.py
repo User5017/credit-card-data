@@ -49,6 +49,7 @@ RELEASE_RHYTHM = {
     "nyfed_hhdc": ("hhdc_card_balances", "CCP_ALL", "Q", 42),  # 2026 Q2 on 2026-08-11
     "fdic": ("fdic_card_loans", "FDIC_ALL_INSURED", "Q", 50),  # 2026 Q2 in the API on 2026-08-19
     "nyfed_sce": ("sce_any_rejection_rate", "SCE_ALL", "T", 40),  # a wave lands four to six weeks after fielding
+    "nyfed_sce_monthly": ("sce_miss_payment_prob", "SCE_ALL", "M", 10),  # August 2026 landed 2026-09-08
 }
 
 SOURCE_LABELS = {
@@ -58,6 +59,7 @@ SOURCE_LABELS = {
     "nyfed_hhdc": "Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit (Consumer Credit Panel/Equifax)",
     "fdic": "FDIC, Call Report data via the BankFind Suite API",
     "nyfed_sce": "Federal Reserve Bank of New York, Survey of Consumer Expectations Credit Access Survey",
+    "nyfed_sce_monthly": "Federal Reserve Bank of New York, Survey of Consumer Expectations (monthly)",
 }
 STATUS_LABELS = {
     "ok": "OK",
@@ -219,6 +221,17 @@ SLOOS_NOTE = (
     "tightened than eased, positive on the demand line means more saw demand strengthen than weaken. Standards "
     "tightening while demand weakens is a lender-led contraction; demand weakening on its own is the borrower's "
     "choice. The July survey asks about April to June and is shown at June 30."
+)
+
+SCE_MONTHLY_NOTE = (
+    "New York Fed Survey of Consumer Expectations, the monthly core survey: about 1,300 household heads a month on a "
+    "rotating panel, nationally weighted, from June 2013. The delinquency question asks for the respondent's own "
+    "probability, from 0 to 100, of not being able to make a minimum debt payment in the next three months. It is a "
+    "stated probability, not a delinquency rate: its level runs far above any measured delinquency and the "
+    "direction is the signal. Monthly, so it leads every lender-reported series on the page by a quarter or more."
+)
+SCE_SUBGROUP_NOTE = (
+    "Subgroup samples are a few hundred respondents a month, so read the three-month direction, not one month's move."
 )
 
 SCE_NOTE = (
@@ -596,6 +609,29 @@ PANELS = [
                     S("sloos_card_demand_net_stronger", "SLOOS_OTHER", "Other banks", period_type="Q"),
                 ],
             },
+            {
+                "id": "miss_payment_expectation",
+                "title": "Households expecting to miss a debt payment, next three months",
+                "unit": "pct",
+                "step": False,
+                "benchmark": True,
+                "notes": [SCE_MONTHLY_NOTE],
+                "series": [
+                    S("sce_miss_payment_prob", "SCE_ALL", "Mean stated probability, all households", source="nyfed_sce_monthly"),
+                ],
+            },
+            {
+                "id": "miss_payment_by_income",
+                "title": "Expected missed payments by household income",
+                "unit": "pct",
+                "step": False,
+                "notes": [SCE_MONTHLY_NOTE, SCE_SUBGROUP_NOTE],
+                "series": [
+                    S("sce_miss_payment_prob", "INCOME:LT50K", "Income under $50k", source="nyfed_sce_monthly"),
+                    S("sce_miss_payment_prob", "INCOME:50-100K", "Income $50k to $100k", source="nyfed_sce_monthly"),
+                    S("sce_miss_payment_prob", "INCOME:GT100K", "Income over $100k", source="nyfed_sce_monthly"),
+                ],
+            },
         ],
     },
     {
@@ -728,6 +764,39 @@ PANELS = [
                 "series": [S("consumer_sentiment", "US_ECONOMY", "Index of consumer sentiment", period_type="M")],
             },
             {
+                "id": "credit_harder",
+                "title": "Households saying credit is harder to get",
+                "unit": "pct",
+                "step": False,
+                "notes": [
+                    "Share of respondents saying it is much or somewhat harder to obtain credit than a year ago, and "
+                    "the share expecting it to be harder a year ahead. The household's view of the same tightening "
+                    "the bank survey reports from the other side. " + SCE_MONTHLY_NOTE
+                ],
+                "series": [
+                    S("sce_credit_year_ago_much_harder", "SCE_ALL", "Harder than a year ago", source="nyfed_sce_monthly",
+                      view="v_sce_sums", field="combined"),
+                    S("sce_credit_year_ahead_much_harder", "SCE_ALL", "Expected to be harder a year ahead", source="nyfed_sce_monthly",
+                      view="v_sce_sums", field="combined"),
+                ],
+            },
+            {
+                "id": "finances_worse",
+                "title": "Households saying they are worse off",
+                "unit": "pct",
+                "step": False,
+                "notes": [
+                    "Share of respondents saying their household is much or somewhat worse off than a year ago, and "
+                    "the share expecting to be worse off a year ahead. " + SCE_MONTHLY_NOTE
+                ],
+                "series": [
+                    S("sce_finances_year_ago_much_worse", "SCE_ALL", "Worse off than a year ago", source="nyfed_sce_monthly",
+                      view="v_sce_sums", field="combined"),
+                    S("sce_finances_year_ahead_much_worse", "SCE_ALL", "Expect to be worse off a year ahead", source="nyfed_sce_monthly",
+                      view="v_sce_sums", field="combined"),
+                ],
+            },
+            {
                 "id": "consumer_credit_mix",
                 "title": "Revolving and nonrevolving consumer credit",
                 "unit": "usd_bn",
@@ -790,6 +859,7 @@ HEADLINES = [
     (("debt_service_ratio_consumer", "US_HOUSEHOLDS", "all", "Q", "fred"), "Consumer debt payments as a share of disposable income (Fed)", "rate", "debt_service"),
     (("unemployment_rate_sa", "US_ECONOMY", "all", "M", "fred"), "Unemployment rate (BLS)", "rate", "losses_vs_labor"),
     (("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "all", "Q", "fred"), "Banks tightening card standards, net (SLOOS)", "net", "sloos_cards"),
+    (("sce_miss_payment_prob", "SCE_ALL", "all", "M", "nyfed_sce_monthly"), "Households' stated chance of missing a debt payment in the next 3 months (NY Fed survey)", "rate", "miss_payment_expectation"),
 ]
 
 

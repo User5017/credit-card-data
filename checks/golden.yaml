@@ -475,3 +475,32 @@
   check_live: true
   origin: "July 2026 SLOOS, Table 1, question 18 (standards on credit card loans), all respondents: 3 of 45 tightened somewhat (6.7%), none eased, net 6.7"
   origin_url: https://www.federalreserve.gov/data/sloos/sloos-202607-table-1.htm
+
+# NY Fed monthly SCE: the press release states the delinquency expectation to one decimal and its monthly change.
+# The workbook re-publishes the whole history every month, so the prior month is the live entry and the newest is
+# fixture-only.
+- id: sce_monthly_miss_payment_2026_07
+  metric: sce_miss_payment_prob
+  entity: SCE_ALL
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: nyfed_sce_monthly
+  expected: 12.0
+  tolerance: 0.05
+  check_live: true
+  origin: "NY Fed press release of 2026-09-08 (August 2026 SCE): 'The average perceived probability of missing a minimum debt payment over the next three months increased by 1.2 percentage points to 13.2%', so July was 12.0%"
+  origin_url: https://www.newyorkfed.org/newsevents/news/research/2026/20260908
+
+- id: sce_monthly_miss_payment_2026_08
+  metric: sce_miss_payment_prob
+  entity: SCE_ALL
+  tier: all
+  period_type: M
+  period_end: 2026-08-31
+  source: nyfed_sce_monthly
+  expected: 13.2
+  tolerance: 0.05
+  check_live: false
+  origin: "Same sentence, the August 2026 reading: 13.2%. Newest month, fixture-only."
+  origin_url: https://www.newyorkfed.org/newsevents/news/research/2026/20260908

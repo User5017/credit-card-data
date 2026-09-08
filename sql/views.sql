@@ -257,3 +257,17 @@ SELECT f.metric, f.entity, f.entity_type, f.tier, f.period_type, f.source, CAST(
 FROM facts f
 JOIN total t ON t.period_end = CAST(f.period_end AS DATE)
 WHERE f.metric = 'revolving_credit_nsa' AND f.source = 'fred' AND f.entity <> 'ALL_HOLDERS' AND t.total > 0;
+
+-- Monthly SCE answer sums: the share saying credit is harder (much plus somewhat) and the share saying the household
+-- is worse off, for each horizon. Keyed on the 'much' series so render.py can select the sum as a field.
+CREATE OR REPLACE VIEW v_sce_sums AS
+WITH s AS (
+  SELECT metric, entity, entity_type, tier, period_type, source, CAST(period_end AS DATE) AS period_end, value
+  FROM facts WHERE source = 'nyfed_sce_monthly'
+)
+SELECT a.metric, a.entity, a.entity_type, a.tier, a.period_type, a.source, a.period_end,
+       a.value AS much, b.value AS somewhat, a.value + b.value AS combined
+FROM s a
+JOIN s b ON b.entity = a.entity AND b.period_end = a.period_end
+       AND b.metric = replace(replace(a.metric, '_much_harder', '_somewhat_harder'), '_much_worse', '_somewhat_worse')
+WHERE a.metric LIKE '%_much_harder' OR a.metric LIKE '%_much_worse';

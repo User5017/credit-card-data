@@ -29,7 +29,7 @@ RUN1 = "2026-09-06T00:00:00Z"
 RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
 POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service"}
-ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce")
+ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly")
 
 
 def _health(generated_at: str, sources=("fred",), status="ok") -> dict:
@@ -63,13 +63,13 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 35
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 39
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
     assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
-    assert "6 sources OK" in html.split("<h2>Latest readings</h2>")[0]
+    assert "7 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
 
@@ -251,7 +251,7 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     html, payload = page
     items = headlines(fixture_facts, TODAY)
     labels = [h["label"] for h in items]
-    assert labels[0].startswith("Revolving consumer credit") and len(items) == 11  # no 30+ delinquency fixture
+    assert labels[0].startswith("Revolving consumer credit") and len(items) == 12  # no 30+ delinquency fixture
     rev = items[0]["text"]
     assert rev == "$1,351bn in Jun 2026, +3.8% on the year"  # October 2024 was higher, so no 'highest since' flag
     # the flag logic on a synthetic series: a record, a three-year high, and a value with no flag
@@ -286,7 +286,7 @@ def test_card_badge_and_last_attempt_when_a_source_is_not_ok(tmp_paths, fixture_
     assert by_id["nco_by_issuer"]["status"] == "failed" and by_id["nco_by_issuer"]["attempted"] == "2026-09-08"
     assert "data as of 2026-09-07" in by_id["nco_by_issuer"]["footer"]  # the data on the chart is still the last good load
     assert '<span class="badge st-failed"' in html and "last fetch attempt 2026-09-08" in html
-    assert "2 of 6 sources need attention (Failed)" in html
+    assert "2 of 7 sources need attention (Failed)" in html
 
 
 def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_facts):
@@ -500,3 +500,16 @@ def test_page_carries_link_previews_nav_and_next_release(page, tmp_paths, fixtur
     assert "Jul 2026 data expected any day (around 2026-09-07)" in health  # due yesterday: within the grace week
     assert "2026 Q3 data expected around 2026-11-11" in health  # NY Fed HHDC: quarter end plus 42 days
     assert 'id="theme"' in html and '@media (max-width: 640px)' in html
+
+
+def test_monthly_sce_charts_and_reading(page):
+    html, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    miss = ids["miss_payment_expectation"]
+    assert miss["series"][0]["last_period"] == "Aug 2026" and abs(miss["data"][1][-1] - 13.16) < 0.01
+    assert miss["series"][-1]["benchmark"] and 10 < miss["data"][-1][0] < 14
+    income = ids["miss_payment_by_income"]
+    assert income["data"][1][-1] > income["data"][3][-1]
+    harder = ids["credit_harder"]
+    assert abs(harder["data"][1][-1] - (15.306 + 30.606)) < 0.01  # much plus somewhat harder, August 2026
+    assert "Households' stated chance of missing a debt payment" in html

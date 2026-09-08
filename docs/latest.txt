@@ -12,6 +12,7 @@ US credit card data, latest readings (2026-09-10)
 - Consumer debt payments as a share of disposable income (Fed): 5.29% in 2026 Q1, -0.06 pp on the year, 2015-2019 average 5.71%
 - Unemployment rate (BLS): 4.10% in Aug 2026, -0.20 pp on the year, 2015-2019 average 4.42%
 - Banks tightening card standards, net (SLOOS): 6.70% in 2026 Q2, -3.70 pp on the year
+- Households' stated chance of missing a debt payment in the next 3 months (NY Fed survey): 13.16% in Aug 2026, +0.07 pp on the year, 2015-2019 average 12.31%
 
 Thesis of 2026-09-08 (holds): US card credit is re-segmenting, not cycling: the 2022-24 loss surge was a vintage event, and the repricing that came with it is structural.
 - [ok ] Flow into 90+ day delinquency stays below 7.5% -> 6.97% in 2026 Q2
