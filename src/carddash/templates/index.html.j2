@@ -3,7 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>US Credit Card Data</title>
+<title>{{ site_title }}</title>
+<meta name="description" content="{{ description }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ site_title }}">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:url" content="{{ site_url }}">
+<meta property="og:image" content="{{ preview_image }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ site_title }}">
+<meta name="twitter:description" content="{{ description }}">
+<meta name="twitter:image" content="{{ preview_image }}">
+<link rel="canonical" href="{{ site_url }}">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='7' width='28' height='18' rx='3' fill='%232a78d6'/%3E%3Crect x='2' y='11' width='28' height='4' fill='%230b0b0b'/%3E%3Crect x='6' y='18' width='10' height='3' rx='1' fill='%23ffffff'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem('carddash-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <style>
 {{ uplot_css | safe }}
 :root {
@@ -16,7 +31,7 @@
   --good: #0ca30c; --warning: #d99a0b; --critical: #d03b3b;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --bg: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #9b9a94;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,.10);
@@ -25,6 +40,15 @@
     --band: rgba(77,143,224,.18); --recession: rgba(255,255,255,.06);
     --warning: #fab219;
   }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #9b9a94;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,.10);
+  --series-1: #4d8fe0; --series-2: #f07a3c; --series-3: #2dbd86; --series-4: #a78bea;
+  --series-5: #a3a29b; --series-6: #ef5aa0; --series-7: #d3945a; --series-8: #3cb7c8;
+  --band: rgba(77,143,224,.18); --recession: rgba(255,255,255,.06);
+  --warning: #fab219;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -86,23 +110,67 @@ th:first-child, td:first-child { text-align: left; }
 #browse-detail { border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
 .stamp { color: var(--muted); font-size: 12px; }
+.nav { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--border);
+  margin: 14px -20px 0; padding: 6px 20px; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; font-size: 13px; }
+.nav a { color: var(--ink2); text-decoration: none; padding: 2px 0; }
+.nav a:hover { color: var(--ink); }
+.nav .spacer { flex: 1; }
+.nav button { font: inherit; font-size: 12px; color: var(--ink2); background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+.readings a, .changes a.chartlink { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--muted); }
+.readings a:hover, .changes a.chartlink:hover { color: var(--series-1); }
+.due { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+.endlabel { position: absolute; transform: translateY(-50%); font: 600 11px/1 system-ui, sans-serif; white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+.health .next { display: block; margin-top: 2px; }
+.health .overdue { color: var(--warning); }
+button.link { font: inherit; font-size: 11px; color: var(--ink2); background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+button.link:hover { color: var(--ink); }
+.browse .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; font-size: 12px; }
+.browse .actions .picking { color: var(--series-1); }
+figure.card:target, #browse-detail:target { outline: 2px solid var(--series-1); outline-offset: 2px; }
+@media (max-width: 640px) {
+  main { padding: 16px 12px 40px; }
+  header h1 { font-size: 22px; }
+  h2 { margin-top: 28px; }
+  .nav { margin: 10px -12px 0; padding: 6px 12px; gap: 4px 10px; font-size: 12px; }
+  .readings { padding: 10px 12px 10px 26px; }
+  figure.card { padding: 10px 8px 8px; }
+  .cardhead { flex-wrap: wrap; }
+  .uplot .u-legend { font-size: 11px; }
+  #browse-table { font-size: 12px; }
+  #browse-table td.name { max-width: 200px; }
+}
+@media print {
+  .nav, button, .tools { display: none !important; }
+  figure.card { break-inside: avoid; }
+}
 </style>
 </head>
 <body>
 <main>
 <header>
   <h1>US credit card data</h1>
-  <p>Balances, pricing, performance and borrower behavior from public sources, refreshed daily and checked against the releases they come from.</p>
+  <p>{{ tagline }}</p>
   <p class="stamp">Generated {{ generated_at }} · {{ n_series }} series · {{ n_facts }} observations · <a href="{{ repo_url }}">code and data</a> ·
     <span class="status st-{{ health_summary.worst }}"><span class="dot" aria-hidden="true"></span>{% if health_summary.n == 0 %}no sources loaded{% elif health_summary.n_ok == health_summary.n %}{{ health_summary.n }} source{{ 's' if health_summary.n != 1 else '' }} OK{% else %}{{ health_summary.n - health_summary.n_ok }} of {{ health_summary.n }} sources need attention ({{ health_summary.worst_label }}){% endif %}</span>
     as of {{ health_generated }} UTC · <a href="#health">source health</a></p>
+  {% if upcoming %}<p class="due">Due in the next two weeks: {% for r in upcoming %}{{ r.label.split(',')[0] }} {{ r.next.period }} around {{ r.next.due }}{{ '; ' if not loop.last else '.' }}{% endfor %}</p>{% endif %}
 </header>
+<nav class="nav" aria-label="Sections">
+  <a href="#readings">Readings</a>
+  {% for panel in panels %}<a href="#panel-{{ panel.name | lower }}">{{ panel.name }}</a>{% endfor %}
+  <a href="#browse">Browse</a>
+  <a href="#changed">Changed</a>
+  <a href="#health">Health</a>
+  <a href="#method">Method</a>
+  <span class="spacer"></span>
+  <button type="button" id="theme" title="Switch between light and dark">Dark</button>
+</nav>
 
-<h2>Latest readings</h2>
+<h2 id="readings">Latest readings</h2>
 <p class="lede">Computed from the series charted below, nothing else. Change is against the same period a year earlier; the benchmark is the {{ benchmark_label }}.</p>
 <ul class="readings">
 {% for h in headlines %}
-  <li><strong>{{ h.label }}:</strong> {{ h.text }}</li>
+  <li><strong>{% if h.chart %}<a href="#{{ h.chart }}" title="Go to the chart">{{ h.label }}</a>{% else %}{{ h.label }}{% endif %}:</strong> {{ h.text }}</li>
 {% else %}
   <li>No data loaded yet.</li>
 {% endfor %}
@@ -112,10 +180,10 @@ th:first-child, td:first-child { text-align: left; }
 They are checked here on every refresh.</p>
 <div class="changes">
   <div><span class="status st-{{ 'ok' if thesis_holds else 'failed' }}"><span class="dot" aria-hidden="true"></span>{{ 'Holds' if thesis_holds else 'Broken' }}</span>
-    &middot; <em>{{ thesis_claim }}</em> <span class="note">Stated {{ thesis_date }} in <a href="https://github.com/User5017/credit-card-data/blob/main/{{ thesis_note }}">{{ thesis_note }}</a>.</span></div>
+    &middot; <em>{{ thesis_claim }}</em> <span class="note">Stated {{ thesis_date }} in <a href="{{ thesis_href }}">{{ thesis_note }}</a>.</span></div>
   <ul>
   {% for t in thesis %}
-    <li><strong>{{ '✓' if t.holds else ('✗' if t.holds is false else '?') }} {{ t.label }}:</strong>
+    <li><strong>{{ '✓' if t.holds else ('✗' if t.holds is false else '?') }} {% if t.chart %}<a class="chartlink" href="#{{ t.chart }}" title="Go to the chart">{{ t.label }}</a>{% else %}{{ t.label }}{% endif %}:</strong>
       {{ t.text }}{% if t.holds is false %} &mdash; this test has broken{% endif %}. <span class="note">{{ t.why }}</span></li>
   {% endfor %}
   </ul>
@@ -124,7 +192,7 @@ They are checked here on every refresh.</p>
 <p class="stamp"><a href="latest.txt">Plain-text version</a> of these readings and the thesis watch, for pasting into a post. Charts open on the last {{ default_years }} years; the button on each card shows the full history. Shaded bands are NBER recessions.</p>
 
 {% for panel in panels %}
-<section class="panel">
+<section class="panel" id="panel-{{ panel.name | lower }}">
   <h2>{{ panel.name }}</h2>
   <p class="lede">{{ panel.blurb }}</p>
   <div class="grid">
@@ -136,12 +204,13 @@ They are checked here on every refresh.</p>
           <div class="tools">
             {% if c.status != 'ok' %}<span class="badge st-{{ c.status }}" title="Source status"><span class="dot" aria-hidden="true"></span>{{ c.status_label }}</span>{% endif %}
             <button type="button" class="range" data-range="{{ c.id }}" hidden>Full history</button>
+            <button type="button" class="link" data-link="{{ c.id }}" title="Copy a link to this chart">Link</button>
           </div>
         </div>
         <span class="unit">{{ c.unit_label }}</span>
       </figcaption>
       <div class="plot" data-chart="{{ c.id }}"></div>
-      <footer>{{ c.footer }}{% if c.attempted %} · last fetch attempt {{ c.attempted }}{% endif %}{% if c.post %} · <a href="img/{{ c.id }}.png">PNG</a>{% endif %}</footer>
+      <footer>{{ c.footer }}{% if c.attempted %} · last fetch attempt {{ c.attempted }}{% endif %} · <a href="img/{{ c.id }}.png">PNG</a></footer>
       {% if c.footer_lines %}
       <ul class="lines">{% for l in c.footer_lines %}<li>{{ l }}</li>{% endfor %}</ul>
       {% endif %}
@@ -187,6 +256,13 @@ read the scope note before comparing it with anything.</p>
     <div class="cardhead"><h3 id="browse-title"></h3><span class="unit" id="browse-unit"></span></div>
     <div class="plot" id="browse-plot"></div>
     <footer id="browse-footer"></footer>
+    <div class="actions">
+      <button type="button" class="link" id="browse-compare">Compare with another series</button>
+      <button type="button" class="link" id="browse-clear" hidden>Remove comparison</button>
+      <a id="browse-csv" class="link" href="#" download="series.csv">Download CSV</a>
+      <button type="button" class="link" id="browse-link">Link</button>
+      <span id="browse-hint"></span>
+    </div>
     <details id="browse-about"><summary>About this series</summary><p id="browse-note"></p></details>
   </div>
   <div class="tablewrap"><table id="browse-table">
@@ -195,7 +271,7 @@ read the scope note before comparing it with anything.</p>
   </table></div>
 </div>
 
-<h2>What changed</h2>
+<h2 id="changed">What changed</h2>
 <div class="changes">
   {% if not run %}
   <div>No refresh run recorded yet.</div>
@@ -230,6 +306,7 @@ read the scope note before comparing it with anything.</p>
   <li class="st-{{ s.status }}">
     <span class="status"><span class="dot" aria-hidden="true"></span>{{ s.label }} · {{ s.status_label }}</span>
     <small>latest period {{ s.last_period_end }} · last fetch {{ s.pulled_at }} · {{ s.n_series }} series, {{ s.rows }} rows</small>
+    {% if s.next %}<small class="next{% if s.next.overdue %} overdue{% endif %}">{{ s.next.text }}</small>{% endif %}
     {% if s.messages %}
     <details><summary>{{ s.messages | length }} note{{ 's' if s.messages | length != 1 else '' }}</summary>
       <ul>{% for m in s.messages %}<li>{{ m }}</li>{% endfor %}</ul>
@@ -241,7 +318,7 @@ read the scope note before comparing it with anything.</p>
 {% endfor %}
 </ul>
 
-<h2>Data and method</h2>
+<h2 id="method">Data and method</h2>
 <ul class="method">
   <li><a href="data/facts.csv">Download every series as one CSV</a> (metric, entity, tier, period_end, period_type, value, source, pulled_at).</li>
   <li>Every period is dated to its last day: month end, quarter end, or the Wednesday for weekly bank data. A quarterly survey taken in May is shown at June 30; the July Senior Loan Officer survey, which asks about the quarter just ended, is shown at June 30.</li>
@@ -252,8 +329,9 @@ read the scope note before comparing it with anything.</p>
   <li>"Data as of" on a chart is when its newest value was loaded. A card carries a status badge when its source is not OK; "last fetch attempt" is then the run that failed. "Checked against the release" lists the numbers the pipeline reproduces from the source's own release page on every run.</li>
   <li>The latest readings are computed from the series on the page: latest value, change against the same period a year earlier, the {{ benchmark_label }} for rates, and whether the value is the highest or lowest in at least three years. No model writes any of it.</li>
   <li>Sources: {{ sources | join('; ') }}. The Federal Reserve Board series (G.19 Consumer Credit, H.8 Assets and Liabilities of Commercial Banks, Charge-Off and Delinquency Rates, Senior Loan Officer Opinion Survey) are retrieved from FRED, Federal Reserve Bank of St. Louis.</li>
-  <li>A dated analysis note reading the whole page together, with the numbers behind it and the test that would prove it wrong, is at <a href="https://github.com/User5017/credit-card-data/blob/main/design/thesis-2026-09-08.html">design/thesis-2026-09-08.html</a> in the repository. The page above is mechanical; that note is editorial and dated.</li>
-  <li>One chart per panel is also written as a PNG (the link in its footer), drawn from the same data as the page and showing the same {{ default_years }}-year window. The image carries no pull date, so it changes only when the data does.</li>
+  <li>A dated analysis note reading the whole page together, with the numbers behind it and the test that would prove it wrong, is at <a href="{{ thesis_href }}">{{ thesis_note }}</a> (also in the repository). The page above is mechanical; that note is editorial and dated.</li>
+  <li>Every chart is also written as a PNG (the link in its footer), drawn from the same data as the page and showing the same {{ default_years }}-year window. The image carries no pull date, so it changes only when the data does.</li>
+  <li>"Expected around" under each source is the period after the newest one loaded, plus the lag its releases have shown; it is a reader's expectation, not a status. The loader marks a source stale on its own rule.</li>
 </ul>
 </main>
 
@@ -290,6 +368,78 @@ read the scope note before comparing it with anything.</p>
   }
   var HEIGHT = 250, YEAR = 365.25 * 86400;
 
+  // theme toggle: the choice is remembered per browser and wins over the system setting both ways
+  (function () {
+    var btn = document.getElementById('theme');
+    var root = document.documentElement;
+    function current() {
+      var t = root.getAttribute('data-theme');
+      if (t) return t;
+      return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    if (btn) {
+      btn.textContent = current() === 'dark' ? 'Light' : 'Dark';
+      btn.addEventListener('click', function () {
+        var next = current() === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('carddash-theme', next); } catch (e) {}
+        root.setAttribute('data-theme', next);
+        location.reload();  // chart colors are read once at draw time
+      });
+    }
+  })();
+
+  // the latest value of every series printed in the right margin, level with the end of its line, so a reader does
+  // not have to hover. HTML spans over the canvas (the canvas clips at the plot edge), repositioned on every draw.
+  var LABEL_PAD = 62;
+  function labelEnds(u) {
+    var wrap = u.root.querySelector('.u-wrap');
+    if (!wrap) return;
+    if (!u._labels) {
+      u._labels = [];
+      for (var k = 1; k < u.series.length; k++) {
+        var el = document.createElement('span');
+        el.className = 'endlabel';
+        wrap.appendChild(el);
+        u._labels.push(el);
+      }
+    }
+    var xmax = u.scales.x.max, used = [], dpr = devicePixelRatio || 1;
+    var x = (u.bbox.left + u.bbox.width) / dpr + 4;
+    for (var k = 1; k < u.series.length; k++) {
+      var s = u.series[k], el = u._labels[k - 1];
+      el.hidden = true;
+      if (!s.show || s._benchmark) continue;
+      var ys = u.data[k], i = -1;
+      for (var j = ys.length - 1; j >= 0; j--) {
+        if (ys[j] != null && u.data[0][j] <= xmax) { i = j; break; }
+      }
+      if (i < 0) continue;
+      var y = u.valToPos(ys[i], s.scale || 'y', true) / dpr;
+      for (var t = 0; t < 8; t++) {
+        var clash = used.some(function (uy) { return Math.abs(uy - y) < 13; });
+        if (!clash) break;
+        y += 13;
+      }
+      used.push(y);
+      el.textContent = s._fmt(ys[i]);
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.color = typeof s.stroke === 'function' ? s.stroke(u, k) : s.stroke;
+      el.hidden = false;
+    }
+  }
+
+  function copyLink(hash, btn) {
+    var url = location.href.split('#')[0] + '#' + hash;
+    var done = function () { var old = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = old; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { location.hash = hash; });
+    else { location.hash = hash; done(); }
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-link]');
+    if (b) copyLink(b.getAttribute('data-link'), b);
+  });
+
   // NBER recessions, painted under the series
   function shadeRecessions(u) {
     var ctx = u.ctx, left = u.bbox.left, right = left + u.bbox.width;
@@ -313,7 +463,9 @@ read the scope note before comparing it with anything.</p>
         width: s.benchmark ? 1 : 2,
         spanGaps: true,
         points: { show: false },
-        value: function (u, val) { return fmtVal(val, s.unit || c.unit); }
+        value: function (u, val) { return fmtVal(val, s.unit || c.unit); },
+        _benchmark: !!s.benchmark,
+        _fmt: function (val) { return fmtVal(val, s.unit || c.unit); }
       };
       if (c.step && !s.benchmark) cfg.paths = uPlot.paths.stepped({ align: -1 });
       if (s.dash || s.benchmark) cfg.dash = [6, 4];
@@ -340,7 +492,8 @@ read the scope note before comparing it with anything.</p>
       ],
       cursor: { drag: { x: true, y: false } },
       legend: { show: true },
-      hooks: { drawClear: [shadeRecessions] }
+      padding: [null, LABEL_PAD, null, null],
+      hooks: { drawClear: [shadeRecessions], draw: [labelEnds] }
     };
     // a band fills between two series: the range of terms offered across credit tiers
     if (c.band) opts.bands = [{ series: c.band, fill: v('--band') }];
@@ -384,7 +537,34 @@ read the scope note before comparing it with anything.</p>
     var q = document.getElementById('browse-q'), src = document.getElementById('browse-src');
     var un = document.getElementById('browse-un'), count = document.getElementById('browse-count');
     var detail = document.getElementById('browse-detail'), plotEl = document.getElementById('browse-plot');
-    var chart = null, current = null;
+    var chart = null, current = null, other = null, picking = false;
+    var cmpBtn = document.getElementById('browse-compare'), clearBtn = document.getElementById('browse-clear');
+    var csvA = document.getElementById('browse-csv'), hint = document.getElementById('browse-hint');
+    var linkBtn = document.getElementById('browse-link');
+
+    function seriesRows(s) {
+      var grid = B.grids[s.grid], out = [];
+      for (var i = 0; i < s.values.length; i++) if (s.values[i] != null) out.push([grid[s.start + i], s.values[i]]);
+      return out;
+    }
+    function csvFor(list) {
+      var lines = ['period_end,' + list.map(function (s) { return '"' + s.name.replace(/"/g, '""') + ' [' + s.unit + ']"'; }).join(',')];
+      var byDate = {};
+      list.forEach(function (s, k) {
+        seriesRows(s).forEach(function (r) { (byDate[r[0]] = byDate[r[0]] || [])[k] = r[1]; });
+      });
+      Object.keys(byDate).map(Number).sort(function (a, b) { return a - b; }).forEach(function (ts) {
+        var row = byDate[ts];
+        lines.push(new Date(ts * 1e3).toISOString().slice(0, 10) + ',' + list.map(function (_, k) { return row[k] == null ? '' : row[k]; }).join(','));
+      });
+      return lines.join('\n') + '\n';
+    }
+    function setCsv() {
+      var list = other ? [current, other] : [current];
+      if (csvA.href && csvA.href.indexOf('blob:') === 0) URL.revokeObjectURL(csvA.href);
+      csvA.href = URL.createObjectURL(new Blob([csvFor(list)], { type: 'text/csv' }));
+      csvA.download = (current.metric + (other ? '_vs_' + other.metric : '')) + '.csv';
+    }
 
     function fmt(s) { return fmtVal(s.last_value, s.unit); }
     function rows(list) {
@@ -430,45 +610,84 @@ read the scope note before comparing it with anything.</p>
       var about = document.getElementById('browse-about');
       document.getElementById('browse-note').textContent = s.note || '';
       about.hidden = !s.note;
-      var grid = B.grids[s.grid], xs = grid.slice(s.start, s.start + s.values.length);
-      var stepped = s.period_type !== 'D' && s.period_type !== 'W';
-      var cfg = {
-        label: s.name, stroke: v('--series-1'), width: 2, spanGaps: true, points: { show: false },
-        value: function (u, val) { return fmtVal(val, s.unit); }
-      };
-      if (stepped) cfg.paths = uPlot.paths.stepped({ align: -1 });
+      // one date grid for the plotted series: the union of their dates, nulls where a series has no reading
+      var list = other ? [s, other] : [s];
+      var dates = {};
+      list.forEach(function (q) { seriesRows(q).forEach(function (r) { dates[r[0]] = true; }); });
+      var xs = Object.keys(dates).map(Number).sort(function (a, b) { return a - b; });
+      var pos = {};
+      xs.forEach(function (ts, i) { pos[ts] = i; });
+      var data = [xs];
+      var seriesCfg = [{ label: 'Period', value: function (u, ts) { return fmtPeriod(ts, s.period_type); } }];
+      list.forEach(function (q, k) {
+        var ys = new Array(xs.length).fill(null);
+        seriesRows(q).forEach(function (r) { ys[pos[r[0]]] = r[1]; });
+        data.push(ys);
+        var stepped = q.period_type !== 'D' && q.period_type !== 'W';
+        var sameUnit = k === 0 || q.unit === s.unit;
+        var cfg = {
+          label: q.name, stroke: v('--series-' + (k + 1)), width: 2, spanGaps: true, points: { show: false },
+          scale: sameUnit ? 'y' : 'y2',
+          value: function (u, val) { return fmtVal(val, q.unit); },
+          _fmt: function (val) { return fmtVal(val, q.unit); }
+        };
+        if (stepped) cfg.paths = uPlot.paths.stepped({ align: -1 });
+        seriesCfg.push(cfg);
+      });
+      var twoAxes = other && other.unit !== s.unit;
+      var axes = [
+        { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { stroke: v('--grid'), width: 1 } },
+        { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { show: false }, size: 64,
+          values: function (u, vals) { return vals.map(function (x) { return fmtAxis(x, s.unit); }); } }
+      ];
+      if (twoAxes) axes.push({ scale: 'y2', side: 1, stroke: v('--series-2'), grid: { show: false }, ticks: { show: false }, size: 64,
+        values: function (u, vals) { return vals.map(function (x) { return fmtAxis(x, other.unit); }); } });
       var opts = {
         width: plotEl.clientWidth || 600, height: 260, tzDate: tz,
-        series: [{ label: 'Period', value: function (u, ts) { return fmtPeriod(ts, s.period_type); } }, cfg],
-        scales: { x: { time: true }, y: {} },
-        axes: [
-          { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { stroke: v('--grid'), width: 1 } },
-          { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { show: false }, size: 64,
-            values: function (u, vals) { return vals.map(function (x) { return fmtAxis(x, s.unit); }); } }
-        ],
+        series: seriesCfg,
+        scales: { x: { time: true }, y: {}, y2: {} },
+        axes: axes,
         cursor: { drag: { x: true, y: false } }, legend: { show: true },
-        hooks: { drawClear: [shadeRecessions] }
+        padding: [null, twoAxes ? 8 : LABEL_PAD, null, null],
+        hooks: { drawClear: [shadeRecessions], draw: [labelEnds] }
       };
       if (chart) { chart.destroy(); chart = null; }
-      chart = new uPlot(opts, [xs, s.values], plotEl);
+      chart = new uPlot(opts, data, plotEl);
       markSelected(s.key);
-      if (history.replaceState) history.replaceState(null, '', '#series=' + encodeURIComponent(s.key));
+      clearBtn.hidden = !other;
+      cmpBtn.hidden = !!other;
+      hint.textContent = other ? (twoAxes ? 'Second series on the right axis.' : 'Both series on one axis.') : '';
+      setCsv();
+      if (history.replaceState) history.replaceState(null, '', '#series=' + encodeURIComponent(s.key) + (other ? '&vs=' + encodeURIComponent(other.key) : ''));
     }
     var byKey = {};
     all.forEach(function (s) { byKey[s.key] = s; });
+    function pick(s) {
+      if (picking && current && s.key !== current.key) { other = s; picking = false; hint.classList.remove('picking'); draw(current); return; }
+      other = null; draw(s);
+    }
+    cmpBtn.addEventListener('click', function () {
+      picking = true; hint.textContent = 'Now click the series to compare with.'; hint.classList.add('picking');
+    });
+    clearBtn.addEventListener('click', function () { other = null; if (current) draw(current); });
+    linkBtn.addEventListener('click', function () {
+      if (!current) return;
+      copyLink('series=' + encodeURIComponent(current.key) + (other ? '&vs=' + encodeURIComponent(other.key) : ''), linkBtn);
+    });
     body.addEventListener('click', function (e) {
       var tr = e.target.closest('tr[data-key]');
-      if (tr && byKey[tr.getAttribute('data-key')]) draw(byKey[tr.getAttribute('data-key')]);
+      if (tr && byKey[tr.getAttribute('data-key')]) pick(byKey[tr.getAttribute('data-key')]);
     });
     body.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       var tr = e.target.closest('tr[data-key]');
-      if (tr && byKey[tr.getAttribute('data-key')]) { e.preventDefault(); draw(byKey[tr.getAttribute('data-key')]); }
+      if (tr && byKey[tr.getAttribute('data-key')]) { e.preventDefault(); pick(byKey[tr.getAttribute('data-key')]); }
     });
     [q, src, un].forEach(function (el) { el.addEventListener('input', refresh); });
     window.addEventListener('resize', function () { if (chart) chart.setSize({ width: plotEl.clientWidth, height: 260 }); });
     refresh();
-    var m = /#series=([^&]+)/.exec(location.hash || '');
+    var m = /#series=([^&]+)/.exec(location.hash || ''), m2 = /[&#]vs=([^&]+)/.exec(location.hash || '');
+    if (m2 && byKey[decodeURIComponent(m2[1])]) other = byKey[decodeURIComponent(m2[1])];
     if (m && byKey[decodeURIComponent(m[1])]) draw(byKey[decodeURIComponent(m[1])]);
   })();
 })();

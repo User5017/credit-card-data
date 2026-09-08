@@ -29,6 +29,27 @@ from .schema import PERIOD_WORDS, SERIES_KEY, shift_period
 from .series import load_series, series_index
 
 VENDOR = Path(__file__).parent / "vendor"
+SITE_URL = "https://user5017.github.io/credit-card-data/"
+REPO_URL = "https://github.com/User5017/credit-card-data"
+SITE_TITLE = "US credit card data"
+SITE_TAGLINE = (
+    "Balances, pricing, performance and borrower behavior from public sources, refreshed daily and checked against "
+    "the releases they come from."
+)
+PREVIEW_CHART = "revolving_level"  # the PNG that link previews (Open Graph, Twitter cards) show
+
+# The next expected release per source: the series that sets the source's release rhythm (metric, entity,
+# period_type) and the typical number of days after the period end that its release lands (observed on the release
+# pages, see TASKS.md open items). The health strip turns this into a date: the period after the newest loaded one,
+# plus the lag.
+RELEASE_RHYTHM = {
+    "fred": ("revolving_credit_sa", "ALL_HOLDERS", "M", 38),  # G.19 lands about the 5th business day, five weeks after month end
+    "tccp": ("tccp_product_count", "TCCP_ALL", "H", 180),  # H2 2025 appeared June 2026
+    "phillyfed": ("y14_card_balances", "Y14_CARD_FILERS", "Q", 105),  # 2026 Q1 on 2026-07-13
+    "nyfed_hhdc": ("hhdc_card_balances", "CCP_ALL", "Q", 42),  # 2026 Q2 on 2026-08-11
+    "fdic": ("fdic_card_loans", "FDIC_ALL_INSURED", "Q", 50),  # 2026 Q2 in the API on 2026-08-19
+    "nyfed_sce": ("sce_any_rejection_rate", "SCE_ALL", "T", 40),  # a wave lands four to six weeks after fielding
+}
 
 SOURCE_LABELS = {
     "fred": "Federal Reserve Board, via FRED",
@@ -736,38 +757,39 @@ THESIS_TESTS = [
     {
         "label": "Flow into 90+ day delinquency stays below 7.5%",
         "series": S("hhdc_card_transition_dq90", "CCP_ALL", "", period_type="Q", source="nyfed_hhdc"),
-        "op": "<", "threshold": 7.5, "unit": "pct",
+        "op": "<", "threshold": 7.5, "unit": "pct", "chart": "hhdc_dq90_by_age",
         "why": "A break above this would mean the loosening that began in late 2025 was larger than the small line sizes suggest, and that this is a cycle after all.",
     },
     {
         "label": "Card charge-off rate stays below 4.2%",
         "series": S("card_nco_rate_sa", "COMBANKS_ALL", "", period_type="Q"),
-        "op": "<", "threshold": 4.2, "unit": "pct",
+        "op": "<", "threshold": 4.2, "unit": "pct", "chart": "card_nco",
         "why": "Losses reaccelerating while unemployment is near 4% would break the argument that the surge was a vintage event that has washed out.",
     },
     {
         "label": "Card APR margin over prime stays above 14 points",
         "series": S("card_apr_assessed_interest", "COMBANKS_ALL", "", period_type="Q", view="v_apr_spread", field="spread_over_prime"),
-        "op": ">", "threshold": 14.0, "unit": "pp",
+        "op": ">", "threshold": 14.0, "unit": "pp", "chart": "apr_over_prime",
         "why": "The margin falling back toward its 2015-19 level of 10.7 points would mean the repricing was cyclical, not structural.",
     },
 ]
 
 # The latest-readings block: (series key, label, kind). kind: level (dollar amount, change in percent on the year),
 # rate (percent, change in points, compared with the 2015-2019 average), net (a net balance in percent, no benchmark).
+# (series key, label, kind, chart id the reading links to)
 HEADLINES = [
-    (("revolving_credit_sa", "ALL_HOLDERS", "all", "M", "fred"), "Revolving consumer credit, all lenders (Fed G.19, SA)", "level"),
-    (("hhdc_card_balances", "CCP_ALL", "all", "Q", "nyfed_hhdc"), "Card balances on credit reports (NY Fed)", "level"),
-    (("card_apr_assessed_interest", "COMBANKS_ALL", "all", "Q", "fred"), "APR paid by revolvers at commercial banks (Fed G.19)", "rate"),
-    (("card_dq_rate_sa", "COMBANKS_ALL", "all", "Q", "fred"), "Card delinquency, 30+ days past due, commercial banks (Fed, SA)", "rate"),
-    (("card_nco_rate_sa", "COMBANKS_ALL", "all", "Q", "fred"), "Card charge-off rate, annualized, commercial banks (Fed, SA)", "rate"),
-    (("hhdc_card_transition_dq90", "CCP_ALL", "all", "Q", "nyfed_hhdc"), "Card balances newly 90+ days late, annualized flow (NY Fed)", "rate"),
-    (("y14_card_pay_minimum_share", "Y14_CARD_FILERS", "all", "Q", "phillyfed"), "Accounts paying only the minimum, large banks (Philly Fed)", "rate"),
-    (("sce_card_rejection_rate", "SCE_ALL", "all", "T", "nyfed_sce"), "Card applications refused, of those who applied (NY Fed survey)", "rate"),
-    (("sce_lender_closed_rate", "SCE_ALL", "all", "T", "nyfed_sce"), "Had an account closed by a lender (NY Fed survey)", "rate"),
-    (("debt_service_ratio_consumer", "US_HOUSEHOLDS", "all", "Q", "fred"), "Consumer debt payments as a share of disposable income (Fed)", "rate"),
-    (("unemployment_rate_sa", "US_ECONOMY", "all", "M", "fred"), "Unemployment rate (BLS)", "rate"),
-    (("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "all", "Q", "fred"), "Banks tightening card standards, net (SLOOS)", "net"),
+    (("revolving_credit_sa", "ALL_HOLDERS", "all", "M", "fred"), "Revolving consumer credit, all lenders (Fed G.19, SA)", "level", "revolving_level"),
+    (("hhdc_card_balances", "CCP_ALL", "all", "Q", "nyfed_hhdc"), "Card balances on credit reports (NY Fed)", "level", "per_account_credit"),
+    (("card_apr_assessed_interest", "COMBANKS_ALL", "all", "Q", "fred"), "APR paid by revolvers at commercial banks (Fed G.19)", "rate", "card_apr"),
+    (("card_dq_rate_sa", "COMBANKS_ALL", "all", "Q", "fred"), "Card delinquency, 30+ days past due, commercial banks (Fed, SA)", "rate", "card_dq"),
+    (("card_nco_rate_sa", "COMBANKS_ALL", "all", "Q", "fred"), "Card charge-off rate, annualized, commercial banks (Fed, SA)", "rate", "card_nco"),
+    (("hhdc_card_transition_dq90", "CCP_ALL", "all", "Q", "nyfed_hhdc"), "Card balances newly 90+ days late, annualized flow (NY Fed)", "rate", "hhdc_dq90_by_age"),
+    (("y14_card_pay_minimum_share", "Y14_CARD_FILERS", "all", "Q", "phillyfed"), "Accounts paying only the minimum, large banks (Philly Fed)", "rate", "y14_payment_behavior"),
+    (("sce_card_rejection_rate", "SCE_ALL", "all", "T", "nyfed_sce"), "Card applications refused, of those who applied (NY Fed survey)", "rate", "card_access"),
+    (("sce_lender_closed_rate", "SCE_ALL", "all", "T", "nyfed_sce"), "Had an account closed by a lender (NY Fed survey)", "rate", "lender_closures"),
+    (("debt_service_ratio_consumer", "US_HOUSEHOLDS", "all", "Q", "fred"), "Consumer debt payments as a share of disposable income (Fed)", "rate", "debt_service"),
+    (("unemployment_rate_sa", "US_ECONOMY", "all", "M", "fred"), "Unemployment rate (BLS)", "rate", "losses_vs_labor"),
+    (("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "all", "Q", "fred"), "Banks tightening card standards, net (SLOOS)", "net", "sloos_cards"),
 ]
 
 
@@ -1015,7 +1037,7 @@ def thesis_status(con, today: dt.date) -> list[dict]:
     for test in THESIS_TESTS:
         rows = [r for r in _series_rows(con, test["series"]) if r[0] <= today]
         if not rows:
-            out.append({**{k: test[k] for k in ("label", "op", "threshold", "unit", "why")},
+            out.append({**{k: test[k] for k in ("label", "op", "threshold", "unit", "why", "chart")},
                         "value": None, "period": None, "holds": None, "text": "no data"})
             continue
         period_end, value = rows[-1]
@@ -1024,7 +1046,7 @@ def thesis_status(con, today: dt.date) -> list[dict]:
         suffix = " pp" if test["unit"] == "pp" else "%"
         out.append(
             {
-                **{k: test[k] for k in ("label", "op", "threshold", "unit", "why")},
+                **{k: test[k] for k in ("label", "op", "threshold", "unit", "why", "chart")},
                 "value": value,
                 "period": period_label(period_end, test["series"]["period_type"]),
                 "holds": holds,
@@ -1040,7 +1062,7 @@ def _fmt_value(v: float, kind: str) -> str:
     return f"{v:.2f}%"
 
 
-def _headline(facts: pd.DataFrame, key: tuple, label: str, kind: str, today: dt.date) -> dict | None:
+def _headline(facts: pd.DataFrame, key: tuple, label: str, kind: str, today: dt.date, chart: str | None = None) -> dict | None:
     metric, entity, tier, pt, source = key
     s = facts[
         (facts["metric"] == metric) & (facts["entity"] == entity) & (facts["tier"] == tier)
@@ -1085,17 +1107,25 @@ def _headline(facts: pd.DataFrame, key: tuple, label: str, kind: str, today: dt.
                 flag = f"lowest since {period_label(since_lo, pt)}"
     parts = [p for p in (change, bench, flag) if p]
     text = f"{_fmt_value(latest, kind)} in {period_label(latest_d, pt)}" + (", " + ", ".join(parts) if parts else "")
-    return {"label": label, "text": text, "source": source, "source_label": SOURCE_LABELS.get(source, source)}
+    return {"label": label, "text": text, "source": source, "source_label": SOURCE_LABELS.get(source, source), "chart": chart}
 
 
 def headlines(facts: pd.DataFrame, today: dt.date) -> list[dict]:
     """The latest-readings block, computed from facts: no model, no adjectives, every number traceable to a series."""
     out = []
-    for key, label, kind in HEADLINES:
-        h = _headline(facts, key, label, kind, today)
+    for key, label, kind, chart in HEADLINES:
+        h = _headline(facts, key, label, kind, today, chart)
         if h:
             out.append(h)
     return out
+
+
+def preview_description(items: list[dict], health_summary: dict) -> str:
+    """One sentence for the description and Open Graph tags: the first two readings and the source count."""
+    parts = [f"{h['label'].split(' (')[0]}: {h['text'].split(', ')[0]}" for h in items[:2]]
+    lead = "; ".join(parts)
+    n = health_summary.get("n", 0)
+    return (f"{lead}. " if lead else "") + f"{n} public sources, refreshed daily and checked against their release pages."
 
 
 def headlines_text(items: list[dict], generated_at: str, thesis: list[dict] | None = None) -> str:
@@ -1107,7 +1137,7 @@ def headlines_text(items: list[dict], generated_at: str, thesis: list[dict] | No
         for t in thesis:
             mark = "ok " if t["holds"] else ("BROKEN" if t["holds"] is False else "no data")
             lines.append(f"- [{mark}] {t['label']} -> {t['text']}")
-    lines += ["", "Source: https://user5017.github.io/credit-card-data/ (public data, checked against the releases)"]
+    lines += ["", f"Source: {SITE_URL} (public data, checked against the releases)"]
     return "\n".join(lines) + "\n"
 
 
@@ -1193,7 +1223,36 @@ def _latest_by_source(facts: pd.DataFrame, meta_idx: dict, today: dt.date) -> di
     return out
 
 
-def _health_rows(health: dict, latest_by_source: dict[str, str]) -> list[dict]:
+GRACE_DAYS = 7  # a release a week past its typical date is late, not missing
+
+
+def next_expected(facts: pd.DataFrame, source: str, today: dt.date) -> dict | None:
+    """When the source's next release is due: the period after the newest loaded one on the source's release
+    cadence (RELEASE_RHYTHM), plus the typical lag. Says 'overdue' once that date has passed; a source is only
+    flagged stale by the loader, this is the reader's expectation, not a status."""
+    rhythm = RELEASE_RHYTHM.get(source)
+    if rhythm is None or facts.empty:
+        return None
+    metric, entity, pt, lag = rhythm
+    ended = facts[(facts["source"] == source) & (facts["metric"] == metric) & (facts["entity"] == entity)
+                  & (facts["period_type"] == pt) & (facts["period_end"].dt.date <= today)]
+    if ended.empty:
+        return None
+    last = ended["period_end"].max().date()
+    nxt = shift_period(last, pt, 1)
+    due = nxt + dt.timedelta(days=lag)
+    overdue = (today - due).days > GRACE_DAYS
+    if due >= today:
+        text = f"{period_label(nxt, pt)} data expected around {due.isoformat()}"
+    elif not overdue:
+        text = f"{period_label(nxt, pt)} data expected any day (around {due.isoformat()})"
+    else:
+        text = f"{period_label(nxt, pt)} data was expected around {due.isoformat()} and has not appeared"
+    return {"period": period_label(nxt, pt), "due": due.isoformat(), "overdue": overdue, "text": text}
+
+
+def _health_rows(health: dict, latest_by_source: dict[str, str], facts: pd.DataFrame | None = None,
+                 today: dt.date | None = None) -> list[dict]:
     rows = []
     for source, h in sorted(health.items()):
         rows.append(
@@ -1207,9 +1266,17 @@ def _health_rows(health: dict, latest_by_source: dict[str, str]) -> list[dict]:
                 "rows": h.get("rows", 0),
                 "n_series": h.get("n_series", 0),
                 "messages": h.get("messages", []),
+                "next": next_expected(facts, source, today) if facts is not None and today else None,
             }
         )
     return rows
+
+
+def upcoming(rows: list[dict], today: dt.date, days: int = 14) -> list[dict]:
+    """Releases due within `days`, soonest first, for the line at the top of the page."""
+    out = [r for r in rows if r.get("next") and not r["next"]["overdue"]
+           and (dt.date.fromisoformat(r["next"]["due"]) - today).days <= days]
+    return sorted(out, key=lambda r: r["next"]["due"])
 
 
 def _health_summary(health: dict) -> dict:
@@ -1328,13 +1395,30 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
         "browse": browse,
     }
     payload_json = json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
+    health_rows = _health_rows(health, _latest_by_source(facts, meta_idx, today), facts, today)
+    summary = _health_summary(health)
+    # the thesis note is served next to the page so the link renders on Pages (the repository blob view shows source)
+    thesis_src = paths.root / THESIS_NOTE
+    thesis_href = f"{REPO_URL}/blob/main/{THESIS_NOTE}"
+    if thesis_src.exists():
+        dest = paths.docs / THESIS_NOTE
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(thesis_src, dest)
+        thesis_href = THESIS_NOTE
 
     env = Environment(loader=PackageLoader("carddash", "templates"), autoescape=select_autoescape(["html"]))
     tpl = env.get_template("index.html.j2")
     html = tpl.render(
         generated_at=generated_at,
-        health=_health_rows(health, _latest_by_source(facts, meta_idx, today)),
-        health_summary=_health_summary(health),
+        health=health_rows,
+        health_summary=summary,
+        upcoming=upcoming(health_rows, today),
+        site_url=SITE_URL,
+        site_title=SITE_TITLE,
+        tagline=SITE_TAGLINE,
+        description=preview_description(latest, summary),
+        preview_image=f"{SITE_URL}img/{PREVIEW_CHART}.png",
+        thesis_href=thesis_href,
         health_generated=(run or "never")[:16].replace("T", " "),
         panels=panels,
         headlines=latest,
@@ -1358,7 +1442,7 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
         payload_json=payload_json,
         uplot_js=(VENDOR / "uPlot.iife.min.js").read_text(encoding="utf-8"),
         uplot_css=(VENDOR / "uPlot.min.css").read_text(encoding="utf-8"),
-        repo_url="https://github.com/User5017/credit-card-data",
+        repo_url=REPO_URL,
     )
     paths.docs.mkdir(parents=True, exist_ok=True)
     out = paths.docs / "index.html"
@@ -1369,8 +1453,7 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
         shutil.copyfile(paths.facts_csv, paths.docs / "data" / "facts.csv")
     if paths.revisions_csv.exists():
         shutil.copyfile(paths.revisions_csv, paths.docs / "data" / "revisions.csv")
-    for chart in payload["charts"]:
-        if chart["post"]:
-            write_png(chart, paths.docs / "img" / f"{chart['id']}.png", recessions=payload["recessions"], years=DEFAULT_YEARS)
+    for chart in payload["charts"]:  # every chart, so any of them can be pasted into a post
+        write_png(chart, paths.docs / "img" / f"{chart['id']}.png", recessions=payload["recessions"], years=DEFAULT_YEARS)
     (paths.docs / ".nojekyll").write_text("", encoding="utf-8")
     return out

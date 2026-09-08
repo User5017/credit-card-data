@@ -131,7 +131,7 @@ def test_new_charts_draw_the_other_sources(page):
     assert scores["y_zero"] is False and scores["unit"] == "score" and scores["n_points"] > 50
     assert by_id["card_apr"]["y_zero"] is True
     assert {c["id"] for c in payload["charts"] if c["post"]} == POST_CHARTS
-    assert 'href="img/hhdc_dq90_by_age.png"' in html and 'href="img/card_dq.png"' not in html
+    assert 'href="img/hhdc_dq90_by_age.png"' in html and 'href="img/card_dq.png"' in html  # every chart has a PNG
 
 
 def test_derived_views_draw_the_context_charts(page):
@@ -266,7 +266,7 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     assert apr.startswith("22.15% in 2026 Q2, ") and "pp on the year" in apr and BENCHMARK_LABEL in apr
     sloos = next(h for h in items if h["label"].startswith("Banks tightening"))["text"]
     assert sloos.startswith("6.70% in 2026 Q2") and BENCHMARK_LABEL not in sloos  # a net balance has no benchmark
-    assert "<strong>Revolving consumer credit, all lenders (Fed G.19, SA):</strong> $1,351bn in Jun 2026" in html
+    assert ('<strong><a href="#revolving_level" title="Go to the chart">Revolving consumer credit, all lenders (Fed G.19, SA)</a>:</strong> $1,351bn in Jun 2026' in html)
     text = (tmp_paths.docs / "latest.txt").read_text(encoding="utf-8")
     assert text.startswith("US credit card data, latest readings (") and "- Revolving consumer credit" in text
     assert 'href="latest.txt"' in html
@@ -294,7 +294,8 @@ def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_f
     tmp_paths.health_json.write_text(json.dumps(_health(RUN2)), encoding="utf-8")
     render(tmp_paths, today=TODAY)
     img = tmp_paths.docs / "img"
-    assert {p.stem for p in img.glob("*.png")} == POST_CHARTS
+    assert {p.stem for p in img.glob("*.png")} == {c["id"] for panel in PANELS for c in panel["charts"]}
+    assert POST_CHARTS <= {p.stem for p in img.glob("*.png")}
     first = {p.name: p.read_bytes() for p in img.glob("*.png")}
     for name, data in first.items():
         assert data[:8] == b"\x89PNG\r\n\x1a\n"
@@ -317,7 +318,7 @@ def test_what_changed_lists_only_the_latest_run(tmp_paths, fixture_facts):
     assert "3 values revised by the source, largest first (2 listed; revisions under 0.1% are only counted)" in html
     assert "Card balances (NY Fed CCP), 2026 Q1: 1252 → 1242 (0.80%)" in html
     assert "Issuers with a card above 30% purchase APR, 2025 H2: 0 → 13 (from 0)" in html  # old value 0: no percentage
-    changed = html.split("<h2>What changed</h2>")[1].split('<h2 id="health">')[0]
+    changed = html.split('<h2 id="changed">What changed</h2>')[1].split('<h2 id="health">')[0]
     assert "Card APR, all accounts" not in changed  # the 0.05% revision is counted, not listed
     assert "Card balances (Y-14 large banks)" not in changed  # run 1's revision is not shown
     assert 'href="data/revisions.csv"' in html and (tmp_paths.docs / "data" / "revisions.csv").exists()
@@ -345,7 +346,7 @@ def test_a_period_that_has_not_ended_is_never_the_latest(tmp_paths, fixture_fact
     sloos = next(c for c in _payload(html)["charts"] if c["id"] == "sloos_cards")
     assert sloos["series"][0]["last_period"] == "2026 Q2" and "latest period 2026 Q2" in sloos["footer"]
     assert sloos["data"][0][-1] > 4_000_000_000  # the row itself is still drawn, it is just not called latest
-    assert "2099" not in html.split("<h2>What changed</h2>")[0]  # neither the readings nor the cards call 2099 latest
+    assert "2099" not in html.split('<h2 id="changed">What changed</h2>')[0]  # neither the readings nor the cards call 2099 latest
 
 
 def test_thesis_watch_evaluates_every_falsification_test(page, tmp_paths, fixture_facts):
@@ -475,3 +476,27 @@ def test_holder_and_sloos_demand_charts(page):
     assert sloos["series"][1]["last_period"] == "2026 Q2"
     by_size = ids["sloos_demand_by_size"]
     assert by_size["data"][1][-1] == 0.0 and by_size["data"][2][-1] == 3.8
+
+
+def test_page_carries_link_previews_nav_and_next_release(page, tmp_paths, fixture_facts):
+    html, payload = page
+    head = html.split("</head>")[0]
+    assert '<meta property="og:image" content="https://user5017.github.io/credit-card-data/img/revolving_level.png">' in head
+    assert '<meta name="description" content="Revolving consumer credit, all lenders: $1,351bn in Jun 2026; ' in head
+    assert '<meta name="twitter:card" content="summary_large_image">' in head
+    assert '<link rel="icon" href="data:image/svg+xml,' in head
+    assert '<nav class="nav" aria-label="Sections">' in html and 'href="#panel-performance"' in html
+    assert '<section class="panel" id="panel-growth">' in html
+    for panel in PANELS:
+        for c in panel["charts"]:
+            assert f'<button type="button" class="link" data-link="{c["id"]}"' in html
+    # the thesis note is served next to the page, not linked to the repository blob view
+    assert (tmp_paths.docs / "design" / "thesis-2026-09-08.html").exists()
+    assert 'href="design/thesis-2026-09-08.html"' in html and "blob/main/design" not in html
+    # the thesis tests link to their charts
+    assert '<a class="chartlink" href="#card_nco"' in html
+    # next expected release per source, from the newest loaded period plus the typical lag
+    health = html.split('<h2 id="health">')[1]
+    assert "Jul 2026 data expected any day (around 2026-09-07)" in health  # due yesterday: within the grace week
+    assert "2026 Q3 data expected around 2026-11-11" in health  # NY Fed HHDC: quarter end plus 42 days
+    assert 'id="theme"' in html and '@media (max-width: 640px)' in html
