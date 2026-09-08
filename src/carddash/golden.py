@@ -3,6 +3,9 @@
 checks/golden.yaml entries trace to a public release page, never to the machine-readable feed itself.
 The fixture test runs every entry against checked-in raw files (deterministic). The live run only checks
 entries with check_live: true, which should be periods old enough not to be revised routinely.
+
+An entry with `change_from_prior: true` checks the change from the previous period instead of the level, for
+releases that state changes and not levels (the BEA Personal Income and Outlays text: 'PCE increased $36.3 billion').
 """
 
 from __future__ import annotations
@@ -25,14 +28,15 @@ def check_golden(facts: pd.DataFrame, entries: list[dict], live_only: bool = Fal
     for e in entries:
         if live_only and not e.get("check_live", True):
             continue
-        sel = facts[
+        series = facts[
             (facts["metric"] == e["metric"])
             & (facts["entity"] == e["entity"])
             & (facts["tier"] == e.get("tier", "all"))
             & (facts["period_type"] == e["period_type"])
             & (facts["source"] == e["source"])
-            & (facts["period_end"] == pd.Timestamp(str(e["period_end"])))
-        ]
+        ].sort_values("period_end")
+        period_end = pd.Timestamp(str(e["period_end"]))
+        sel = series[series["period_end"] == period_end]
         expected = float(e["expected"])
         tol = float(e.get("tolerance", 0.0))
         if sel.empty:
@@ -42,6 +46,15 @@ def check_golden(facts: pd.DataFrame, entries: list[dict], live_only: bool = Fal
             )
             continue
         actual = float(sel["value"].iloc[0])
+        if e.get("change_from_prior"):
+            prior = series[series["period_end"] < period_end]
+            if prior.empty:
+                results.append(
+                    {"id": e["id"], "source": e["source"], "ok": False, "actual": None, "expected": expected,
+                     "message": f"{e['id']}: no period before {e['period_end']} to take the change from"}
+                )
+                continue
+            actual = actual - float(prior["value"].iloc[-1])
         ok = abs(actual - expected) <= tol
         msg = f"{e['id']}: got {actual:.6g}, expected {expected:.6g} +/-{tol:g} ({e.get('origin', '')})"
         results.append(

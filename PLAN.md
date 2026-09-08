@@ -37,9 +37,11 @@ replaces it. The CFPB complaint database is not on Socrata; it has an Elasticsea
 aggregation endpoint (no trailing slash). SLOOS and Fed charge-off rates are on FRED, so three sources collapse
 into one fetcher.
 
-### v1.5
-BEA PCE detail (API key), Census Monthly Retail Trade (API), NY Fed SCE Credit Access (T), CFPB complaints
-(trends endpoint only, never rows). Spend panel.
+### v1.5 (done 2026-09-08 as v1.3 and v1.6)
+NY Fed SCE Credit Access (T) and the monthly core SCE; BEA PCE by type of product via the keyless NipaDataM.txt flat
+file (subset snapshot); Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx. Spend panel. CFPB
+complaints were investigated and rejected (TASKS.md). Also added: SLOOS demand and G.19 by holder (FRED) and the
+all-debt sheets of the HHDC workbook.
 
 ### v2 and v3
 Issuer monthly 8-K credit metrics (COF, SYF, BFC, AXP); 10-Q economics via SEC XBRL with a per-issuer tag map.

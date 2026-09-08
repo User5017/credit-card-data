@@ -545,3 +545,103 @@
   check_live: false
   origin: "Same page: 'About 55,000 individuals had new foreclosures on their credit reports' (sheet: 55.16 thousand)"
   origin_url: https://www.newyorkfed.org/medialibrary/interactives/householdcredit/data/pdf/HHDC_2026Q2.pdf
+
+# BEA Personal Income and Outlays: the release text and its 'historical comparisons' workbook state monthly dollar
+# changes, so these check the change from the prior month (change_from_prior). July is the newest month and will be
+# revised; June's change is also stated (77.4, the 'last period with larger value') and is the live entry.
+- id: bea_pce_change_2026_07
+  metric: pce_total_saar
+  entity: US_HOUSEHOLDS
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: bea
+  expected: 36.3
+  tolerance: 0.06
+  change_from_prior: true
+  check_live: false
+  origin: "BEA Personal Income and Outlays, July 2026 (released 2026-08-26): 'Personal consumption expenditures (PCE) increased $36.3 billion (0.2 percent)'"
+  origin_url: https://www.bea.gov/news/2026/personal-income-and-outlays-july-2026
+
+- id: bea_pce_goods_change_2026_07
+  metric: pce_goods_saar
+  entity: US_HOUSEHOLDS
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: bea
+  expected: -49.9
+  tolerance: 0.06
+  change_from_prior: true
+  check_live: false
+  origin: "Same release, page 2: 'an increase of $86.2 billion in spending on services that was partly offset by a decrease of $49.9 billion in spending on goods'"
+  origin_url: https://www.bea.gov/news/2026/personal-income-and-outlays-july-2026
+
+- id: bea_pce_services_change_2026_07
+  metric: pce_services_saar
+  entity: US_HOUSEHOLDS
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: bea
+  expected: 86.2
+  tolerance: 0.06
+  change_from_prior: true
+  check_live: false
+  origin: "Same sentence, services: $86.2 billion"
+  origin_url: https://www.bea.gov/news/2026/personal-income-and-outlays-july-2026
+
+- id: bea_pce_change_2026_06
+  metric: pce_total_saar
+  entity: US_HOUSEHOLDS
+  tier: all
+  period_type: M
+  period_end: 2026-06-30
+  source: bea
+  expected: 77.4
+  tolerance: 0.06
+  change_from_prior: true
+  check_live: true
+  origin: "Same release, 'Historical Comparisons' workbook (pi0726-hist.xlsx), PCE dollar change: last period with a larger value than July's 36.3 was 2026M06 at 77.4"
+  origin_url: https://www.bea.gov/news/2026/personal-income-and-outlays-july-2026
+
+# Census retail trade: the advance release PDF's Table 1 prints the not-adjusted levels of the two prior months as
+# revised, in millions. May is the live entry; June is preliminary in the workbook and fixture-only.
+- id: census_nonstore_nsa_2026_05
+  metric: retail_sales_nsa
+  entity: NAICS:454
+  tier: all
+  period_type: M
+  period_end: 2026-05-31
+  source: census
+  expected: 134.767
+  tolerance: 0.0006
+  check_live: true
+  origin: "Advance Monthly Sales for Retail and Food Services, July 2026 (released 2026-08-14), Table 1, not adjusted, 454 Nonstore retailers, May 2026 (r): 134,767 ($ millions)"
+  origin_url: https://www.census.gov/retail/marts/www/marts_current.pdf
+
+- id: census_food_services_nsa_2026_05
+  metric: retail_sales_nsa
+  entity: NAICS:722
+  tier: all
+  period_type: M
+  period_end: 2026-05-31
+  source: census
+  expected: 110.590
+  tolerance: 0.0006
+  check_live: true
+  origin: "Same table, 722 Food services & drinking places, May 2026 (r): 110,590"
+  origin_url: https://www.census.gov/retail/marts/www/marts_current.pdf
+
+- id: census_nonstore_nsa_2026_06
+  metric: retail_sales_nsa
+  entity: NAICS:454
+  tier: all
+  period_type: M
+  period_end: 2026-06-30
+  source: census
+  expected: 138.020
+  tolerance: 0.0006
+  check_live: false
+  origin: "Same table, 454 Nonstore retailers, Jun. 2026 (p): 138,020. Preliminary, fixture-only."
+  origin_url: https://www.census.gov/retail/marts/www/marts_current.pdf

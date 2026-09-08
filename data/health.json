@@ -1,6 +1,26 @@
 {
-  "generated_at": "2026-09-08T19:27:07Z",
+  "generated_at": "2026-09-08T19:42:42Z",
   "sources": {
+    "bea": {
+      "source": "bea",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-07-31",
+      "pulled_at": "2026-09-08T19:42:42Z",
+      "rows": 6488,
+      "n_series": 8,
+      "n_revisions": 0
+    },
+    "census": {
+      "source": "census",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-06-30",
+      "pulled_at": "2026-09-08T19:42:42Z",
+      "rows": 4968,
+      "n_series": 12,
+      "n_revisions": 0
+    },
     "fdic": {
       "source": "fdic",
       "status": "ok",

@@ -5,10 +5,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from carddash.fetchers import fdic, fred, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
+from carddash.fetchers import bea, census, fdic, fred, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
-from carddash.series import load_series
+from carddash.series import load_series, series_for_source
 
 REPO = Path(__file__).resolve().parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -95,8 +95,25 @@ def sce_monthly_facts() -> pd.DataFrame:
     return coerce_facts(nyfed_sce_monthly.parse_release(SCE_MONTHLY_FIXTURE, PULLED_AT))
 
 
+BEA_FIXTURE = FIXTURES / "bea" / bea.RAW_NAME
+CENSUS_FIXTURE = FIXTURES / "census" / census.RAW_NAME
+
+
 @pytest.fixture(scope="session")
-def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, sce_facts, sce_monthly_facts) -> pd.DataFrame:
+def bea_facts(meta) -> pd.DataFrame:
+    """Facts from the checked-in NIPA subset (eight PCE series to July 2026), parsed once per session."""
+    return coerce_facts(bea.parse_subset(BEA_FIXTURE.read_text(encoding="utf-8"), series_for_source(meta, bea.SOURCE), PULLED_AT))
+
+
+@pytest.fixture(scope="session")
+def census_facts() -> pd.DataFrame:
+    """Facts from the checked-in retail trade workbook (months to June 2026), parsed once per session."""
+    return coerce_facts(census.parse_release(CENSUS_FIXTURE, PULLED_AT))
+
+
+@pytest.fixture(scope="session")
+def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, sce_facts, sce_monthly_facts,
+                  bea_facts, census_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
@@ -108,6 +125,8 @@ def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, 
                 fdic_facts,
                 sce_facts,
                 sce_monthly_facts,
+                bea_facts,
+                census_facts,
             ],
             ignore_index=True,
         )

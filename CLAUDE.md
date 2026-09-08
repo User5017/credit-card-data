@@ -38,6 +38,8 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 ## Fetcher contract (src/carddash/fetchers/<source>.py)
 - `SOURCE` and `fetch(meta, raw_dir, session, pulled_at) -> DataFrame` in the facts schema.
 - Pull the full history every run. Idempotent. Save the raw download under `raw_dir/latest/` before parsing.
+  One documented exception: the BEA NIPA flat file is 36.7 MB, so `fetchers/bea.py` saves only the lines of the series in
+  series.csv (header included, the file's own format) and parses the full file in memory.
 - Parse by header text, never by column position. Fail loudly on anything unexpected.
 - Never write facts.csv, health.json, or DuckDB. The loader does that.
 - Send the pipeline's own User-Agent (src/carddash/http.py). The CFPB's edge blocks browser-like agents sent from
@@ -45,7 +47,8 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Before writing a parser: download the real file, print its headers and first rows, then write the parser.
   Check the raw file in under tests/fixtures/<source>/ and write a test that parses it.
 - Every fetcher ships with: a fixture test, at least one golden entry in checks/golden.yaml that traces to
-  a release page (not the feed), and its rows in crosswalks/series.csv.
+  a release page (not the feed), and its rows in crosswalks/series.csv. A golden entry may carry `change_from_prior: true`
+  when the release states a change rather than a level (BEA).
 
 ## Loader behaviour (src/carddash/loader.py)
 - Replace-by-source: on success, all prior rows for that source are dropped and the new rows inserted.
@@ -64,6 +67,11 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   latest/, committed, and loaded into the DuckDB session by render._connect so views can use them. Their facts
   come from sql/<source>_facts.sql, which the fetcher runs in memory: aggregation choices stay in SQL.
 - Keep this repo out of OneDrive.
+
+## Sources (nine as of 2026-09-08)
+fred, tccp, phillyfed, nyfed_hhdc, fdic, nyfed_sce (credit access, four-monthly), nyfed_sce_monthly (core survey),
+bea (PCE by type of product, keyless flat file), census (Monthly Retail Trade workbook). Each has a typical release lag in
+`RELEASE_RHYTHM` (render.py) that the health strip turns into a 'next expected' date.
 
 ## Rendering
 - docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON. That now

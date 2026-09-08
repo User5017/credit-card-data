@@ -29,7 +29,7 @@ RUN1 = "2026-09-06T00:00:00Z"
 RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
 POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service"}
-ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly")
+ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly", "bea", "census")
 
 
 def _health(generated_at: str, sources=("fred",), status="ok") -> dict:
@@ -62,14 +62,14 @@ def test_page_is_self_contained_and_carries_every_chart(page):
     for panel in PANELS:
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
-    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 43
+    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Spend", "Context"]
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 48
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
     assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
-    assert "7 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
+    assert "9 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
 
@@ -286,7 +286,7 @@ def test_card_badge_and_last_attempt_when_a_source_is_not_ok(tmp_paths, fixture_
     assert by_id["nco_by_issuer"]["status"] == "failed" and by_id["nco_by_issuer"]["attempted"] == "2026-09-08"
     assert "data as of 2026-09-07" in by_id["nco_by_issuer"]["footer"]  # the data on the chart is still the last good load
     assert '<span class="badge st-failed"' in html and "last fetch attempt 2026-09-08" in html
-    assert "2 of 7 sources need attention (Failed)" in html
+    assert "2 of 9 sources need attention (Failed)" in html
 
 
 def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_facts):
@@ -525,3 +525,17 @@ def test_hhdc_all_debt_charts(page):
     assert bk["unit_label"] == "Thousands" and abs(bk["data"][1][-1] - 136.8) < 0.05
     assert abs(ids["collections"]["data"][1][-1] - 4.88) < 0.01
     assert ids["credit_demand_flow"]["unit"] == "millions" and abs(ids["credit_demand_flow"]["data"][1][-1] - 83.021) < 0.01
+
+
+def test_spend_panel(page):
+    html, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    growth = ids["spend_growth"]
+    assert growth["series"][0]["last_period"] == "Jul 2026" and 0 < growth["data"][1][-1] < 10
+    retail = ids["retail_growth"]
+    assert retail["series"][0]["last_period"] == "Jun 2026"
+    share = ids["online_share"]
+    assert 15 < share["data"][1][-1] < 22  # nonstore about 18% of retail and food services sales in 2026
+    cross = ids["card_volume_vs_retail"]
+    assert {s["source"] for s in cross["series"]} == {"phillyfed", "census"} and cross["footer_lines"]
+    assert '<section class="panel" id="panel-spend">' in html

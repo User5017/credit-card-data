@@ -271,3 +271,16 @@ FROM s a
 JOIN s b ON b.entity = a.entity AND b.period_end = a.period_end
        AND b.metric = replace(replace(a.metric, '_much_harder', '_somewhat_harder'), '_much_worse', '_somewhat_worse')
 WHERE a.metric LIKE '%_much_harder' OR a.metric LIKE '%_much_worse';
+
+-- Nonstore share of retail: online and mail-order sellers as a share of all retail and food services sales, the
+-- card-not-present channel. Keyed on the nonstore series so render.py can select share_pct.
+CREATE OR REPLACE VIEW v_retail_share AS
+WITH t AS (
+  SELECT metric, CAST(period_end AS DATE) AS period_end, value AS total
+  FROM facts WHERE source = 'census' AND entity = 'NAICS:44X72'
+)
+SELECT f.metric, f.entity, f.entity_type, f.tier, f.period_type, f.source, CAST(f.period_end AS DATE) AS period_end,
+       f.value, t.total, 100.0 * f.value / t.total AS share_pct
+FROM facts f
+JOIN t ON t.metric = f.metric AND t.period_end = CAST(f.period_end AS DATE)
+WHERE f.source = 'census' AND f.entity <> 'NAICS:44X72' AND t.total > 0;

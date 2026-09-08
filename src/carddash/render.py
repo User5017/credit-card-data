@@ -50,6 +50,8 @@ RELEASE_RHYTHM = {
     "fdic": ("fdic_card_loans", "FDIC_ALL_INSURED", "Q", 50),  # 2026 Q2 in the API on 2026-08-19
     "nyfed_sce": ("sce_any_rejection_rate", "SCE_ALL", "T", 40),  # a wave lands four to six weeks after fielding
     "nyfed_sce_monthly": ("sce_miss_payment_prob", "SCE_ALL", "M", 10),  # August 2026 landed 2026-09-08
+    "bea": ("pce_total_saar", "US_HOUSEHOLDS", "M", 27),  # July 2026 on 2026-08-26
+    "census": ("retail_sales_sa", "NAICS:44X72", "M", 45),  # June 2026 in the workbook with the 2026-08-14 release
 }
 
 SOURCE_LABELS = {
@@ -60,6 +62,8 @@ SOURCE_LABELS = {
     "fdic": "FDIC, Call Report data via the BankFind Suite API",
     "nyfed_sce": "Federal Reserve Bank of New York, Survey of Consumer Expectations Credit Access Survey",
     "nyfed_sce_monthly": "Federal Reserve Bank of New York, Survey of Consumer Expectations (monthly)",
+    "bea": "Bureau of Economic Analysis, personal consumption expenditures by type of product (NIPA monthly)",
+    "census": "Census Bureau, Monthly Retail Trade Survey",
 }
 STATUS_LABELS = {
     "ok": "OK",
@@ -197,6 +201,17 @@ FLOWS_NOTE = (
     "charge-offs); charge-offs are left inside payments because the Y-14 publishes a charge-off rate rather than a "
     "dollar amount, which overstates the payment rate by a few tenths of a point. A rising payment rate with a falling "
     "revolving share means the growth is transactors, not borrowers. " + Y14_NOTE
+)
+PCE_NOTE = (
+    "BEA personal consumption expenditures by type of product, monthly, seasonally adjusted at annual rates, in "
+    "current dollars: growth here is nominal and includes price changes (gasoline most of all). Total spending "
+    "is the ceiling on what cards can carry; the card-heavy categories are where purchase volume actually comes "
+    "from. Published about four weeks after the month."
+)
+RETAIL_NOTE = (
+    "Census Monthly Retail Trade Survey, sales by kind of business (NAICS), seasonally adjusted, current dollars. "
+    "Retail is about a third of consumer spending but most of what is paid by card. The newest month in the file "
+    "is preliminary; the advance estimate for the month after it is in the MARTS release and not loaded."
 )
 HHDC_ALL_DEBT_NOTE = (
     "NY Fed Consumer Credit Panel/Equifax, all consumer debt on the credit report (mortgage, auto, card, student and "
@@ -738,6 +753,86 @@ PANELS = [
                     S("y14_card_orig_credit_score_p10", "Y14_CARD_FILERS", "10th percentile", period_type="Q", source="phillyfed"),
                     S("y14_card_orig_credit_score_p25", "Y14_CARD_FILERS", "25th percentile", period_type="Q", source="phillyfed"),
                     S("y14_card_orig_credit_score_p50", "Y14_CARD_FILERS", "Median", period_type="Q", source="phillyfed"),
+                ],
+            },
+        ],
+    },
+    {
+        "name": "Spend",
+        "blurb": "What the cards are buying: household spending and retail sales by category, and how card purchase volume tracks them.",
+        "charts": [
+            {
+                "id": "spend_growth",
+                "title": "Consumer spending, year-over-year change",
+                "unit": "pct",
+                "step": False,
+                "benchmark": True,
+                "notes": [PCE_NOTE],
+                "series": [
+                    S("pce_total_saar", "US_HOUSEHOLDS", "All personal consumption", source="bea", view="v_growth", field="yoy_pct"),
+                    S("pce_goods_saar", "US_HOUSEHOLDS", "Goods", source="bea", view="v_growth", field="yoy_pct"),
+                    S("pce_services_saar", "US_HOUSEHOLDS", "Services", source="bea", view="v_growth", field="yoy_pct"),
+                ],
+            },
+            {
+                "id": "spend_categories",
+                "title": "Card-heavy spending categories, year-over-year change",
+                "unit": "pct",
+                "step": False,
+                "notes": [PCE_NOTE],
+                "series": [
+                    S("pce_food_services_saar", "US_HOUSEHOLDS", "Restaurants and hotels", source="bea", view="v_growth", field="yoy_pct"),
+                    S("pce_food_home_saar", "US_HOUSEHOLDS", "Groceries", source="bea", view="v_growth", field="yoy_pct"),
+                    S("pce_gasoline_saar", "US_HOUSEHOLDS", "Gasoline", source="bea", view="v_growth", field="yoy_pct"),
+                    S("pce_clothing_saar", "US_HOUSEHOLDS", "Clothing", source="bea", view="v_growth", field="yoy_pct"),
+                    S("pce_recreation_services_saar", "US_HOUSEHOLDS", "Recreation services", source="bea", view="v_growth", field="yoy_pct"),
+                ],
+            },
+            {
+                "id": "retail_growth",
+                "title": "Retail sales by kind of business, year-over-year change",
+                "unit": "pct",
+                "step": False,
+                "benchmark": True,
+                "notes": [RETAIL_NOTE],
+                "series": [
+                    S("retail_sales_sa", "NAICS:44X72", "All retail and food services", source="census", view="v_growth", field="yoy_pct"),
+                    S("retail_sales_sa", "NAICS:454", "Nonstore (online)", source="census", view="v_growth", field="yoy_pct"),
+                    S("retail_sales_sa", "NAICS:722", "Restaurants and bars", source="census", view="v_growth", field="yoy_pct"),
+                    S("retail_sales_sa", "NAICS:447", "Gasoline stations", source="census", view="v_growth", field="yoy_pct"),
+                ],
+            },
+            {
+                "id": "online_share",
+                "title": "Online sellers' share of retail sales",
+                "unit": "pct",
+                "step": False,
+                "notes": [
+                    "Nonstore retailers (online and mail order) as a share of all retail and food services sales, "
+                    "seasonally adjusted. The card-not-present channel: it earns issuers a higher interchange rate "
+                    "and carries more fraud, so its share is part of the economics of the card. " + RETAIL_NOTE
+                ],
+                "series": [
+                    S("retail_sales_sa", "NAICS:454", "Nonstore share of retail and food services sales", source="census",
+                      view="v_retail_share", field="share_pct"),
+                ],
+            },
+            {
+                "id": "card_volume_vs_retail",
+                "title": "Card purchase volume against retail sales, year-over-year change",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "Purchase volume on the largest banks' cards (Y-14, quarterly, not seasonally adjusted, compared "
+                    "with the same quarter a year earlier) against seasonally adjusted retail and food services "
+                    "sales. Card volume growing faster than sales is share gain by cards over cash, debit and "
+                    "checks; the gap closing is the card's share stalling. " + Y14_NOTE
+                ],
+                "series": [
+                    S("y14_card_purchase_volume", "Y14_CARD_FILERS", "Card purchase volume, large banks (Y-14)", period_type="Q",
+                      source="phillyfed", view="v_growth", field="yoy_pct"),
+                    S("retail_sales_sa", "NAICS:44X72", "Retail and food services sales (Census)", source="census",
+                      view="v_growth", field="yoy_pct"),
                 ],
             },
         ],
