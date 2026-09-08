@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T00:03:10Z",
+  "generated_at": "2026-09-08T18:42:01Z",
   "sources": {
     "fdic": {
       "source": "fdic",
@@ -15,14 +15,14 @@
     },
     "fred": {
       "source": "fred",
-      "status": "golden_mismatch",
+      "status": "ok",
       "messages": [
-        "golden check failed: g19_revolving_sa_2026_03: got 1338.18, expected 1338 +/-0.06 (Fed G.19 release of 2026-08-07, Revolving, SA, 'Q1 2026' column (quarter-end level))"
+        "1897 new row(s)"
       ],
       "last_period_end": "2026-09-02",
-      "pulled_at": "2026-09-10T00:03:10Z",
-      "rows": 13056,
-      "n_series": 26,
+      "pulled_at": "2026-09-08T18:42:01Z",
+      "rows": 14949,
+      "n_series": 32,
       "n_revisions": 0
     },
     "nyfed_hhdc": {

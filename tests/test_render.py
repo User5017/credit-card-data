@@ -63,7 +63,7 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Context"]
-    assert len(payload["charts"]) == 32
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 35
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
@@ -460,3 +460,18 @@ def test_new_periods_are_the_periods_only_this_run_loaded(fixture_facts):
     assert out[1]["periods"] == ["2 semiannual periods through 2025 H2"]  # the two checked-in workbooks
     assert _new_periods(coerce_facts(facts), None) == []
     assert _new_periods(coerce_facts(facts.iloc[0:0]), RUN2) == []
+
+
+def test_holder_and_sloos_demand_charts(page):
+    _, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    holders = ids["revolving_by_holder"]
+    assert [s["label"][:10] for s in holders["series"]] == ["Depository", "Credit uni", "Finance co"]
+    share = ids["holder_share"]
+    last = [ys[-1] for ys in share["data"][1:]]
+    assert 5 < last[0] < 9 and 0.5 < last[1] < 3  # credit unions about 6.5%, finance companies about 1% of the NSA total
+    sloos = ids["sloos_cards"]
+    assert [s["label"] for s in sloos["series"]][1].startswith("Net % of banks reporting stronger")
+    assert sloos["series"][1]["last_period"] == "2026 Q2"
+    by_size = ids["sloos_demand_by_size"]
+    assert by_size["data"][1][-1] == 0.0 and by_size["data"][2][-1] == 3.8

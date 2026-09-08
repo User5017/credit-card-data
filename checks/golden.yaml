@@ -379,3 +379,99 @@
   check_live: false
   origin: "Same page and sentence, the June 2026 reading: 16.1 percent. Newest wave, fixture-only."
   origin_url: https://www.newyorkfed.org/microeconomics/sce/credit-access
+
+# G.19 by major holder (not seasonally adjusted). The release page's holder table prints year-end and monthly
+# levels in billions; the 2025 year-end column is checked live, June 2026 is preliminary ('p') and fixture-only.
+- id: g19_revolving_depository_2025_12
+  metric: revolving_credit_nsa
+  entity: DEPOSITORY_INSTITUTIONS
+  tier: all
+  period_type: M
+  period_end: 2025-12-31
+  source: fred
+  expected: 1219.7
+  tolerance: 0.06
+  check_live: true
+  origin: "Fed G.19 release of 2026-08-07, table 'Consumer credit outstanding', by major holder, Revolving, Depository institutions, '2025' column, billions (NSA)"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_revolving_credit_unions_2025_12
+  metric: revolving_credit_nsa
+  entity: CREDIT_UNIONS
+  tier: all
+  period_type: M
+  period_end: 2025-12-31
+  source: fred
+  expected: 88.3
+  tolerance: 0.06
+  check_live: true
+  origin: "Same table, Revolving, Credit unions, '2025' column"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_revolving_finance_companies_2025_12
+  metric: revolving_credit_nsa
+  entity: FINANCE_COMPANIES
+  tier: all
+  period_type: M
+  period_end: 2025-12-31
+  source: fred
+  expected: 16.3
+  tolerance: 0.06
+  check_live: true
+  origin: "Same table, Revolving, Finance companies, '2025' column"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+- id: g19_revolving_depository_2026_06
+  metric: revolving_credit_nsa
+  entity: DEPOSITORY_INSTITUTIONS
+  tier: all
+  period_type: M
+  period_end: 2026-06-30
+  source: fred
+  expected: 1202.6
+  tolerance: 0.06
+  check_live: false
+  origin: "Same table, Revolving, Depository institutions, 'Jun 2026 p' column (preliminary, fixture-only)"
+  origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
+
+# SLOOS card demand: the July 2026 survey's Table 1, question 24, publishes bank counts and shares, not the net
+# figure. Net = moderately stronger minus moderately weaker: all respondents 13.3 - 11.1 = 2.2, large banks
+# 15.8 - 15.8 = 0.0, other banks 11.5 - 7.7 = 3.8. The July survey asks about April to June, so period_end is 2026-06-30.
+- id: sloos_card_demand_2026_q2
+  metric: sloos_card_demand_net_stronger
+  entity: SLOOS_DOMESTIC
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: fred
+  expected: 2.2
+  tolerance: 0.06
+  check_live: true
+  origin: "July 2026 SLOOS, Table 1, question 24 (demand for credit card loans), all respondents: 6 of 45 moderately stronger (13.3%), 5 moderately weaker (11.1%), net 2.2"
+  origin_url: https://www.federalreserve.gov/data/sloos/sloos-202607-table-1.htm
+
+- id: sloos_card_demand_other_2026_q2
+  metric: sloos_card_demand_net_stronger
+  entity: SLOOS_OTHER
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: fred
+  expected: 3.8
+  tolerance: 0.06
+  check_live: true
+  origin: "Same table and question, other banks: 3 of 26 moderately stronger (11.5%), 2 moderately weaker (7.7%), net 3.8"
+  origin_url: https://www.federalreserve.gov/data/sloos/sloos-202607-table-1.htm
+
+- id: sloos_card_standards_2026_q2
+  metric: sloos_card_standards_net_tightening
+  entity: SLOOS_DOMESTIC
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: fred
+  expected: 6.7
+  tolerance: 0.06
+  check_live: true
+  origin: "July 2026 SLOOS, Table 1, question 18 (standards on credit card loans), all respondents: 3 of 45 tightened somewhat (6.7%), none eased, net 6.7"
+  origin_url: https://www.federalreserve.gov/data/sloos/sloos-202607-table-1.htm

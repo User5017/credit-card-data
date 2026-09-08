@@ -186,6 +186,20 @@ DEBT_SERVICE_NOTE = (
     "balance is actually a burden."
 )
 
+HOLDER_NOTE = (
+    "The G.19 splits revolving credit by who owns the loan. Depository institutions are commercial banks and "
+    "savings institutions; credit unions are outside the FDIC data on this page entirely; finance companies are "
+    "nonbank lenders. The split is published not seasonally adjusted only, so these lines carry the December spending "
+    "hump and are never compared with the seasonally adjusted total above."
+)
+SLOOS_NOTE = (
+    "Senior Loan Officer Opinion Survey, about 45 domestic banks each quarter. A net percentage is the share of "
+    "banks answering one way minus the share answering the other: positive on the standards line means more banks "
+    "tightened than eased, positive on the demand line means more saw demand strengthen than weaken. Standards "
+    "tightening while demand weakens is a lender-led contraction; demand weakening on its own is the borrower's "
+    "choice. The July survey asks about April to June and is shown at June 30."
+)
+
 SCE_NOTE = (
     "New York Fed Survey of Consumer Expectations, Credit Access Survey: about 1,000 household heads, weighted to be "
     "nationally representative, asked every four months in February, June and October about the previous twelve "
@@ -262,6 +276,31 @@ PANELS = [
                 "series": [
                     S("revolving_credit_sa", "ALL_HOLDERS", "Nominal", view="v_card_burden", field="revolving"),
                     S("revolving_credit_sa", "ALL_HOLDERS", "At the latest price level", view="v_card_burden", field="revolving_real"),
+                ],
+            },
+            {
+                "id": "revolving_by_holder",
+                "title": "Who holds revolving credit: banks, credit unions, finance companies",
+                "unit": "usd_bn",
+                "step": False,
+                "notes": [HOLDER_NOTE],
+                "series": [
+                    S("revolving_credit_nsa", "DEPOSITORY_INSTITUTIONS", "Depository institutions (banks and thrifts), NSA"),
+                    S("revolving_credit_nsa", "CREDIT_UNIONS", "Credit unions, NSA"),
+                    S("revolving_credit_nsa", "FINANCE_COMPANIES", "Finance companies, NSA"),
+                ],
+            },
+            {
+                "id": "holder_share",
+                "title": "Credit unions' and finance companies' share of revolving credit",
+                "unit": "pct",
+                "step": False,
+                "notes": [HOLDER_NOTE],
+                "series": [
+                    S("revolving_credit_nsa", "CREDIT_UNIONS", "Credit unions, share of the NSA total",
+                      view="v_holder_share", field="share_pct"),
+                    S("revolving_credit_nsa", "FINANCE_COMPANIES", "Finance companies, share of the NSA total",
+                      view="v_holder_share", field="share_pct"),
                 ],
             },
             {
@@ -516,10 +555,25 @@ PANELS = [
             },
             {
                 "id": "sloos_cards",
-                "title": "Banks tightening credit card standards, net percent",
+                "title": "Card credit at banks: supply tightening and demand, net percent",
                 "unit": "pct",
                 "step": True,
-                "series": [S("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "Net % tightening", period_type="Q")],
+                "notes": [SLOOS_NOTE],
+                "series": [
+                    S("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "Net % of banks tightening card standards", period_type="Q"),
+                    S("sloos_card_demand_net_stronger", "SLOOS_DOMESTIC", "Net % of banks reporting stronger card demand", period_type="Q"),
+                ],
+            },
+            {
+                "id": "sloos_demand_by_size",
+                "title": "Card demand reported by large and other banks, net percent",
+                "unit": "pct",
+                "step": True,
+                "notes": [SLOOS_NOTE],
+                "series": [
+                    S("sloos_card_demand_net_stronger", "SLOOS_LARGE", "Large banks", period_type="Q"),
+                    S("sloos_card_demand_net_stronger", "SLOOS_OTHER", "Other banks", period_type="Q"),
+                ],
             },
         ],
     },

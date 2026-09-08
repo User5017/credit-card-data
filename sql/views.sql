@@ -244,3 +244,16 @@ SELECT 'card_apr_assessed_interest' AS metric, 'COMBANKS_ALL' AS entity, 'aggreg
        a.apr, p.prime, a.apr - p.prime AS spread_over_prime
 FROM apr a
 JOIN prime p ON p.period_end = a.period_end;
+
+-- Holder share: each G.19 holder's revolving credit as a share of the sum of the three published holders plus the
+-- rest (the NSA total). Keyed on the holder's own series so render.py can select share_pct per entity.
+CREATE OR REPLACE VIEW v_holder_share AS
+WITH total AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS total
+  FROM facts WHERE metric = 'revolving_credit_nsa' AND entity = 'ALL_HOLDERS' AND source = 'fred'
+)
+SELECT f.metric, f.entity, f.entity_type, f.tier, f.period_type, f.source, CAST(f.period_end AS DATE) AS period_end,
+       f.value, t.total, 100.0 * f.value / t.total AS share_pct
+FROM facts f
+JOIN total t ON t.period_end = CAST(f.period_end AS DATE)
+WHERE f.metric = 'revolving_credit_nsa' AND f.source = 'fred' AND f.entity <> 'ALL_HOLDERS' AND t.total > 0;

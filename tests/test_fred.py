@@ -54,8 +54,33 @@ def test_sloos_is_dated_to_the_quarter_it_asks_about(meta):
     assert facts[pd.Timestamp("1995-12-31")] == 25.0  # the January 1996 survey describes 1995 Q4
     assert facts.index.max() == pd.Timestamp("2026-06-30")  # nothing dated to a quarter that has not ended
     assert (facts.index == facts.index + pd.offsets.QuarterEnd(0)).all()
-    # every other FRED series has no offset and keeps its dating
-    assert int((meta.loc[meta["source"] == "fred", "period_offset"] != 0).sum()) == 1
+    # only the four SLOOS series carry an offset; every other FRED series keeps its dating
+    offset = meta.loc[(meta["source"] == "fred") & (meta["period_offset"] != 0), "source_id"].tolist()
+    assert sorted(offset) == ["DEMCC", "DRTSCLCC", "SUBLPDCLCDLGNQ", "SUBLPDCLCDOTHNQ"]
+
+
+def test_sloos_demand_is_the_net_of_the_release_table(meta):
+    """July 2026 SLOOS Table 1, question 24: 13.3% moderately stronger minus 11.1% moderately weaker = 2.2, dated Q2."""
+    for sid, expected in (("DEMCC", 2.2), ("SUBLPDCLCDLGNQ", 0.0), ("SUBLPDCLCDOTHNQ", 3.8)):
+        obs = fred.parse_fredgraph((FIXTURES / "fred" / f"{sid}.csv").read_text())
+        facts = fred.to_facts(obs, _row(meta, sid), PULLED_AT).set_index("period_end")["value"]
+        assert facts[pd.Timestamp("2026-06-30")] == expected, sid
+        assert facts.index.max() == pd.Timestamp("2026-06-30")
+        assert facts.index.min() == pd.Timestamp("2011-03-31")  # the April 2011 survey describes 2011 Q1
+
+
+def test_g19_holders_are_billions_nsa_and_sum_below_the_total(meta):
+    """The G.19 holder table (NSA, billions): depository 1,219.7, credit unions 88.3, finance companies 16.3 at end-2025."""
+    total = 0.0
+    for sid, expected in (("REVOLNDI", 1219.7), ("REVOLNCU", 88.3), ("REVOLNFC", 16.3)):
+        obs = fred.parse_fredgraph((FIXTURES / "fred" / f"{sid}.csv").read_text())
+        row = _row(meta, sid)
+        assert row["metric"] == "revolving_credit_nsa" and not row["sa"]
+        facts = fred.to_facts(obs, row, PULLED_AT).set_index("period_end")["value"]
+        assert abs(facts[pd.Timestamp("2025-12-31")] - expected) < 0.06, sid
+        total += facts[pd.Timestamp("2025-12-31")]
+    # the three holders are most of revolving credit (nonfinancial business and the federal government are the rest)
+    assert 1300 < total < 1400
 
 
 @pytest.mark.parametrize(
