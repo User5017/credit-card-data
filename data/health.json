@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T19:12:51Z",
+  "generated_at": "2026-09-08T19:27:07Z",
   "sources": {
     "fdic": {
       "source": "fdic",
@@ -28,11 +28,13 @@
     "nyfed_hhdc": {
       "source": "nyfed_hhdc",
       "status": "ok",
-      "messages": [],
+      "messages": [
+        "1222 new row(s)"
+      ],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-10T00:03:10Z",
-      "rows": 1200,
-      "n_series": 12,
+      "pulled_at": "2026-09-08T19:27:07Z",
+      "rows": 2422,
+      "n_series": 25,
       "n_revisions": 0
     },
     "nyfed_sce": {

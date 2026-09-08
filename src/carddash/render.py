@@ -73,6 +73,7 @@ UNIT_LABELS = {
     "usd_bn": "Billions of dollars",
     "usd": "Dollars",
     "millions": "Millions",
+    "thousands": "Thousands",
     "pct": "Percent",
     "pp": "Percentage points",
     "count": "Count",
@@ -196,6 +197,10 @@ FLOWS_NOTE = (
     "charge-offs); charge-offs are left inside payments because the Y-14 publishes a charge-off rate rather than a "
     "dollar amount, which overstates the payment rate by a few tenths of a point. A rising payment rate with a falling "
     "revolving share means the growth is transactors, not borrowers. " + Y14_NOTE
+)
+HHDC_ALL_DEBT_NOTE = (
+    "NY Fed Consumer Credit Panel/Equifax, all consumer debt on the credit report (mortgage, auto, card, student and "
+    "other), not cards alone: the workbook does not split this table by loan type. Quarterly, from 2003 Q1."
 )
 PER_ACCOUNT_NOTE = (
     "Balances, limits and unused credit per open card account on credit reports. Joint accounts are counted twice in "
@@ -439,6 +444,18 @@ PANELS = [
                     S("sce_any_rejection_rate", "SCORE:LT680", "Score under 680", period_type="T", source="nyfed_sce"),
                     S("sce_any_rejection_rate", "SCORE:680-760", "Score 680 to 760", period_type="T", source="nyfed_sce"),
                     S("sce_any_rejection_rate", "SCORE:GE760", "Score over 760", period_type="T", source="nyfed_sce"),
+                ],
+            },
+            {
+                "id": "credit_demand_flow",
+                "title": "Credit inquiries, accounts opened and accounts closed, all loan types",
+                "unit": "millions",
+                "step": True,
+                "notes": [HHDC_ALL_DEBT_NOTE],
+                "series": [
+                    S("hhdc_inquiries_6mo", "CCP_ALL", "Hard inquiries, past 6 months", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_accounts_opened_12mo", "CCP_ALL", "Accounts opened, past 12 months", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_accounts_closed_12mo", "CCP_ALL", "Accounts closed, past 12 months", period_type="Q", source="nyfed_hhdc"),
                 ],
             },
             {
@@ -794,6 +811,53 @@ PANELS = [
                       view="v_sce_sums", field="combined"),
                     S("sce_finances_year_ahead_much_worse", "SCE_ALL", "Expect to be worse off a year ahead", source="nyfed_sce_monthly",
                       view="v_sce_sums", field="combined"),
+                ],
+            },
+            {
+                "id": "debt_by_delinquency_stage",
+                "title": "Household debt by stage of delinquency, share of balances",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "Everything that is not current, by how late it is. Severely derogatory balances (charged off, in "
+                    "foreclosure or repossession, or in a bankruptcy) stay on credit reports for years, which is why "
+                    "that line barely moves with the cycle while the 30-day line turns first. " + HHDC_ALL_DEBT_NOTE
+                ],
+                "series": [
+                    S("hhdc_debt_share_dq30", "CCP_ALL", "30 days late", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_debt_share_dq60", "CCP_ALL", "60 days late", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_debt_share_dq90", "CCP_ALL", "90 days late", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_debt_share_dq120", "CCP_ALL", "120+ days late", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_debt_share_derogatory", "CCP_ALL", "Severely derogatory", period_type="Q", source="nyfed_hhdc"),
+                ],
+            },
+            {
+                "id": "bankruptcies_foreclosures",
+                "title": "Consumers with a new bankruptcy or foreclosure",
+                "unit": "thousands",
+                "step": True,
+                "notes": [
+                    "The end of the road for card debt: a card charge-off is often followed by a bankruptcy filing, "
+                    "and bankruptcies rising while charge-offs fall would say the losses are being resolved rather "
+                    "than avoided. " + HHDC_ALL_DEBT_NOTE
+                ],
+                "series": [
+                    S("hhdc_new_bankruptcies", "CCP_ALL", "New bankruptcy notations", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_new_foreclosures", "CCP_ALL", "New foreclosure notations", period_type="Q", source="nyfed_hhdc"),
+                ],
+            },
+            {
+                "id": "collections",
+                "title": "Consumers with a third-party collection account",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "Share of consumers with at least one third-party collection on their credit report. The 2023 "
+                    "drop is the removal of medical collections under $500 and of paid medical collections from "
+                    "credit reports, not a change in behaviour. " + HHDC_ALL_DEBT_NOTE
+                ],
+                "series": [
+                    S("hhdc_collections_share", "CCP_ALL", "Share of consumers with a collection", period_type="Q", source="nyfed_hhdc"),
                 ],
             },
             {

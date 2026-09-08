@@ -117,6 +117,52 @@ SHEET_SPEC = [
         "factor": 1.0,
         "columns": [(g, "hhdc_card_transition_dq90", f"AGE:{g}", "age") for g in AGE_GROUPS],
     },
+    # The four sheets below cover all consumer debt on the credit report, not cards alone (the workbook does not
+    # split them by loan type). Their metric names say debt, accounts or consumers rather than card, and their scope
+    # notes in series.csv say so.
+    {
+        "title": "Total Number of New and Closed Accounts and Consumer Credit Inquiries",
+        "unit": "Millions",
+        "factor": 1.0,
+        "columns": [
+            ("inquiry within 6 mo", "hhdc_inquiries_6mo", ENTITY, "aggregate"),
+            ("closed within 12 mo", "hhdc_accounts_closed_12mo", ENTITY, "aggregate"),
+            ("open within 12 mo", "hhdc_accounts_opened_12mo", ENTITY, "aggregate"),
+        ],
+    },
+    {
+        # the 'Total' column is a formula (=SUM) and is not read
+        "title": "Total Balance by Delinquency Status",
+        "unit": "Percent",
+        "factor": 1.0,
+        "columns": [
+            ("Current", "hhdc_debt_share_current", ENTITY, "aggregate"),
+            ("30 days late", "hhdc_debt_share_dq30", ENTITY, "aggregate"),
+            ("60 days late", "hhdc_debt_share_dq60", ENTITY, "aggregate"),
+            ("90 days late", "hhdc_debt_share_dq90", ENTITY, "aggregate"),
+            ("120+ days late", "hhdc_debt_share_dq120", ENTITY, "aggregate"),
+            ("Severely Derogatory", "hhdc_debt_share_derogatory", ENTITY, "aggregate"),
+        ],
+    },
+    {
+        "title": "Number of Consumers with New Foreclosures and Bankruptcies",
+        "unit": "Thousands",
+        "factor": 1.0,
+        "columns": [
+            ("foreclosure", "hhdc_new_foreclosures", ENTITY, "aggregate"),
+            ("bankruptcy", "hhdc_new_bankruptcies", ENTITY, "aggregate"),
+        ],
+    },
+    {
+        # A2 says Percent; the second column is dollars, which series.csv carries
+        "title": "Third Party Collections",
+        "unit": "Percent",
+        "factor": 1.0,
+        "columns": [
+            ("proportion of consumers with collection", "hhdc_collections_share", ENTITY, "aggregate"),
+            ("average collection amount per person with item", "hhdc_collections_avg_amount", ENTITY, "aggregate"),
+        ],
+    },
 ]
 
 

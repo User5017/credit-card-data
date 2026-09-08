@@ -138,7 +138,7 @@ def test_fetch_end_to_end_with_a_fake_site(tmp_path, meta):
     facts = hhdc.fetch(meta, raw, session, "2026-09-07T12:00:00Z")
     assert (raw / "latest" / "HHD_C_Report.xlsx").read_bytes() == HHDC_FIXTURE.read_bytes()
     assert facts["period_end"].max() == Q2_2026
-    assert len(facts) == 6 * N_LOAN_TYPE_QUARTERS + 6 * N_AGE_QUARTERS
+    assert len(facts) == 19 * N_LOAN_TYPE_QUARTERS + 6 * N_AGE_QUARTERS
 
 
 # ---------- parsing the real release ----------
@@ -195,7 +195,7 @@ def test_facts_cover_every_series_in_series_csv_and_nothing_else(meta, hhdc_fact
     expected = set(mine[SERIES_KEY].itertuples(index=False, name=None))
     got = set(hhdc_facts[SERIES_KEY].drop_duplicates().itertuples(index=False, name=None))
     assert got == expected, f"missing {expected - got}, extra {got - expected}"
-    assert len(expected) == 12  # six aggregate series, six age groups of the 90+ flow
+    assert len(expected) == 25  # six card series, thirteen all-debt series, six age groups of the 90+ flow
     errors, warnings = validate(hhdc_facts, mine)
     assert errors == []
     assert warnings == []
@@ -207,7 +207,7 @@ def test_facts_cover_every_series_in_series_csv_and_nothing_else(meta, hhdc_fact
     is_age = counts.index.get_level_values("entity").str.startswith("AGE:")
     assert (counts[~is_age] == N_LOAN_TYPE_QUARTERS).all()
     assert (counts[is_age] == N_AGE_QUARTERS).all()
-    assert len(hhdc_facts) == 6 * N_LOAN_TYPE_QUARTERS + 6 * N_AGE_QUARTERS
+    assert len(hhdc_facts) == 19 * N_LOAN_TYPE_QUARTERS + 6 * N_AGE_QUARTERS
 
 
 def test_limit_sheet_balance_column_tracks_the_balance_sheet():
@@ -273,7 +273,7 @@ def write_workbook(path: Path, edit=None) -> Path:
 
 def test_synthetic_workbook_parses(tmp_path):
     facts = hhdc.parse_release(write_workbook(tmp_path / "ok.xlsx"), PULLED_AT, expected_quarter=(2026, 2))
-    assert len(facts) == 12 * len(QUARTERS)
+    assert len(facts) == 25 * len(QUARTERS)
     assert value(facts, "hhdc_card_balances", "2026-06-30") == pytest.approx(3000.0)  # 3.0 trillion
     assert value(facts, "hhdc_card_limit", "2025-12-31") == pytest.approx(1000.0)
     assert value(facts, "hhdc_card_transition_dq90", "2025-12-31", "AGE:70+") == pytest.approx(1.5)
@@ -317,3 +317,19 @@ def test_missing_data_sheets_fail(tmp_path):
     wb.save(tmp_path / "empty.xlsx")
     with pytest.raises(ValueError, match="no 'Page N Data' sheets"):
         hhdc.read_sheets(tmp_path / "empty.xlsx")
+
+
+def test_all_debt_sheets_reproduce_the_report_summary(hhdc_facts):
+    """Q2 2026 report, page 2: about 137,000 bankruptcies, 55,000 foreclosures, 4.7% of debt delinquent."""
+    q2 = hhdc_facts[hhdc_facts["period_end"] == pd.Timestamp("2026-06-30")].set_index("metric")["value"]
+    assert abs(q2["hhdc_new_bankruptcies"] - 137) < 0.6 and abs(q2["hhdc_new_foreclosures"] - 55) < 0.6
+    assert abs((100 - q2["hhdc_debt_share_current"]) - 4.7) < 0.06
+    stages = ["hhdc_debt_share_current", "hhdc_debt_share_dq30", "hhdc_debt_share_dq60", "hhdc_debt_share_dq90",
+              "hhdc_debt_share_dq120", "hhdc_debt_share_derogatory"]
+    assert abs(sum(q2[m] for m in stages) - 100) < 0.01  # the sheet's Total column is a formula and is not read
+    assert abs(q2["hhdc_collections_share"] - 4.88) < 0.01 and abs(q2["hhdc_collections_avg_amount"] - 1577.43) < 0.01
+    assert abs(q2["hhdc_inquiries_6mo"] - 83.021) < 0.001
+    # every all-debt series runs the full history from 2003 Q1 with no gaps
+    for m in stages + ["hhdc_new_bankruptcies", "hhdc_collections_share", "hhdc_inquiries_6mo"]:
+        s = hhdc_facts[hhdc_facts["metric"] == m]
+        assert s["period_end"].min() == pd.Timestamp("2003-03-31") and len(s) == 94, m

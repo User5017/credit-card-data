@@ -63,7 +63,7 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 39
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 43
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
@@ -513,3 +513,15 @@ def test_monthly_sce_charts_and_reading(page):
     harder = ids["credit_harder"]
     assert abs(harder["data"][1][-1] - (15.306 + 30.606)) < 0.01  # much plus somewhat harder, August 2026
     assert "Households' stated chance of missing a debt payment" in html
+
+
+def test_hhdc_all_debt_charts(page):
+    _, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    stages = ids["debt_by_delinquency_stage"]
+    assert len(stages["series"]) == 5 and stages["series"][0]["last_period"] == "2026 Q2"
+    assert abs(sum(ys[-1] for ys in stages["data"][1:]) - (100 - 95.27)) < 0.02  # 4.7% in some stage of delinquency
+    bk = ids["bankruptcies_foreclosures"]
+    assert bk["unit_label"] == "Thousands" and abs(bk["data"][1][-1] - 136.8) < 0.05
+    assert abs(ids["collections"]["data"][1][-1] - 4.88) < 0.01
+    assert ids["credit_demand_flow"]["unit"] == "millions" and abs(ids["credit_demand_flow"]["data"][1][-1] - 83.021) < 0.01
