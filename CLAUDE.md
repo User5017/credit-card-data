@@ -20,6 +20,7 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
     uv run carddash render          # rebuild docs/index.html from data/
     uv run carddash check           # every golden check against data/facts.csv
     uv run carddash health --fail-on-red
+    uv run carddash issuers          # dim_issuer per charter and the unmatched-name report
 
 ## Data contracts (do not change without updating PLAN.md and the tests)
 - `facts` columns: metric, entity, entity_type, tier, period_end, period_type, value, source, pulled_at.

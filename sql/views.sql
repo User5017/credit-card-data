@@ -57,25 +57,33 @@ ASOF JOIN offered o ON p.period_end >= o.period_end;
 -- FDIC issuer roll-up: the per-charter series (entity CERT:<n>, source fdic) summed by issuer and period, acquirer
 -- plus acquired charters, so an issuer's line does not jump when a book moves between charters (Discover Bank into
 -- Capital One, N.A. in 2025 Q2). crosswalks/issuers.csv maps each charter to its issuer and, for charters that
--- merged out, to the surviving charter (merged_into), whose issuer names the roll-up. n_certs says how many charters
--- carried the item that quarter. Keyed like facts (entity ISSUER:<issuer_id>) so render.py can select it.
+-- merged out, to the surviving charter (merged_into), whose issuer names the roll-up (dim_issuer below). n_certs says
+-- how many charters carried the item that quarter. Keyed like facts (entity ISSUER:<issuer_id>) so render.py can
+-- select it. Rows are bounded by the charter's valid_from and valid_to (a charter cannot file after its merger,
+-- so the bound documents the intent more than it filters).
+-- dim_issuer: crosswalks/issuers.csv with the issuer each charter rolls up to. A charter that merged out rolls up to
+-- the surviving charter's issuer (Discover Bank to Capital One). valid_from is the FDIC established date, valid_to the
+-- merger date, both checked against the FDIC every run by the fdic fetcher.
+CREATE OR REPLACE VIEW dim_issuer AS
+SELECT i.fdic_cert, i.bank_name, i.kind, i.issuer_id, i.issuer_name,
+       COALESCE(s.issuer_id, i.issuer_id) AS rollup_issuer_id,
+       COALESCE(s.issuer_name, i.issuer_name) AS rollup_issuer_name,
+       i.valid_from, i.valid_to, i.merged_into, i.sec_cik
+FROM issuers i
+LEFT JOIN issuers s ON s.fdic_cert = i.merged_into;
+
 CREATE OR REPLACE VIEW v_fdic_issuer AS
-WITH rollup AS (
-  SELECT i.fdic_cert AS cert,
-         COALESCE(s.issuer_id, i.issuer_id) AS issuer_id,
-         COALESCE(s.issuer_name, i.issuer_name) AS issuer_name
-  FROM issuers i
-  LEFT JOIN issuers s ON s.fdic_cert = i.merged_into
-)
 SELECT f.metric,
-       'ISSUER:' || r.issuer_id AS entity,
+       'ISSUER:' || d.rollup_issuer_id AS entity,
        'issuer' AS entity_type,
        f.tier, f.period_type, f.source,
        CAST(f.period_end AS DATE) AS period_end,
        SUM(f.value) AS value,
        COUNT(*) AS n_certs,
-       r.issuer_name
+       d.rollup_issuer_name AS issuer_name
 FROM facts f
-JOIN rollup r ON f.entity = 'CERT:' || r.cert
+JOIN dim_issuer d ON f.entity = 'CERT:' || d.fdic_cert
 WHERE f.source = 'fdic' AND f.entity_type = 'bank'
-GROUP BY f.metric, r.issuer_id, r.issuer_name, f.tier, f.period_type, f.source, f.period_end;
+  AND CAST(f.period_end AS DATE) >= d.valid_from
+  AND (d.valid_to IS NULL OR CAST(f.period_end AS DATE) < d.valid_to)
+GROUP BY f.metric, d.rollup_issuer_id, d.rollup_issuer_name, f.tier, f.period_type, f.source, f.period_end;

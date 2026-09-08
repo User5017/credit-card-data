@@ -12,6 +12,7 @@ import pandas as pd
 from .fetchers import FETCHERS
 from .golden import check_golden, load_golden
 from .http import make_session
+from .issuers import REPORT_PREFIX, crosswalk_report, dimension, load_issuers
 from .loader import (
     RED,
     REVISION_COLUMNS,
@@ -74,6 +75,14 @@ def cmd_refresh(paths: Paths, sources: list[str] | None, do_render: bool) -> int
         for m in h.messages:
             print(f"    - {m}")
 
+    # the unmatched-name report: crosswalk drift is a maintenance item shown in health, never a status change
+    for source, lines in crosswalk_report(paths).items():
+        if source not in health:
+            continue
+        health[source].messages = [m for m in health[source].messages if not m.startswith(REPORT_PREFIX)] + lines
+        for line in lines:
+            print(f"[{source}] {line}")
+
     for r in check_golden(facts, load_golden(paths.golden_yaml), live_only=True):
         h = health.setdefault(r["source"], SourceHealth(source=r["source"]))
         if not r["ok"]:
@@ -114,6 +123,19 @@ def cmd_health(paths: Paths, fail_on_red: bool) -> int:
     return 1 if (fail_on_red and red) else 0
 
 
+def cmd_issuers(paths: Paths) -> int:
+    """Print dim_issuer (one line per charter) and the unmatched-name report from the raw files on disk."""
+    dim = dimension(load_issuers(paths.issuers_csv))
+    for r in dim.itertuples(index=False):
+        span = f"{r.valid_from.date()} to {r.valid_to.date() if not pd.isna(r.valid_to) else 'present'}"
+        into = f" -> cert {int(r.merged_into)}" if not pd.isna(r.merged_into) else ""
+        print(f"{r.fdic_cert:6d} {r.bank_name:46s} {r.kind:8s} {r.issuer_id:12s} rolls up to {r.rollup_issuer_id:12s} {span}{into}")
+    for source, lines in crosswalk_report(paths).items():
+        for line in lines:
+            print(f"[{source}] {line}")
+    return 0
+
+
 def load_dotenv(path) -> None:
     """Load KEY=VALUE lines from a local .env (never committed) into the environment, without overriding."""
     import os
@@ -137,6 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--no-render", action="store_true")
     sub.add_parser("render", help="rebuild docs/index.html from data/")
     sub.add_parser("check", help="run every golden check against data/facts.csv")
+    sub.add_parser("issuers", help="print dim_issuer and the unmatched-name report")
     h = sub.add_parser("health", help="print source health")
     h.add_argument("--fail-on-red", action="store_true")
     args = p.parse_args(argv)
@@ -149,6 +172,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "check":
         return cmd_check(paths)
+    if args.cmd == "issuers":
+        return cmd_issuers(paths)
     if args.cmd == "health":
         return cmd_health(paths, args.fail_on_red)
     return 2

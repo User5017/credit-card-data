@@ -15,7 +15,8 @@ import duckdb
 import pandas as pd
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from .fetchers import fdic, tccp
+from .fetchers import tccp
+from .issuers import ISSUER_TYPES
 from .loader import read_facts, read_revisions
 from .paths import Paths
 from .schema import PERIOD_WORDS, SERIES_KEY
@@ -177,7 +178,7 @@ def _connect(
         )
     if issuers_csv is not None and issuers_csv.exists():
         # the charter list behind the FDIC issuer roll-up view, schema pinned the same way
-        cols = ", ".join(f"'{c}': '{t}'" for c, t in fdic.ISSUER_TYPES.items())
+        cols = ", ".join(f"'{c}': '{t}'" for c, t in ISSUER_TYPES.items())
         con.execute(
             f"CREATE TABLE issuers AS SELECT * FROM read_csv(?, header = true, columns = {{{cols}}})",
             [str(issuers_csv)],

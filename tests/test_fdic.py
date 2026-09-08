@@ -69,7 +69,7 @@ def test_quarter_end_before(merger, last_report):
 
 def test_issuers_csv_lists_the_handoff_charters_with_their_mergers():
     issuers = fdic.load_issuers(REPO / "crosswalks" / "issuers.csv")
-    assert len(issuers) == 29 and issuers["fdic_cert"].is_unique
+    assert len(issuers) == 30 and issuers["fdic_cert"].is_unique
     assert set(issuers["kind"]) == {"issuer", "sponsor"}
     assert int((issuers["kind"] == "sponsor").sum()) == 6
     merged = issuers[issuers["valid_to"].notna()].set_index("fdic_cert")
@@ -81,7 +81,7 @@ def test_issuers_csv_lists_the_handoff_charters_with_their_mergers():
         34351: ("2024-06-01", 32188),
     }
     active = set(issuers.loc[issuers["valid_to"].isna(), "fdic_cert"])
-    assert len(active) == 24 and set(merged["merged_into"].astype(int)) <= active
+    assert len(active) == 25 and set(merged["merged_into"].astype(int)) <= active
     by_cert = issuers.set_index("fdic_cert")
     assert by_cert.loc[5649, "issuer_id"] == "DISCOVER" and by_cert.loc[33954, "issuer_id"] == "CAPITAL_ONE"
     assert by_cert.loc[34404, "issuer_id"] == "WEBBANK" and by_cert.loc[34404, "kind"] == "sponsor"
@@ -96,7 +96,7 @@ def test_series_csv_matches_issuers_csv(meta):
     assert set(mine["metric"]) == metrics and len(metrics) == 6
     expected_entities = {fdic.entity_for(int(c)) for c in issuers["fdic_cert"]} | {fdic.ENTITY_ALL}
     assert set(mine["entity"]) == expected_entities
-    assert len(mine) == 6 * len(expected_entities) == 180
+    assert len(mine) == 6 * len(expected_entities) == 186
     assert set(mine.loc[mine["entity"] == fdic.ENTITY_ALL, "entity_type"]) == {"aggregate"}
     assert set(mine.loc[mine["entity"] != fdic.ENTITY_ALL, "entity_type"]) == {"bank"}
     assert (mine["period_type"] == "Q").all() and (mine["tier"] == "all").all() and (mine["unit"] == "usd_bn").all()
@@ -117,6 +117,9 @@ def test_series_csv_matches_issuers_csv(meta):
         (lambda df: df.assign(fdic_cert=df["fdic_cert"].replace("628", "628a")), "must be a number"),
         (lambda df: df.assign(bank_name=df["bank_name"].where(df["fdic_cert"] != "628", "")), "empty bank_name"),
         (lambda df: df.assign(valid_to=df["valid_to"].replace("2025-05-18", "05/18/2025")), "match format"),
+        (lambda df: df.assign(valid_from=df["valid_from"].where(df["fdic_cert"] != "628", "")), "empty valid_from"),
+        (lambda df: df.assign(valid_from=df["valid_from"].where(df["fdic_cert"] != "5649", "2025-05-18")), "valid_to before valid_from"),
+        (lambda df: df.assign(aliases=df["aliases"].where(df["fdic_cert"] != "628", "Discover Bank")), "claimed by cert 5649"),
     ],
 )
 def test_issuers_csv_inconsistencies_fail(tmp_path, edit, match):
@@ -308,9 +311,11 @@ class FakeSession:
         self.calls: list[dict] = []
 
     def get(self, url, params=None):
-        assert url == fdic.API_URL
+        assert url in (fdic.API_URL, fdic.INSTITUTIONS_URL)
         self.calls.append(params)
-        if "agg_by" in params:
+        if url == fdic.INSTITUTIONS_URL:
+            body = (FDIC_FIXTURE_DIR / fdic.INSTITUTIONS_FILE).read_bytes()
+        elif "agg_by" in params:
             body = self.agg_override if self.agg_override is not None else (FDIC_FIXTURE_DIR / fdic.AGGREGATE_FILE).read_bytes()
         else:
             cert = int(params["filters"].split(":")[1])
@@ -343,20 +348,23 @@ def test_fetch_end_to_end(tmp_path, monkeypatch, meta, fdic_facts):
     (raw / "latest" / "financials_99999.csv").write_text("stale file from a charter no longer listed\n")
     session = FakeSession()
     facts = fdic.fetch(meta, raw, session, PULLED_AT)
-    assert len(session.calls) == len(FDIC_FIXTURE_CERTS) + 1
+    assert len(session.calls) == len(FDIC_FIXTURE_CERTS) + 2
     assert session.calls[0]["format"] == "csv" and session.calls[0]["limit"] == fdic.LIMIT
-    assert session.calls[-1]["filters"] == "NOT BKCLASS:(NC OR OI)" and session.calls[-1]["agg_by"] == "REPDTE"
+    assert session.calls[-2]["filters"] == "NOT BKCLASS:(NC OR OI)" and session.calls[-2]["agg_by"] == "REPDTE"
+    assert session.calls[-1]["filters"] == "CERT:(4297 OR 33954 OR 5649 OR 628 OR 34404)"
     assert sorted(p.name for p in (raw / "latest").iterdir()) == sorted(
-        [fdic.CERT_FILE.format(cert=c) for c in FDIC_FIXTURE_CERTS] + [fdic.AGGREGATE_FILE]
+        [fdic.CERT_FILE.format(cert=c) for c in FDIC_FIXTURE_CERTS] + [fdic.AGGREGATE_FILE, fdic.INSTITUTIONS_FILE]
     )
     assert (raw / "latest" / "financials_4297.csv").read_bytes() == cert_file(4297).read_bytes()
     assert len(facts) == len(fdic_facts)
     assert facts["period_end"].max() == Q2_2026
 
 
-def test_fetch_fails_on_a_charter_with_no_rows(tmp_path, monkeypatch, meta):
+def test_fetch_fails_on_a_charter_the_fdic_does_not_return(tmp_path, monkeypatch, meta):
+    """The institution records come back without cert 7213 (as for an unknown certificate), so the crosswalk check
+    fails before any charter file is parsed; a header-only charter CSV is covered in test_charter_file_problems_fail."""
     monkeypatch.setattr(fdic, "ISSUERS_CSV", fixture_issuers_csv(tmp_path, certs=(4297, 5649, 33954, 628, 34404, 7213)))
-    with pytest.raises(ValueError, match="fields missing from the response"):
+    with pytest.raises(ValueError, match=r"certificates missing \[7213\]"):
         fdic.fetch(meta, tmp_path / "fdic", FakeSession(), PULLED_AT)
 
 
@@ -461,6 +469,7 @@ def _release_dir(tmp_path: Path, drop_last_of: int | None = None, drop_last_buck
     if drop_last_bucket:
         doc["data"] = doc["data"][:-1]
     (latest / fdic.AGGREGATE_FILE).write_text(json.dumps(doc), encoding="utf-8")
+    (latest / fdic.INSTITUTIONS_FILE).write_bytes((FDIC_FIXTURE_DIR / fdic.INSTITUTIONS_FILE).read_bytes())
     return latest
 
 
@@ -494,4 +503,8 @@ def test_missing_or_unlisted_charter_files_fail(tmp_path, fdic_issuers):
     (latest / "financials_4297.csv").write_bytes(cert_file(4297).read_bytes())
     (latest / fdic.AGGREGATE_FILE).unlink()
     with pytest.raises(ValueError, match="no aggregate_by_repdte.json"):
+        fdic.parse_release(latest, fdic_issuers, PULLED_AT)
+    (latest / fdic.AGGREGATE_FILE).write_bytes((FDIC_FIXTURE_DIR / fdic.AGGREGATE_FILE).read_bytes())
+    (latest / fdic.INSTITUTIONS_FILE).unlink()
+    with pytest.raises(ValueError, match="no institutions.json"):
         fdic.parse_release(latest, fdic_issuers, PULLED_AT)

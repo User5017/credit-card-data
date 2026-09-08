@@ -1,30 +1,31 @@
-issuer_id,issuer_name,fdic_cert,bank_name,kind,sec_cik,valid_from,valid_to,merged_into,note
-CAPITAL_ONE,Capital One,4297,"Capital One, National Association",issuer,,,,,"The surviving Capital One charter. Absorbed Capital One Bank (USA), N.A. (cert 33954) on 2022-10-03 and Discover Bank (cert 5649) on 2025-05-18; the roll-up view sums all three. Its own card loans jump from $143bn to $246bn in 2025 Q2 when Discover's book arrives. FDIC change codes verified 2026-09-07 via api.fdic.gov/banks/history."
-CAPITAL_ONE,Capital One,33954,"Capital One Bank (USA), National Association",issuer,,,2022-10-03,4297,"Capital One's card-issuing charter until it merged into cert 4297 (change code 223, effective 2022-10-03). Last call report 2022-09-30, card loans $99.0bn."
-DISCOVER,Discover,5649,Discover Bank,issuer,1393612,,2025-05-18,4297,"Merged into Capital One, N.A. (change code 223, effective 2025-05-18). Last call report 2025-03-31, card loans $98.9bn. SEC CIK is Discover Financial Services, the former parent."
-JPMORGAN,JPMorgan Chase,628,"JPMorgan Chase Bank, National Association",issuer,19617,,,,"Absorbed Chase Bank USA, N.A. (cert 23702) on 2019-05-18; the roll-up sums both. SEC CIK is JPMorgan Chase & Co."
-JPMORGAN,JPMorgan Chase,23702,"Chase Bank USA, National Association",issuer,,,2019-05-18,628,"Chase's card-issuing charter until it merged into cert 628 (change code 223, effective 2019-05-18). Last call report 2019-03-31."
-CITI,Citi,7213,"Citibank, National Association",issuer,,,,,
-AMEX,American Express,27471,American Express National Bank,issuer,,,,,"Renamed from American Express Centurion Bank on 2018-04-01, the day American Express Bank, FSB (cert 35328) merged in; the roll-up sums both."
-AMEX,American Express,35328,"American Express Bank, FSB",issuer,,,2018-04-01,27471,"Merged into cert 27471 (change code 223, effective 2018-04-01). Last call report 2018-03-31."
-BOFA,Bank of America,3510,"Bank of America, National Association",issuer,,,,,
-SYNCHRONY,Synchrony,27314,Synchrony Bank,issuer,,,,,"GE Money Bank lineage, renamed 2014-06-02."
-WELLS_FARGO,Wells Fargo,3511,"Wells Fargo Bank, National Association",issuer,,,,,
-US_BANK,U.S. Bank,6548,U.S. Bank National Association,issuer,,,,,
-BARCLAYS,Barclays,57203,Barclays Bank Delaware,issuer,,,,,US card charter of Barclays PLC.
-GOLDMAN,Goldman Sachs,33124,Goldman Sachs Bank USA,issuer,,,,,"Consumer card issuer since 2019 (Apple Card). Reports zero card charge-offs in 2026 against $19.5bn of card loans (scouting of 2026-09-07); unexplained, watch."
-USAA,USAA,32188,USAA Federal Savings Bank,issuer,,,,,"Reports 90+ day card balances as nonaccrual (P9CRCD 0, NACRCD nonzero), so noncurrent (90+ plus nonaccrual) is the comparable measure. Absorbed USAA Savings Bank (cert 34351) on 2024-06-01."
-USAA,USAA,34351,USAA Savings Bank,issuer,,,2024-06-01,32188,"Folded into USAA FSB effective 2024-06-01 (date from the scouting of 2026-09-07; the /history endpoint carries no change-code-223 record on this cert). Last call report 2024-03-31, card loans already 0."
-BREAD,Bread Financial,57570,Comenity Capital Bank,issuer,,,,,One of Bread Financial's two charters; the roll-up sums it with Comenity Bank (cert 27499).
-BREAD,Bread Financial,27499,Comenity Bank,issuer,,,,,Bread Financial's second charter.
-TD,TD Bank,33947,"TD Bank USA, National Association",issuer,,,,,"TD's retail card book. TD Bank, N.A. (cert 18409) holds a further $4.8bn of card loans and is not listed."
-FNBO,First National Bank of Omaha,5452,First National Bank of Omaha,issuer,,,,,Reports 90+ day card balances as nonaccrual.
-PNC,PNC,6384,"PNC Bank, National Association",issuer,,,,,
-TRUIST,Truist,9846,Truist Bank,issuer,,,,,
-CITIZENS,Citizens,57957,"Citizens Bank, National Association",issuer,,,,,Reports 90+ day card balances as nonaccrual.
-COASTAL,Coastal Community Bank,34403,Coastal Community Bank,sponsor,,,,,Sponsor bank for fintech card programs (CCBX).
-BANCORP,The Bancorp,35444,"The Bancorp Bank, National Association",sponsor,,,,,Sponsor bank for fintech card programs.
-LEAD,Lead Bank,8283,Lead Bank,sponsor,,,,,Sponsor bank for fintech card programs.
-WEBBANK,WebBank,34404,WebBank,sponsor,,,,,Utah industrial bank; sponsor bank for fintech card programs. Card charge-off fields are zero in every quarter since 2005 (a few thousand dollars a quarter in 2000-2004). FDIC cert verified 2026-09-07 via api.fdic.gov.
-EVOLVE,Evolve Bank & Trust,1299,Evolve Bank & Trust,sponsor,,,,,Sponsor bank for fintech card programs.
-SUTTON,Sutton Bank,5962,Sutton Bank,sponsor,,,,,Sponsor bank for fintech card programs.
+issuer_id,issuer_name,fdic_cert,bank_name,kind,sec_cik,valid_from,valid_to,merged_into,aliases,note
+CAPITAL_ONE,Capital One,4297,"Capital One, National Association",issuer,,1933-05-22,,,Capital One,"The surviving Capital One charter (Hibernia National Bank until Capital One bought Hibernia in 2005; the card book before that is Hibernia's, tiny). Absorbed Capital One Bank (USA), N.A. (cert 33954) on 2022-10-03 and Discover Bank (cert 5649) on 2025-05-18; the roll-up sums all three. Its own card loans jump from $143bn to $246bn in 2025 Q2 when Discover's book arrives."
+CAPITAL_ONE,Capital One,33954,"Capital One Bank (USA), National Association",issuer,,1994-11-22,2022-10-03,4297,Capital One Bank,"Capital One's card-issuing charter until it merged into cert 4297 (change code 223, effective 2022-10-03). Last call report 2022-09-30, card loans $99.0bn."
+DISCOVER,Discover,5649,Discover Bank,issuer,1393612,1911-08-30,2025-05-18,4297,Discover,"Greenwood Trust Company until 2000. Merged into Capital One, N.A. (change code 223, effective 2025-05-18). Last call report 2025-03-31, card loans $98.9bn. SEC CIK is Discover Financial Services, the former parent."
+JPMORGAN,JPMorgan Chase,628,"JPMorgan Chase Bank, National Association",issuer,19617,1824-01-01,,,"JPMorgan Chase Bank, N.A.|Chase","Chemical Bank lineage. Absorbed Chase Bank USA, N.A. (cert 23702) on 2019-05-18; the roll-up sums both. SEC CIK is JPMorgan Chase & Co."
+JPMORGAN,JPMorgan Chase,23702,"Chase Bank USA, National Association",issuer,,1982-02-11,2019-05-18,628,"Chase Bank USA, N.A.|Chase Manhattan Bank USA","Chase's card-issuing charter until it merged into cert 628 (change code 223, effective 2019-05-18). Last call report 2019-03-31."
+CITI,Citi,7213,"Citibank, National Association",issuer,,1812-06-16,,,"Citibank, N.A.|Citibank","The TCCP survey spells it 'Citibank, N.A.'."
+AMEX,American Express,27471,American Express National Bank,issuer,,1989-03-20,,,American Express,"American Express Centurion Bank until 2018-04-01, the day American Express Bank, FSB (cert 35328) merged in; the roll-up sums both. The FDIC record carries a double space in the name."
+AMEX,American Express,35328,"American Express Bank, FSB",issuer,,2000-12-01,2018-04-01,27471,,"Merged into cert 27471 (change code 223, effective 2018-04-01). Last call report 2018-03-31."
+BOFA,Bank of America,3510,"Bank of America, National Association",issuer,,1904-10-17,,,"Bank of America, N.A.|Bank of America",
+SYNCHRONY,Synchrony,27314,Synchrony Bank,issuer,,1988-08-01,,,Synchrony Financial|Synchrony,"GE Money Bank lineage, renamed 2014-06-02. The TCCP survey files under the holding company name 'Synchrony Financial'."
+WELLS_FARGO,Wells Fargo,3511,"Wells Fargo Bank, National Association",issuer,,1870-01-01,,,"Wells Fargo Bank, N.A.|Wells Fargo",
+US_BANK,U.S. Bank,6548,U.S. Bank National Association,issuer,,1863-07-13,,,"U.S. Bancorp|U.S. Bank, National Association|U.S. Bank N.A.",The TCCP survey files under the holding company name 'U.S. Bancorp'.
+BARCLAYS,Barclays,57203,Barclays Bank Delaware,issuer,,2001-05-23,,,Barclays,Juniper Bank until Barclays bought Juniper Financial in 2004; US card charter of Barclays PLC.
+GOLDMAN,Goldman Sachs,33124,Goldman Sachs Bank USA,issuer,,1990-08-30,,,Goldman Sachs,"Consumer card issuer since 2019 (Apple Card). Reports zero card charge-offs in 2026 against $19.5bn of card loans (scouting of 2026-09-07); unexplained, watch."
+USAA,USAA,32188,USAA Federal Savings Bank,issuer,,1983-12-30,,,USAA,"Reports 90+ day card balances as nonaccrual (P9CRCD 0, NACRCD nonzero), so noncurrent (90+ plus nonaccrual) is the comparable measure. Absorbed USAA Savings Bank (cert 34351) on 2024-06-01."
+USAA,USAA,34351,USAA Savings Bank,issuer,,1996-09-27,2024-06-01,32188,USAA Credit Card Bank,"Folded into USAA FSB effective 2024-06-01 (change code 224 on the institution record, NEWCERT 32188; no 223 record in /history). Last call report 2024-03-31, card loans already 0."
+BREAD,Bread Financial,57570,Comenity Capital Bank,issuer,,2003-12-01,,,Comenity Capital|World Financial Capital Bank,One of Bread Financial's two charters; the roll-up sums it with Comenity Bank (cert 27499).
+BREAD,Bread Financial,27499,Comenity Bank,issuer,,1989-05-01,,,World Financial Network National Bank|Comenity,Bread Financial's second charter.
+TD,TD Bank,33947,"TD Bank USA, National Association",issuer,,1994-10-13,,,"TD Bank USA, N.A.|TD Bank USA","TD's retail card book (store-card programs). TD Bank, N.A. (cert 18409) holds the rest of TD's card loans; the roll-up sums both."
+TD,TD Bank,18409,"TD Bank, National Association",issuer,,1852-01-01,,,"TD Bank, N.A.|TD Bank","TD's main US charter (Banknorth lineage). Holds about $4.8bn of card loans alongside TD Bank USA's book; the TCCP survey lists it separately as 'TD Bank, N.A.'. Thrift-style history: card loans reported from 1986, charge-off flows from 1989."
+FNBO,First National Bank of Omaha,5452,First National Bank of Omaha,issuer,,1857-01-01,,,FNBO,Reports 90+ day card balances as nonaccrual.
+PNC,PNC,6384,"PNC Bank, National Association",issuer,,1804-01-01,,,"PNC Bank, N.A.|PNC",
+TRUIST,Truist,9846,Truist Bank,issuer,,1872-01-01,,,Truist|Branch Banking and Trust Company,Branch Banking and Trust Company (BB&T) until the 2019 SunTrust merger created Truist.
+CITIZENS,Citizens,57957,"Citizens Bank, National Association",issuer,,2005-05-13,,,"Citizens Bank, N.A.|Citizens",Reports 90+ day card balances as nonaccrual.
+COASTAL,Coastal Community Bank,34403,Coastal Community Bank,sponsor,,1997-04-01,,,,Sponsor bank for fintech card programs (CCBX).
+BANCORP,The Bancorp,35444,"The Bancorp Bank, National Association",sponsor,,2000-07-28,,,"The Bancorp Bank, N.A.|The Bancorp Bank",Sponsor bank for fintech card programs.
+LEAD,Lead Bank,8283,Lead Bank,sponsor,,1928-01-12,,,,Garden City Bank until 2010. Sponsor bank for fintech card programs.
+WEBBANK,WebBank,34404,WebBank,sponsor,,1997-05-15,,,,Utah industrial bank; sponsor bank for fintech card programs. Card charge-off fields are zero in every quarter since 2005 (a few thousand dollars a quarter in 2000-2004). FDIC cert verified 2026-09-07 via api.fdic.gov.
+EVOLVE,Evolve Bank & Trust,1299,Evolve Bank & Trust,sponsor,,1925-06-05,,,Evolve Bank and Trust,Sponsor bank for fintech card programs.
+SUTTON,Sutton Bank,5962,Sutton Bank,sponsor,,1878-01-01,,,,Sponsor bank for fintech card programs.

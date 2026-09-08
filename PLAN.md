@@ -79,12 +79,19 @@ covers Y-14 filers only, NY Fed is an Equifax panel. Every chart footnote comes 
 
 ### 4.3 Other crosswalks
 
-- `issuers.csv`: one row per FDIC charter: issuer_id, issuer_name, fdic_cert, bank_name, kind (issuer or sponsor),
-  sec_cik, valid_from, valid_to, merged_into (the surviving certificate), note. Multi-charter issuers repeat the
-  issuer_id (Bread, Capital One); a charter that merged out carries the merger date and its acquirer, and the
-  surviving charter's issuer names the roll-up (Discover into Capital One). Chains of mergers are not supported:
-  merged_into must point at an active charter. Loaded into DuckDB as `issuers` for the views. Hardest artifact;
-  every row that needs one has a note.
+- `issuers.csv` (dim_issuer, src/carddash/issuers.py): one row per FDIC charter: issuer_id, issuer_name, fdic_cert,
+  bank_name (the FDIC legal name), kind (issuer or sponsor), sec_cik, valid_from (the FDIC established date),
+  valid_to (the merger date), merged_into (the surviving certificate), aliases (spellings other sources use,
+  pipe-separated), note. Multi-charter issuers repeat the issuer_id (Bread, Capital One, TD); a charter that merged
+  out carries the merger date and its acquirer, and the surviving charter's issuer names the roll-up (Discover into
+  Capital One). Chains of mergers are not supported: merged_into must point at an active charter. The fdic fetcher
+  checks valid_from, valid_to, merged_into and the active flag against the FDIC's /institutions records on every
+  run and fails on a disagreement; a renamed charter is only reported. Names match on a normalized form (case,
+  punctuation and spacing dropped), never fuzzy, and the unmatched-name report (`carddash issuers`, and the health
+  messages of the tccp and fdic sources after every refresh) lists the TCCP top-25 institution names and the FDIC
+  legal names the crosswalk does not know. Lineage before a renaming (Hibernia into Capital One, N.A., Juniper into
+  Barclays) is in the note, not modelled: the roll-up carries a charter's whole history. Loaded into DuckDB as
+  `issuers`, exposed as the `dim_issuer` view. Hardest artifact; every row that needs one has a note.
 - `tiers.csv`: the CFPB five tiers with score bounds. Per-source mappings are documented as sources arrive.
 
 ### 4.4 Sub-grain sources

@@ -1,14 +1,17 @@
 {
-  "generated_at": "2026-09-08T05:05:25Z",
+  "generated_at": "2026-09-08T05:28:06Z",
   "sources": {
     "fdic": {
       "source": "fdic",
       "status": "ok",
-      "messages": [],
+      "messages": [
+        "856 new row(s)",
+        "issuer crosswalk: all 30 charter names match the FDIC institution records"
+      ],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-08T05:05:25Z",
-      "rows": 23642,
-      "n_series": 180,
+      "pulled_at": "2026-09-08T05:28:06Z",
+      "rows": 24498,
+      "n_series": 186,
       "n_revisions": 0
     },
     "fred": {
@@ -44,7 +47,9 @@
     "tccp": {
       "source": "tccp",
       "status": "ok",
-      "messages": [],
+      "messages": [
+        "issuer crosswalk: 9 of 28 top-25 institution names in the 2025-12-31 TCCP file are not in issuers.csv: America First Federal Credit Union, Boeing Employees' Credit Union, Credit One Bank, National Association, Fifth Third Bank, National Association, Merrick Bank, Navy Federal Credit Union, Pentagon Federal Credit Union, Regions Bank, Stride Bank, National Association"
+      ],
       "last_period_end": "2025-12-31",
       "pulled_at": "2026-09-08T05:05:25Z",
       "rows": 82,
