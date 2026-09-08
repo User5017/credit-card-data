@@ -28,7 +28,7 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Seasonal adjustment is in the metric name (`_sa` / `_nsa`) whenever the source offers both.
 - unit, cadence, display name, scope note, value range, and staleness limit live in crosswalks/series.csv,
   one row per series. A fetcher may only emit series that exist there; validation rejects the rest.
-- Entities: prefixed ids (`ALL_HOLDERS`, `COMBANKS_TOP100`, later `CERT:34404`, `STATE:ME`), with
+- Entities: prefixed ids (`ALL_HOLDERS`, `COMBANKS_TOP100`, `CERT:4297`, `FDIC_ALL_INSURED`, later `STATE:ME`), with
   entity_type set. Views never parse prefixes.
 - Sources finer than the fact key (TCCP card products, complaints) keep their own raw table and feed
   facts through a view. Aggregation choices go in SQL, not in fetchers.

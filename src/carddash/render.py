@@ -15,7 +15,7 @@ import duckdb
 import pandas as pd
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from .fetchers import tccp
+from .fetchers import fdic, tccp
 from .loader import read_facts, read_revisions
 from .paths import Paths
 from .schema import PERIOD_WORDS, SERIES_KEY
@@ -28,6 +28,7 @@ SOURCE_LABELS = {
     "tccp": "CFPB Terms of Credit Card Plans survey",
     "phillyfed": "Federal Reserve Bank of Philadelphia, Large Bank Credit Card and Mortgage Data (FR Y-14M)",
     "nyfed_hhdc": "Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit (Consumer Credit Panel/Equifax)",
+    "fdic": "FDIC, Call Report data via the BankFind Suite API",
 }
 STATUS_LABELS = {
     "ok": "OK",
@@ -161,7 +162,9 @@ PANELS = [
 ]
 
 
-def _connect(facts: pd.DataFrame, views_sql: Path, products_csv: Path | None = None) -> duckdb.DuckDBPyConnection:
+def _connect(
+    facts: pd.DataFrame, views_sql: Path, products_csv: Path | None = None, issuers_csv: Path | None = None
+) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
     con.register("facts_df", facts)
     con.execute("CREATE TABLE facts AS SELECT * FROM facts_df")
@@ -171,6 +174,13 @@ def _connect(facts: pd.DataFrame, views_sql: Path, products_csv: Path | None = N
         con.execute(
             f"CREATE TABLE tccp_products AS SELECT * FROM read_csv(?, header = true, columns = {{{cols}}})",
             [str(products_csv)],
+        )
+    if issuers_csv is not None and issuers_csv.exists():
+        # the charter list behind the FDIC issuer roll-up view, schema pinned the same way
+        cols = ", ".join(f"'{c}': '{t}'" for c, t in fdic.ISSUER_TYPES.items())
+        con.execute(
+            f"CREATE TABLE issuers AS SELECT * FROM read_csv(?, header = true, columns = {{{cols}}})",
+            [str(issuers_csv)],
         )
     sql = "\n".join(
         line for line in views_sql.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("--")
@@ -342,7 +352,7 @@ def render(paths: Paths) -> Path:
     health = health_doc.get("sources", {})
     revisions = read_revisions(paths.revisions_csv)
 
-    con = _connect(facts, paths.views_sql, paths.tccp_products_csv)
+    con = _connect(facts, paths.views_sql, paths.tccp_products_csv, paths.issuers_csv)
     panels = []
     for panel in PANELS:
         charts = [_chart_payload(con, spec, meta_idx, health) for spec in panel["charts"]]

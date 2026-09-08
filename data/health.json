@@ -1,6 +1,16 @@
 {
-  "generated_at": "2026-09-08T03:45:24Z",
+  "generated_at": "2026-09-08T04:58:22Z",
   "sources": {
+    "fdic": {
+      "source": "fdic",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-06-30",
+      "pulled_at": "2026-09-08T04:58:22Z",
+      "rows": 23642,
+      "n_series": 180,
+      "n_revisions": 0
+    },
     "fred": {
       "source": "fred",
       "status": "ok",

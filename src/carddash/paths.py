@@ -66,6 +66,10 @@ class Paths:
         return self.sql / "tccp_facts.sql"
 
     @property
+    def issuers_csv(self) -> Path:
+        return self.crosswalks / "issuers.csv"
+
+    @property
     def tccp_products_csv(self) -> Path:
         """Sub-grain raw table for the TCCP source: one row per card product per half-year, written by its fetcher."""
         return self.raw / "tccp" / "tccp_products.csv"

@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from carddash.fetchers import fred, nyfed_hhdc, phillyfed, tccp
+from carddash.fetchers import fdic, fred, nyfed_hhdc, phillyfed, tccp
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
 from carddash.series import load_series
@@ -60,12 +60,35 @@ def hhdc_facts() -> pd.DataFrame:
     return coerce_facts(nyfed_hhdc.parse_release(HHDC_FIXTURE, PULLED_AT, expected_quarter=HHDC_FIXTURE_QUARTER))
 
 
+FDIC_FIXTURE_CERTS = (4297, 5649, 33954, 628, 34404)  # charters whose CSVs are checked in under fixtures/fdic
+FDIC_FIXTURE_DIR = FIXTURES / "fdic"
+
+
 @pytest.fixture(scope="session")
-def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts) -> pd.DataFrame:
+def fdic_issuers() -> pd.DataFrame:
+    """issuers.csv rows for the checked-in charters: Capital One and the two it absorbed, JPMorgan Chase, WebBank."""
+    issuers = fdic.load_issuers(REPO / "crosswalks" / "issuers.csv")
+    return issuers[issuers["fdic_cert"].isin(FDIC_FIXTURE_CERTS)].reset_index(drop=True)
+
+
+@pytest.fixture(scope="session")
+def fdic_facts(fdic_issuers) -> pd.DataFrame:
+    """Facts from the checked-in FDIC files (five charters plus the industry total), parsed once per session."""
+    return coerce_facts(fdic.parse_release(FDIC_FIXTURE_DIR, fdic_issuers, PULLED_AT))
+
+
+@pytest.fixture(scope="session")
+def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
-            [facts_from_fred_fixtures(meta), facts_from_tccp_fixtures(tccp_products), phillyfed_facts, hhdc_facts],
+            [
+                facts_from_fred_fixtures(meta),
+                facts_from_tccp_fixtures(tccp_products),
+                phillyfed_facts,
+                hhdc_facts,
+                fdic_facts,
+            ],
             ignore_index=True,
         )
     )

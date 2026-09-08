@@ -30,7 +30,7 @@ or login. No LLM in the numeric path for structured sources. No client-side filt
 | `tccp` | CFPB Terms of Credit Card Plans | H | one xlsx per half-year, linked from the survey page (names vary: `cfpb_tccp-data_2025-12-31.xlsx`, `..._2023-07-01_2023_12-31.xlsx`, re-uploads get a suffix), current layout from H1 2023 | 2026-09-07, loaded H1 2023 to H2 2025 |
 | `phillyfed` | Philadelphia Fed large-bank credit card data (FR Y-14M) | Q | two CSVs per release (Balances, Originations), each with the full history; URL embeds the quarter, fetcher walks back from the current quarter | 2026-09-07, loaded 2012 Q3 to 2026 Q1 |
 | `nyfed_hhdc` | NY Fed Household Debt and Credit (Consumer Credit Panel/Equifax) | Q | one xlsx per release with the full history (`HHD_C_Report_2026Q2.xlsx`); the file name embeds the data quarter, fetcher walks back from the current quarter; data sheets found by title, not sheet name | 2026-09-07, loaded 2003 Q1 to 2026 Q2 (age split from 2000 Q1) |
-| `fdic` | FDIC BankFind API financials (call-report card loans, charge-offs, past due, per bank) | Q | JSON, no key | 2026-09-07 |
+| `fdic` | FDIC BankFind Suite API financials: card loans, 30-89 days past due, noncurrent (90+ plus nonaccrual) and the FDIC's quarterly charge-offs, recoveries and net charge-offs, per charter (`CERT:<n>`, the 29 charters in crosswalks/issuers.csv) and for all insured institutions (`FDIC_ALL_INSURED`, BKCLASS NC and OI excluded) | Q | one CSV per charter plus one aggregate JSON, no key | 2026-09-08, loaded 1984 Q1 to 2026 Q2 |
 
 Corrections from the review: FFIEC bulk download is an ASP.NET form that returns 403 to scripts, so the FDIC API
 replaces it. The CFPB complaint database is not on Socrata; it has an Elasticsearch API with a `trends`
@@ -79,8 +79,12 @@ covers Y-14 filers only, NY Fed is an Equifax panel. Every chart footnote comes 
 
 ### 4.3 Other crosswalks
 
-- `issuers.csv`: issuer_id, display name, SEC CIK, FDIC certs, valid_from, valid_to, merged_into, note.
-  Handles Discover into Capital One and multi-charter issuers. Hardest artifact; every row has a note.
+- `issuers.csv`: one row per FDIC charter: issuer_id, issuer_name, fdic_cert, bank_name, kind (issuer or sponsor),
+  sec_cik, valid_from, valid_to, merged_into (the surviving certificate), note. Multi-charter issuers repeat the
+  issuer_id (Bread, Capital One); a charter that merged out carries the merger date and its acquirer, and the
+  surviving charter's issuer names the roll-up (Discover into Capital One). Chains of mergers are not supported:
+  merged_into must point at an active charter. Loaded into DuckDB as `issuers` for the views. Hardest artifact;
+  every row that needs one has a note.
 - `tiers.csv`: the CFPB five tiers with score bounds. Per-source mappings are documented as sources arrive.
 
 ### 4.4 Sub-grain sources
@@ -88,7 +92,7 @@ covers Y-14 filers only, NY Fed is an Equifax panel. Every chart footnote comes 
 Sources finer than the fact key keep a raw table and feed facts through a view: TCCP is one row per card
 product with a set of target tiers (`tccp_products`, committed as data/raw/tccp/tccp_products.csv, rebuilt from the
 snapshots every run, facts from sql/tccp_facts.sql); complaints are company x issue x state; call reports
-are per charter (`entity = CERT:<n>`, rolled up to issuer in a view). Aggregation choices live in SQL.
+are per charter (`entity = CERT:<n>`, rolled up to issuer in `v_fdic_issuer`, acquirer plus acquired charters summed by period). Aggregation choices live in SQL.
 
 ### 4.5 Cadence alignment
 

@@ -8,6 +8,12 @@ Rules: idempotent; pulls full history; writes the raw download under raw_dir/lat
 never touches facts.csv or DuckDB (the loader does); parses by header text, never by column position.
 """
 
-from . import fred, nyfed_hhdc, phillyfed, tccp
+from . import fdic, fred, nyfed_hhdc, phillyfed, tccp
 
-FETCHERS = {fred.SOURCE: fred, tccp.SOURCE: tccp, phillyfed.SOURCE: phillyfed, nyfed_hhdc.SOURCE: nyfed_hhdc}
+FETCHERS = {
+    fred.SOURCE: fred,
+    tccp.SOURCE: tccp,
+    phillyfed.SOURCE: phillyfed,
+    nyfed_hhdc.SOURCE: nyfed_hhdc,
+    fdic.SOURCE: fdic,
+}
