@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handoff 2026-09-07: task 4 done, tasks 5 to 7 and v1.5 scouted</title>
+<style>
+  :root { color-scheme: light dark; --ink: #1e1e1c; --ink2: #5a5955; --bg: #fbfaf7; --card: #ffffff; --line: #e2e0da; --accent: #1f5fa8; --warn: #9a5a00; --ok: #1d7a4a; }
+  @media (prefers-color-scheme: dark) { :root { --ink: #ecebe6; --ink2: #b3b1aa; --bg: #161615; --card: #1f1f1d; --line: #35342f; --accent: #7fb1ee; --warn: #e0a444; --ok: #6fcf97; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { font-size: 26px; margin: 0 0 4px; } h2 { font-size: 20px; margin: 40px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); } h3 { font-size: 16px; margin: 24px 0 8px; }
+  p, li { max-width: 78ch; } .lead { color: var(--ink2); margin-top: 0; }
+  nav ol { columns: 2; gap: 32px; padding-left: 20px; } nav li { break-inside: avoid; }
+  a { color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; margin: 14px 0; }
+  .tbl { overflow-x: auto; margin: 12px 0; } table { border-collapse: collapse; font-size: 13.5px; min-width: 100%; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 10px; border-bottom: 1px solid var(--line); } th { color: var(--ink2); font-weight: 600; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code { font: 13px ui-monospace, SFMono-Regular, Consolas, monospace; background: color-mix(in srgb, var(--line) 45%, transparent); padding: 1px 5px; border-radius: 4px; }
+  pre { overflow-x: auto; background: color-mix(in srgb, var(--line) 45%, transparent); padding: 10px 12px; border-radius: 6px; font-size: 13px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 10px; border: 1px solid; margin-right: 6px; }
+  .ok { color: var(--ok); border-color: var(--ok); } .warn { color: var(--warn); border-color: var(--warn); } .muted { color: var(--ink2); }
+  ul.tight li { margin: 2px 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>Handoff, 2026-09-07</h1>
+<p class="lead">Task 4 (NY Fed Household Debt and Credit) shipped and green on the runner. The rest of this page is read-only scouting for tasks 5 to 7 and the v1.5 sources, plus a landscape scan. Nothing in sections 2 to 6 has been built; each item is a candidate for the board. Every fact below was verified by a run or a fetch with the pipeline's own User-Agent unless it is marked unverified.</p>
+
+<nav class="card"><strong>Contents</strong>
+<ol>
+  <li><a href="#task4">Task 4 close-out</a></li>
+  <li><a href="#fdic">Task 5 prep: FDIC BankFind API</a></li>
+  <li><a href="#v15">v1.5 sources: SCE, complaints, BEA, Census</a></li>
+  <li><a href="#page">Page critique and task 7 notes</a></li>
+  <li><a href="#landscape">Landscape scan</a></li>
+  <li><a href="#board">Suggested board changes</a></li>
+</ol></nav>
+
+<h2 id="task4">1. Task 4 close-out</h2>
+<div class="card">
+<p><span class="tag ok">done</span> Pass condition met: card balances and delinquency transitions loaded, quarter discovery walks back, fixture test, golden entries. Three commits on main: <code>2fdd70e</code> (fetcher), <code>7cdc3b5</code> (review fixes), <code>9113fcc</code> (board). First Actions run <a href="https://github.com/User5017/credit-card-data/actions/runs/34164118850">34164118850</a> green; the runner's bot commit <code>0faec59</code> shows all four sources <code>ok</code>. 109 tests, 21 golden checks. Live page shows the new source.</p>
+<ul class="tight">
+  <li><strong>Gate.</strong> The workbook downloads directly with the pipeline User-Agent. No terms click; the landing page has a cookie banner only. A missing quarter is a 302 to an HTML 404 page served with HTTP 200, so discovery checks the zip signature, and also walks back on a real 404.</li>
+  <li><strong>Source facts.</strong> One xlsx per release, <code>HHD_C_Report_&lt;yyyy&gt;Q&lt;n&gt;.xlsx</code>, file name is the data quarter. Full history every release. Data sheets are found by their A1 title because the <code>Page N Data</code> names follow the PDF page numbers. Quirks handled: date-cell labels through 2011Q1 on the accounts sheet, interleaved HE Revolving rows on the limit sheet, header on row 5 for the two flow sheets, a revision footnote on the balance sheet.</li>
+  <li><strong>Loaded.</strong> 12 series, 1,200 rows: balances, accounts, limits, 90+ share, 30+ and 90+ flows for <code>CCP_ALL</code> from 2003Q1; the 90+ flow for six age groups (<code>AGE:18-29</code> to <code>AGE:70+</code>) from 2000Q1. Trillions converted to billions in the fetcher.</li>
+  <li><strong>Golden.</strong> From the 2026-08-11 press release: card balances $1.263tn (fixture-only, see next point), flow into serious delinquency 6.97% (Q2 2026) and 6.93% (Q2 2025), both live.</li>
+  <li><strong>Review outcome.</strong> No wrong numbers. Fixed: a real HTTP 404 on the first probe would have failed every run; an empty cell in a read column would have dropped a quarter below the loader's continuity warning. The reviewer parsed the still-online 2026Q1 and 2025Q2 files with the same parser: the 2026Q1 card balance moved by $10bn between releases while flows did not move, so the balance golden is fixture-only.</li>
+  <li><strong>Timing.</strong> Releases land five to seven weeks after quarter end. <code>max_age_days</code> 200: stale if 2026 Q3 is not out by mid-January 2027.</li>
+</ul>
+</div>
+
+<h2 id="fdic">2. Task 5 prep: FDIC BankFind API</h2>
+<p>Two scouts, both read-only, both through <code>carddash.http.make_session()</code>. Scratch JSON and the field dictionary are under <code>C:\Users\samwe\AppData\Local\Temp\claude\scout-fdic\</code>.</p>
+
+<h3>Access</h3>
+<ul class="tight">
+  <li>No key. Base <code>https://api.fdic.gov/banks/</code>, endpoints <code>/institutions</code>, <code>/financials</code>, <code>/history</code>. Docs at <code>/banks/docs/</code>, dictionaries <code>risview_properties.yaml</code>, <code>institution_properties.yaml</code>, <code>history_properties.yaml</code>.</li>
+  <li>Envelope: <code>meta.total</code>, <code>meta.index.name</code> (vintage stamp; <code>risview_20260819185831</code> already holds 2026-06-30), <code>data[].data</code>, <code>totals</code>. Row id is <code>&lt;CERT&gt;_&lt;REPDTE&gt;</code>.</li>
+  <li>Filters are Elasticsearch query strings: <code>CERT:(628 OR 3510) AND REPDTE:[20250101 TO 20261231]</code>, <code>NOT BKCLASS:(NC OR OI)</code>. <code>REPDTE</code> is <code>YYYYMMDD</code> on financials but <code>MM/DD/YYYY</code> on institutions. Field names must be uppercase.</li>
+  <li><code>limit</code> max 10,000 (500 if more than 250 fields). One request per cert with <code>limit=10000</code> returns the full history (170 quarters from 1984-03-31 for cert 628). A 33-cert pull with 16 fields came back as 4,588 rows in 4.9 s.</li>
+  <li>Rate-limit headers <code>X-Ratelimit-Limit: 120</code>; window length unverified; never hit 429 in about 80 calls.</li>
+  <li><strong>Silent failures.</strong> A not-yet-published <code>REPDTE</code> returns 200 with zero rows. A wrongly formatted date returns 200 with zero rows. An unknown field name in <code>fields=</code> is dropped without error. The fetcher must assert every expected key is present and that each cert returned rows.</li>
+  <li>Industry aggregation works: <code>agg_by=REPDTE&amp;agg_sum_fields=LNCRCD,...&amp;limit=0</code>. Exclude <code>BKCLASS NC</code> (noninsured) and <code>OI</code> (insured foreign branches) to match the QBP's 4,238 institutions and $26.46tn assets exactly.</li>
+</ul>
+
+<h3>Fields (thousands of dollars)</h3>
+<div class="tbl"><table>
+<tr><th>Field</th><th>Title (verbatim)</th><th>Kind</th></tr>
+<tr><td><code>LNCRCD</code></td><td>CONSUMER LOANS-CREDIT CARD PLAN</td><td>stock</td></tr>
+<tr><td><code>P3CRCD</code></td><td>30-89 DAYS P/D-CREDIT CARD PLANS</td><td>stock, null before 2001Q1</td></tr>
+<tr><td><code>P9CRCD</code></td><td>90+ DAYS P/D-CREDIT CARD PLANS</td><td>stock, null before 1991Q1</td></tr>
+<tr><td><code>NACRCD</code></td><td>NONACCRUAL-CREDIT CARD PLANS</td><td>stock; some thrift-style filers put 90+ here instead of P9 (USAA FSB, FNBO, Citizens)</td></tr>
+<tr><td><code>NCCRCD</code></td><td>TOTAL N/C CREDIT CARD PLANS</td><td>= P9CRCD + NACRCD, exact</td></tr>
+<tr><td><code>DRCRCD</code> / <code>CRCRCD</code> / <code>NTCRCD</code></td><td>charge-offs / recoveries / net charge-offs</td><td><strong>year-to-date</strong> flows</td></tr>
+<tr><td><code>DRCRCDQ</code> / <code>CRCRCDQ</code> / <code>NTCRCDQ</code></td><td>same, QUARTERLY</td><td>quarterly flows, present from 1984</td></tr>
+<tr><td><code>IDNTCRDR</code>, <code>IDNTCRDQR</code></td><td>CREDIT CARDS &amp; RELATED PLANS (annual, quarterly)</td><td>annualized card NCO rate on average card loans, percent</td></tr>
+<tr><td><code>NTCRCDR</code>, <code>P3CRCDR</code>, <code>P9CRCDR</code>, ...</td><td>ratios</td><td><strong>divided by total assets</strong>, not card loans. Do not use as card rates.</td></tr>
+<tr><td><code>UCCRCD</code></td><td>UNUSED COMMIT-CREDIT CARD LINES</td><td>stock ($700.8bn for Capital One at 2026Q2)</td></tr>
+<tr><td><code>LNLSGR</code>, <code>LNLSNET</code>, <code>ASSET</code></td><td>totals</td><td>scale</td></tr>
+</table></div>
+<p>Securitized card fields (<code>SZLNCRCD</code>, <code>SZ30CRCD</code>, <code>SZ90CRCD</code>, <code>SZDRCRCD</code>, ...) exist and are zero for the large issuers since 2010. A bank with no card book returns 0, not null; null means not reported.</p>
+
+<h3>Year-to-date verdict (answers the open item)</h3>
+<p><code>DRCRCD</code>, <code>CRCRCD</code>, <code>NTCRCD</code> rise through the year and reset in Q1. Capital One, N.A. (cert 4297), thousands:</p>
+<div class="tbl"><table>
+<tr><th>Field</th><th>2025-03</th><th>2025-06</th><th>2025-09</th><th>2025-12</th><th>2026-03</th><th>2026-06</th></tr>
+<tr><td>LNCRCD</td><td class="num">143,440,421</td><td class="num">245,827,607</td><td class="num">247,168,335</td><td class="num">256,015,215</td><td class="num">246,638,000</td><td class="num">250,519,000</td></tr>
+<tr><td>NTCRCD (YTD)</td><td class="num">2,298,913</td><td class="num">4,889,182</td><td class="num">7,807,972</td><td class="num">10,964,648</td><td class="num">3,228,000</td><td class="num">6,229,000</td></tr>
+<tr><td>NTCRCDQ</td><td class="num">2,298,913</td><td class="num">2,590,269</td><td class="num">2,918,790</td><td class="num">3,156,676</td><td class="num">3,228,000</td><td class="num">3,001,000</td></tr>
+<tr><td>IDNTCRDQR (%)</td><td class="num">6.280</td><td class="num">5.323</td><td class="num">4.736</td><td class="num">5.019</td><td class="num">5.138</td><td class="num">4.829</td></tr>
+</table></div>
+<p>Every hand-de-cumulated difference equals the <code>*Q</code> field in normal quarters, but across 4,588 rows there are 79 mismatches, all in merger quarters (JPMorgan 2019Q2, Capital One 2022Q4, Bank of America 2014Q4) and pre-1990. <strong>Load the FDIC's own quarterly fields and never de-cumulate by hand.</strong> Add a test that YTD minus prior YTD equals the Q field for the fixture bank in a non-merger year. Stocks are point-in-time. The 2025Q2 jump in Capital One's balance is Discover's book arriving.</p>
+
+<h3>Issuer to cert map (2026-06-30, thousands)</h3>
+<div class="tbl"><table>
+<tr><th>Issuer</th><th>CERT</th><th>Active</th><th>LNCRCD</th><th>NTCRCD YTD</th><th>P3CRCD</th><th>P9CRCD</th><th>NACRCD</th><th>Notes</th></tr>
+<tr><td>Capital One NA</td><td>4297</td><td>1</td><td class="num">250,519,000</td><td class="num">6,229,000</td><td class="num">4,904,000</td><td class="num">4,854,000</td><td class="num">13,000</td><td>absorbed 5649 and 33954</td></tr>
+<tr><td>Discover Bank</td><td>5649</td><td>0</td><td class="num">98,890,692 (2025-03)</td><td></td><td></td><td></td><td></td><td>merged into 4297 effective 2025-05-18, change code 223, NEWCERT 4297</td></tr>
+<tr><td>Capital One Bank (USA) NA</td><td>33954</td><td>0</td><td class="num">98,973,973 (2022-09)</td><td></td><td></td><td></td><td></td><td>merged into 4297 effective 2022-10-03</td></tr>
+<tr><td>JPMorgan Chase Bank NA</td><td>628</td><td>1</td><td class="num">216,172,000</td><td class="num">3,353,000</td><td class="num">1,920,000</td><td class="num">2,083,000</td><td class="num">0</td><td>Chase Bank USA NA 23702 merged in 2019-05-18</td></tr>
+<tr><td>Citibank NA</td><td>7213</td><td>1</td><td class="num">176,013,000</td><td class="num">3,427,000</td><td class="num">2,224,000</td><td class="num">2,324,000</td><td class="num">0</td><td></td></tr>
+<tr><td>American Express National Bank</td><td>27471</td><td>1</td><td class="num">113,444,029</td><td class="num">1,299,519</td><td class="num">568,812</td><td class="num">331,734</td><td class="num">389,846</td><td>renamed 2018-04-01; AmEx Bank FSB 35328 merged in same day</td></tr>
+<tr><td>Bank of America NA</td><td>3510</td><td>1</td><td class="num">105,659,000</td><td class="num">1,842,000</td><td class="num">1,111,000</td><td class="num">1,241,000</td><td class="num">0</td><td></td></tr>
+<tr><td>Synchrony Bank</td><td>27314</td><td>1</td><td class="num">90,783,000</td><td class="num">2,413,000</td><td class="num">1,945,000</td><td class="num">1,940,000</td><td class="num">0</td><td>GE Money Bank lineage, renamed 2014-06-02</td></tr>
+<tr><td>Wells Fargo Bank NA</td><td>3511</td><td>1</td><td class="num">58,394,000</td><td class="num">1,203,000</td><td class="num">711,000</td><td class="num">758,000</td><td class="num">0</td><td></td></tr>
+<tr><td>U.S. Bank NA</td><td>6548</td><td>1</td><td class="num">32,946,802</td><td class="num">603,488</td><td class="num">372,425</td><td class="num">366,172</td><td class="num">0</td><td></td></tr>
+<tr><td>Barclays Bank Delaware</td><td>57203</td><td>1</td><td class="num">28,220,000</td><td class="num">675,000</td><td class="num">357,000</td><td class="num">450,000</td><td class="num">36,000</td><td></td></tr>
+<tr><td>Goldman Sachs Bank USA</td><td>33124</td><td>1</td><td class="num">19,502,000</td><td class="num">0</td><td class="num">376,000</td><td class="num">340,000</td><td class="num">0</td><td>zero charge-offs in 2026 with $19.5bn of card loans; unexplained, flag</td></tr>
+<tr><td>USAA Federal Savings Bank</td><td>32188</td><td>1</td><td class="num">18,631,000</td><td class="num">302,000</td><td class="num">147,000</td><td class="num">0</td><td class="num">300,000</td><td>90+ sits in nonaccrual; USAA Savings Bank 34351 folded in 2024-06-01</td></tr>
+<tr><td>Comenity Capital Bank (Bread)</td><td>57570</td><td>1</td><td class="num">11,100,023</td><td class="num">427,098</td><td class="num">379,034</td><td class="num">375,204</td><td class="num">0</td><td></td></tr>
+<tr><td>TD Bank USA NA</td><td>33947</td><td>1</td><td class="num">8,518,458</td><td class="num">239,714</td><td class="num">180,507</td><td class="num">180,319</td><td class="num">0</td><td>TD's retail card book; TD Bank NA 18409 holds 4.78bn more</td></tr>
+<tr><td>First National Bank of Omaha</td><td>5452</td><td>1</td><td class="num">7,784,184</td><td class="num">186,240</td><td class="num">90,903</td><td class="num">0</td><td class="num">97,799</td><td>90+ in nonaccrual</td></tr>
+<tr><td>Comenity Bank (Bread)</td><td>27499</td><td>1</td><td class="num">6,322,778</td><td class="num">206,892</td><td class="num">209,616</td><td class="num">204,916</td><td class="num">0</td><td></td></tr>
+<tr><td>PNC Bank NA</td><td>6384</td><td>1</td><td class="num">6,323,284</td><td class="num">91,974</td><td class="num">57,057</td><td class="num">58,513</td><td class="num">11</td><td></td></tr>
+<tr><td>Truist Bank</td><td>9846</td><td>1</td><td class="num">3,207,000</td><td class="num">82,000</td><td class="num">43,000</td><td class="num">45,000</td><td class="num">0</td><td></td></tr>
+<tr><td>Citizens Bank NA</td><td>57957</td><td>1</td><td class="num">1,905,087</td><td class="num">43,103</td><td class="num">21,000</td><td class="num">0</td><td class="num">19,453</td><td>90+ in nonaccrual</td></tr>
+<tr><td>Coastal Community Bank</td><td>34403</td><td>1</td><td class="num">851,526</td><td class="num">48,248</td><td class="num">24,864</td><td class="num">27,077</td><td class="num">26,670</td><td>sponsor</td></tr>
+<tr><td>The Bancorp Bank NA</td><td>35444</td><td>1</td><td class="num">336,344</td><td class="num">306</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>sponsor</td></tr>
+<tr><td>Lead Bank</td><td>8283</td><td>1</td><td class="num">293,919</td><td class="num">4,816</td><td class="num">22,601</td><td class="num">20,951</td><td class="num">0</td><td>sponsor</td></tr>
+<tr><td>WebBank</td><td>34404</td><td>1</td><td class="num">189,672</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>already in issuers.csv; all flow fields zero every quarter</td></tr>
+<tr><td>Evolve Bank &amp; Trust</td><td>1299</td><td>1</td><td class="num">51,409</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>sponsor</td></tr>
+<tr><td>Sutton Bank</td><td>5962</td><td>1</td><td class="num">1,283</td><td class="num">1</td><td class="num">24</td><td class="num">0</td><td class="num">0</td><td>sponsor</td></tr>
+<tr><td>Cross River Bank / Celtic Bank / Pathward NA</td><td>58410 / 57056 / 30776</td><td>1</td><td class="num">0</td><td></td><td></td><td></td><td></td><td>no card loans on book</td></tr>
+<tr><td>Navy Federal</td><td>n/a</td><td></td><td></td><td></td><td></td><td></td><td></td><td>credit union, NCUA, not in FDIC data</td></tr>
+</table></div>
+<p>Only 668 of 4,313 institutions report any card loans at 2026-06-30; 26 report $1bn or more. For <code>dim_issuer</code> (task 6): <code>/institutions</code> exposes <code>ACTIVE</code>, <code>ENDEFYMD</code>, <code>NEWCERT</code>, <code>ULTCERT</code>, <code>PRIORNAME1</code>, <code>INSTCRCD</code>; <code>/history</code> carries change code 223 (merger, with <code>ACQ_CERT</code>) on the outgoing cert, 810 on the acquirer, 510 for a name change, with ISO <code>EFFDATE</code>. Merger <code>valid_to</code> equals <code>EFFDATE</code>; the last call report is the prior quarter end. Per-cert series will step at mergers; the roll-up view must sum acquirer plus acquired by period.</p>
+
+<h3>Golden candidates</h3>
+<p>The QBP HTML pages and press releases carry no card numbers; they live only in the QBP PDF, so <code>origin_url</code> should point at the PDF and quote table, row and column.</p>
+<ul class="tight">
+  <li><a href="https://www.fdic.gov/quarterly-banking-profile/quarterly-banking-profile-second-quarter-2026.pdf">Q2 2026 QBP PDF</a>, Table II-A "Aggregate Condition and Income Data, All FDIC-Insured Institutions", row Credit cards ($ millions): 2Q 2026 <strong>1,189,601</strong>, 1Q 2026 <strong>1,161,264</strong>, 2Q 2025 <strong>1,141,110</strong>. API sums of <code>LNCRCD</code> with NC and OI excluded reproduce all three to the million. Best live golden: the 2Q 2025 value. The 2026 values fixture-only.</li>
+  <li>Same PDF, Table V-A "Loan Performance", row Credit card loans: 30-89 days 1.37 (API 1.370), noncurrent 1.44 ((P9+NA)/LNCRCD 1.441), past-due-and-nonaccrual 2.81 (2.811), net charged-off YTD 4.00 (reproduces as H1 NTCRCD times two over the three-quarter-end average balance, 4.001; the averaging convention is inferred, not documented).</li>
+  <li>Narrative: "credit card loans (up $28.3 billion or 2.4 percent)" and "(down $2.3 billion or 27 basis points to 2.81 percent)" both reproduce.</li>
+  <li>Bank-level: Discover Bank 2025-03-31 <code>LNLSGR</code> 117,403,617 equals the DFS Q1 2025 release "Total loans, end of period $117.4 billion" exactly (SEC EX-99.1; sec.gov returns 403 to the pipeline User-Agent, read it in a browser). Card loans 98.9bn vs the release's 99.0bn (charter vs holding company). Release NCO and 30+ rates do not match API ratios; do not golden the rates.</li>
+</ul>
+
+<h3>Timing and risks</h3>
+<ul class="tight">
+  <li>QBP releases: 55 to 58 days after quarter end (Q2 2026 on Aug 25). The API had 2026-06-30 data by 2026-08-19. <code>max_age_days</code> 200 is safe; 180 minimum.</li>
+  <li>Latest-quarter values can be amended; keep <code>check_live</code> on older periods. Whether the FDIC re-indexes after amendments is unverified.</li>
+  <li>issuers.csv as it stands (WebBank only) yields one thin entity. Task 5 needs the cert list above with dates, which overlaps task 6.</li>
+  <li>Unverified: rate-limit window; change code 224 (USAA); the QBP "Credit Card Banks" column (511.7bn, presumably <code>SPECGRP</code> credit-card specialization).</li>
+</ul>
+
+<h2 id="v15">3. v1.5 sources</h2>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Board's open question</th><th>Answer</th><th>Effort</th></tr>
+<tr><td>NY Fed SCE Credit Access</td><td>terms click?</td><td><span class="tag ok">no</span> direct xlsx, no server-side gate</td><td>about half a session</td></tr>
+<tr><td>CFPB complaints trends</td><td>endpoint shape</td><td><span class="tag ok">works</span> monthly card counts by company and issue, since 2011-12</td><td>one session</td></tr>
+<tr><td>BEA PCE detail</td><td>row caps</td><td><span class="tag warn">key needed for the API</span>; a keyless flat file carries every series</td><td>half to one session</td></tr>
+<tr><td>Census retail trade</td><td>API access</td><td><span class="tag warn">key needed even at low volume</span>; keyless xlsx exists</td><td>one session</td></tr>
+</table></div>
+
+<h3>NY Fed SCE Credit Access</h3>
+<ul class="tight">
+  <li>File: <code>https://www.newyorkfed.org/medialibrary/interactives/sce/sce/downloads/data/frbny-sce-credit-access-data.xlsx</code>, 107 KB, direct GET with the pipeline User-Agent, no redirect. The "terms" is a client-side confirm-download modal only. Name has no date and there are no cache headers, so a new wave is detected by content (canonical-name snapshot, like HHDC).</li>
+  <li>Sheets Disclaimer, License, overall, demographics. Row 1 attribution, row 2 header, one row per (date, group, category); <code>date</code> is an integer YYYYMM. Waves every four months (Feb, Jun, Oct) from 201310; June 2026 already posted. Overall has 36 columns; demographics splits by credit score (less_680, between_680_760, over_760, from 201402) and age (less_eq_40, between_40_59, over_60).</li>
+  <li>Card-specific application and limit-increase request rates exist by score and age. Card-specific rejection rates (<code>CCRejected</code>, <code>CCLimitRejected</code>) exist only for the whole sample. Values are percentages: June 2026 overall applied-for-card 29.89, card rejected 15.39, limit-increase rejected 20.92; under-680 applied 42.45, rejected on any credit 46.60.</li>
+  <li>Golden from the page text: any-credit rejection rate "16.1 percent in June [2026] ... June 2025 reading of 23.1 percent" equals 16.126 and 23.126 in the file.</li>
+  <li>Risks: hand-exported column names; three-bucket score split does not match the CFPB five tiers; whole history re-exported each wave. Unverified: release lag per wave, whether score buckets are self-reported (check the questionnaire before mapping to tiers.csv).</li>
+  <li>Shape: period_type <code>T</code>, period_end the last day of the survey month, entities like <code>SCE_ALL</code>, <code>SCORE:&lt;680</code>, <code>AGE:&lt;=40</code>.</li>
+</ul>
+
+<h3>CFPB complaints trends endpoint</h3>
+<ul class="tight">
+  <li><code>https://www.consumerfinance.gov/data-research/consumer-complaints/search/api/v1/trends</code> (no trailing slash) answers the pipeline User-Agent in 0.4 to 6 s. Database 17.6m complaints; product "Credit card" 340,648 across 178 monthly buckets from 2011-12, continuous.</li>
+  <li>Grammar: <code>lens=overview</code> alone works; <code>lens=product|issue|company</code> needs <code>focus=</code> or <code>sub_lens=</code>; <code>sub_lens_depth</code> must be at least 5; sub-lens buckets are capped at 10 whatever the depth; <code>trend_interval=month</code>.</li>
+  <li><strong>Which aggregation to read:</strong> <code>dateRangeBuckets</code> ignores every filter except the date window (it is the whole database). <code>dateRangeBrush</code> honors product, company and issue filters and ignores the date window: that is the monthly series. With <code>lens=product&amp;focus=Credit card&amp;sub_lens=company</code>, the top-10 companies each carry a monthly <code>trend_period</code> plus <code>sum_other_doc_count</code>.</li>
+  <li>Per-issuer beyond the top 10: one request per company with <code>company=&lt;exact name&gt;&amp;lens=overview</code>. Company names are as filed; Discover will not roll into Capital One without a crosswalk.</li>
+  <li>Issue taxonomy is windowed ("Fees or interest" exists only from 2023-08); the current and prior months are incomplete (2026-08 has 6,695 so far). Drop the current month, mark the prior one provisional.</li>
+  <li>No release page states monthly numbers; a golden would come from the annual Consumer Response report product totals.</li>
+</ul>
+
+<h3>BEA PCE by type of product</h3>
+<ul class="tight">
+  <li>API limits (user guide): 100 requests, 100 MB and 30 errors per minute; 429 with Retry-After. No rows-per-request cap is documented; the guide says avoid <code>Year=ALL</code>. Table <code>U20405</code> "Personal Consumption Expenditures by Type of Product", monthly, millions; chunk by year (about 4,700 rows each). A key is required and none exists; no data call was made.</li>
+  <li><strong>Keyless alternative, verified:</strong> <code>https://apps.bea.gov/national/Release/TXT/NipaDataM.txt</code> (36.7 MB, <code>%SeriesCode,Period,Value</code> with quoted thousands commas, 2,667 series, 1959M01 to 2026M07, all 390 U20405 series present, Last-Modified 2026-08-26). <code>SeriesRegister.txt</code> maps codes to table lines. Cross-check: DPCERC 2026M07 22,250,420 equals FRED PCE 22,250.4bn. Unknown file names return an HTML page with status 200; check the first line.</li>
+  <li>Key line codes: DPCERC total, DGDSRC goods, DSERRC services, DFXARC food off-premises, DCLORC clothing, DGASRC gasoline, DFSARC food services and accommodations, DPMBRC purchased meals, DRCARC recreation services, DIFSRC financial services and insurance.</li>
+  <li>Risk with the flat file: the raw-download contract would snapshot 36.7 MB daily; a documented deviation (snapshot only U20405 rows, or gzip) is needed.</li>
+</ul>
+
+<h3>Census Monthly Retail Trade</h3>
+<ul class="tight">
+  <li>The API redirects to <code>missing_key.html</code> even for one request. Metadata endpoints are keyless but do not publish value lists, so category codes are unverified.</li>
+  <li><strong>Keyless alternative, verified:</strong> <code>https://www.census.gov/retail/mrts/www/mrtssales92-present.xlsx</code> (441 KB, 35 yearly sheets, not-adjusted block from row 7 and adjusted block from row 71, month headers like "Jun. 2026(p)", millions, from 1992-01). Quarterly e-commerce: <code>.../data/excel/tsadjustedsales.xlsx</code> (107 quarters from 1999Q4). Advance report <code>marts_current.xlsx</code>.</li>
+  <li>Risks: hand-formatted headers with (p) and (r) markers and label spelling drift between blocks; whole file re-published monthly (benchmark restatements will trip the detector); NAICS 4541 is not the quarterly e-commerce measure. The dbsearch page warns about robots without owner information: set <code>CARDDASH_CONTACT</code> in CI.</li>
+</ul>
+
+<h2 id="page">4. Page critique and task 7 notes</h2>
+<p>Read-only review of <code>render.py</code>, the template, the views and the rendered <code>docs/index.html</code> against the rendering rules in CLAUDE.md. Ranked by how much each would mislead a reader.</p>
+<ol>
+  <li><strong>Offered vs paid compares the wrong thing.</strong> "Offered" is the median of each product's <em>maximum</em> APR (<code>sql/tccp_facts.sql</code> line 33), against the average rate paid. The 5 to 7 point spread is mostly definitional. The spread also runs two quarters past the last offered reading (the as-of join carries H2 2025 into 2026 Q2), and its unit caption says percent when it is percentage points. Fix: use the tier medians already in facts (superprime, 620_719, le619) as a band against the G.19 paid line; stop or dash the spread past the last offered period.</li>
+  <li><strong>SLOOS is dated to the survey quarter,</strong> so today the page reports a latest period of 2026 Q3, which has not ended, and the step is drawn into the future. The July survey asks about the previous three months. Fix: a per-series period offset in series.csv applied in the FRED fetcher; refuse to call a future period "latest".</li>
+  <li><strong>A chart card cannot go red,</strong> and its "pulled" date is the last attempt, not the last success (<code>loader.py</code> line 258 sets pulled_at before fetching). Fix: show "data as of" from the plotted rows' pulled_at and a status badge per card.</li>
+  <li><strong>"What changed" filters on the newest run in revisions.csv,</strong> not the latest run (<code>render.py</code> lines 319 to 320). After the first revision ever, every later run keeps listing it. Also: rel_change is inf when the old value is 0; new periods are never listed; revisions.csv is neither copied nor linked. The file does not exist yet, so the block is right by accident.</li>
+  <li><strong>Cross-source footers merge sources and cadences alphabetically</strong> and take the max latest period, so the reader cannot tell which line is semiannual. One footer line per series when sources or cadences differ.</li>
+  <li><strong>Method section credits only the Fed via FRED.</strong> CFPB, Philadelphia Fed and NY Fed are loaded but uncredited. Generate the list from <code>SOURCE_LABELS</code>.</li>
+  <li><strong>Population is not visible at a glance.</strong> Scope notes are collapsed; source_url is in the payload but never rendered. Add a short population column to series.csv and print it on the caption line.</li>
+  <li><strong>Light-mode contrast is weak</strong> (orange 3.1:1, green 2.7:1 against the card surface; orange and green are the deuteranopia pair; muted text at 3.5:1). A fourth series silently reuses blue.</li>
+  <li><strong>Step charts lose their first reading:</strong> uPlot's <code>stepped(align:-1)</code> draws point i from x[i-1] to x[i], so the first point is a zero-width tick and every <code>since</code> cut hides one period. Query from one period earlier and clamp the x range.</li>
+  <li><strong><code>spanGaps: true</code> on every series</strong> would bridge any real gap. Not triggered today. Set it only for foreign-grid nulls on mixed-cadence charts.</li>
+</ol>
+<p class="muted">Lower: the method text says nothing is interpolated while three charts are lines; SA/NSA is not in legend labels; the health-strip parenthetical picks an arbitrary series; mixed-cadence tables print ISO dates; the zero-based y rule has no per-chart override (needed before score percentiles get charted); the selection overlay is invisible in dark mode.</p>
+
+<h3>Uncharted series (80 of 92)</h3>
+<ul class="tight">
+  <li><strong>fred (3):</strong> revolving NSA, total consumer credit SA, monthly H.8 bank card loans.</li>
+  <li><strong>tccp (14):</strong> max-APR medians for top-25 and other issuers; purchase APR medians for three tiers times three entities (nine series; the fix for finding 1 and the "size by tier" chart already suggested on the board); three counts.</li>
+  <li><strong>phillyfed (51, all):</strong> levels, rates, APRs, distributions and the by-tier series.</li>
+  <li><strong>nyfed_hhdc (12, all, on purpose):</strong> balances, accounts, limits, 90+ share, 30+ and 90+ flows, 90+ flow by six age groups.</li>
+</ul>
+
+<h3>Task 7: revisions block and PNG export</h3>
+<ul class="tight">
+  <li>Revisions: fix the latest-run filter (use the health file's generated_at), list new periods per source from rows whose pulled_at equals the run, cap rel display, copy and link revisions.csv, add a fixture with two runs to the tests. The file first appears on the first real revision, likely the next G.19 release.</li>
+  <li>Which three charts to export is not named anywhere; suggest a <code>post: True</code> flag on one spec per panel.</li>
+  <li>PNG without a browser: <strong>matplotlib with the Agg backend</strong> is the recommendation. Pure-Python wheels, <code>drawstyle="steps-pre"</code> matches uPlot's align -1, driven from the same chart payload dict so numbers cannot diverge, deterministic bytes with <code>savefig(metadata={"Software": None})</code>. Keep the pull date out of the image so bytes change only when data changes (otherwise about 45 MB of binary churn a year). A headless browser is pixel-identical but 300 MB per CI run and has hung on this machine; SVG rasterising needs cairo.</li>
+</ul>
+
+<h2 id="landscape">5. Landscape scan</h2>
+<p>Who publishes public, regularly updated pages on US card credit conditions, as of 2026-09-07. Pages that returned 403 to the crawler are marked; their details come from search snippets and should be spot-checked in a browser.</p>
+<div class="tbl"><table>
+<tr><th>Who</th><th>Covers</th><th>Cadence</th><th>Download</th><th>Cross-source</th><th>Lacks</th></tr>
+<tr><td>NY Fed HHDC interactive</td><td>Growth, Performance</td><td>quarterly, 5 to 7 weeks lag</td><td>xlsx, PDF</td><td>only via the 2026-08-11 Liberty Street post</td><td>pricing, spend, issuer detail, revision history</td></tr>
+<tr><td>Philadelphia Fed Y-14 page and Insights</td><td>Growth, Performance, Spend</td><td>quarterly, 3.5 months lag</td><td>four CSVs</td><td>no</td><td>all-lender scope, offered APR</td></tr>
+<tr><td>CFPB Consumer Credit Trends, cards</td><td>Growth</td><td>irregular, has stalled</td><td>per-chart CSV with stable URL</td><td>no</td><td>balances, delinquency, APR</td></tr>
+<tr><td>Fed G.19 and charge-off releases</td><td>Growth, Pricing, Performance</td><td>monthly, quarterly</td><td>CSV, XML, FRED</td><td>no</td><td>charts joining sources</td></tr>
+<tr><td>FRED (plus Bankrate weekly APR as BRMCC01)</td><td>single series</td><td>weekly to quarterly</td><td>CSV, API</td><td>user dashboards only</td><td>card-specific joins</td></tr>
+<tr><td>FDIC QBP</td><td>Growth, Performance</td><td>quarterly, 55 days lag</td><td>PDF, xlsx</td><td>no</td><td>a card-specific page</td></tr>
+<tr><td>Equifax, TransUnion, Experian reports</td><td>Growth, some Performance</td><td>monthly to annual</td><td>PDFs, some gated (403)</td><td>no</td><td>they disagree on bankcard balances: $1.11tn, $1.14tn, $1.25tn, vs NY Fed $1.26tn</td></tr>
+<tr><td>S&amp;P and Fitch card ABS indices</td><td>Performance, yield</td><td>monthly</td><td>registration (403)</td><td>no</td><td>trust scope only</td></tr>
+<tr><td>Bankrate, WalletHub, LendingTree, Forbes APR trackers</td><td>Pricing</td><td>weekly to quarterly</td><td>no (Bankrate via FRED)</td><td>WalletHub and LendingTree put own APR next to G.19 in tables</td><td>five trackers span 19.3% to 25.0% for the same month; none explains why</td></tr>
+<tr><td>Wolf Street quarterly series</td><td>all four</td><td>quarterly</td><td>no</td><td>yes, static images</td><td>scope notes, reproducibility</td></tr>
+<tr><td>americandefault.org</td><td>Performance</td><td>quarterly</td><td>CSV per indicator, iframe</td><td>no</td><td>joins; one series per page</td></tr>
+<tr><td>Seeking Alpha Credit Pulse (seven issuers' 8-Ks)</td><td>Performance</td><td>monthly</td><td>no</td><td>no</td><td>tables, charts</td></tr>
+<tr><td>GitHub: Cameloo1/dfri</td><td>Growth (G.19 nowcasts)</td><td>daily</td><td>Parquet ledgers, schema.json</td><td>no</td><td>card performance, pricing</td></tr>
+</table></div>
+<p><strong>The reference for any cross-source performance chart:</strong> the NY Fed's Liberty Street post of 2026-08-11, "How Distressed Are Consumers? Reconciling Diverging Credit Card Delinquency Measures". Charged-off balances leave lender books but stay in bureau data, and the share still reported a year later rose from about 40 percent in 2004 to about 80 percent in 2024. That is why the HHDC 90+ share sits far above the Philly Fed and call-report rates, and it belongs in a footnote.</p>
+<p><strong>What this project does that none of them do:</strong> joins the official card sources with a scope note per chart; an offered-vs-paid chart from public inputs; a revision log for sources that rewrite their history every quarter; a health strip with staleness, restatement detection and golden checks; one keyless CSV of everything, daily.</p>
+<p><strong>Worth copying:</strong> per-chart CSV with a stable URL and a "last N periods not final" flag (CFPB); separate data-vintage and publish timestamps and a schema file (dfri); benchmark rows under performance charts such as the 2015 to 2019 mean, cycle peak and pandemic low (americandefault.org); the weekly Bankrate APR from FRED to bracket the semiannual TCCP step; the stock-versus-flow distinction stated on the delinquency chart (NY Fed).</p>
+
+<h2 id="board">6. Suggested board changes</h2>
+<p>For you to accept or reject; nothing here was changed.</p>
+<ol>
+  <li><strong>Task 5 wording.</strong> Add: use the FDIC's quarterly <code>*Q</code> charge-off fields, not de-cumulated YTD; noncurrent is P9 plus nonaccrual; industry sums exclude BKCLASS NC and OI; golden from QBP Table II-A 2Q 2025 credit cards 1,141,110 $M; issuers.csv needs the cert list with merger dates before the roll-up view means anything (pulls part of task 6 forward).</li>
+  <li><strong>Task 7 pass condition.</strong> Fixture revisions.csv with two runs; the block lists only the latest run; new periods per source; three PNGs via matplotlib with byte-stable output; the three charts named by a <code>post</code> flag.</li>
+  <li><strong>Correctness items to schedule before task 8's "two green releases":</strong> the offered-vs-paid definition and spread carry-forward; SLOOS period dating; chart cards showing data-as-of and status. These affect what the page says today.</li>
+  <li><strong>v1.5 order.</strong> SCE first (half a session, no gate), then complaints, then BEA via the flat file, then Census via the xlsx. Both APIs that the board assumed keyless need keys.</li>
+  <li><strong>Candidate charts, after task 8:</strong> delinquency triangulation across HHDC 90+ share, HHDC 90+ flow, Fed 30+ rate and Y-14 90+ rate with the residue footnote; a vintage-diff chart rebuilt from git history; an APR ladder with margin over prime including BRMCC01; the HHDC 90+ flow by age (already loaded).</li>
+</ol>
+<p class="muted">Scratch notes behind this page: <code>handoff-landscape.md</code>, <code>handoff-fdic-fields.md</code>, <code>handoff-fdic-certs.md</code>, <code>handoff-v15-sources.md</code>, <code>handoff-viz-critique.md</code> in the session scratchpad; raw agent artifacts under <code>%LOCALAPPDATA%\Temp\claude\scout-fdic</code>, <code>scout-v15</code>, <code>scout-viz</code>.</p>
+</main>
+</body>
+</html>
