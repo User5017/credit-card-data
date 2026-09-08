@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from carddash.fetchers import fdic, fred, nyfed_hhdc, phillyfed, tccp
+from carddash.fetchers import fdic, fred, nyfed_hhdc, nyfed_sce, phillyfed, tccp
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
 from carddash.series import load_series
@@ -77,8 +77,17 @@ def fdic_facts(fdic_issuers) -> pd.DataFrame:
     return coerce_facts(fdic.parse_release(FDIC_FIXTURE_DIR, fdic_issuers, PULLED_AT))
 
 
+SCE_FIXTURE = FIXTURES / "nyfed_sce" / nyfed_sce.RAW_NAME
+
+
 @pytest.fixture(scope="session")
-def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts) -> pd.DataFrame:
+def sce_facts() -> pd.DataFrame:
+    """Facts from the checked-in credit access workbook (waves to June 2026), parsed once per session."""
+    return coerce_facts(nyfed_sce.parse_release(SCE_FIXTURE, PULLED_AT))
+
+
+@pytest.fixture(scope="session")
+def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, sce_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
@@ -88,6 +97,7 @@ def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts) 
                 phillyfed_facts,
                 hhdc_facts,
                 fdic_facts,
+                sce_facts,
             ],
             ignore_index=True,
         )

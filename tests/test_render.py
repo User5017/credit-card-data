@@ -28,8 +28,8 @@ from conftest import FIXTURES, PULLED_AT
 RUN1 = "2026-09-06T00:00:00Z"
 RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
-POST_CHARTS = {"revolving_level", "card_apr", "card_nco", "hhdc_dq90_by_age", "debt_service"}
-ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic")
+POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service"}
+ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce")
 
 
 def _health(generated_at: str, sources=("fred",), status="ok") -> dict:
@@ -62,13 +62,14 @@ def test_page_is_self_contained_and_carries_every_chart(page):
     for panel in PANELS:
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
-    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Performance", "Borrowers", "Context"]
-    assert len(payload["charts"]) == 26
+    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Context"]
+    assert len(payload["charts"]) == 30
+    assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
     assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
-    assert "5 sources OK" in html.split("<h2>Latest readings</h2>")[0]
+    assert "6 sources OK" in html.split("<h2>Latest readings</h2>")[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
 
@@ -174,6 +175,29 @@ def test_derived_views_draw_the_context_charts(page):
     assert len(by_id["card_vs_consumer"]["series"]) == 4
 
 
+def test_access_panel_draws_the_credit_access_survey(page):
+    """The survey's own readings, and the gap between score bands that the aggregate hides."""
+    html, payload = page
+    by_id = {c["id"]: c for c in payload["charts"]}
+    access = by_id["card_access"]
+    assert len(access["series"]) == 4 and access["n_points"] == 39
+    assert all(s["cadence"] == "every four months" for s in access["series"])
+    assert "latest period Jun 2026" in access["footer"]  # a wave is labelled by the month it was fielded in
+    rej = by_id["rejection_by_score"]
+    labels = [s["label"] for s in rej["series"]]
+    assert labels == ["Score under 680", "Score 680 to 760", "Score over 760"]
+    sub, mid, top = (next(v for v in reversed(rej["data"][k]) if v is not None) for k in (1, 2, 3))
+    assert sub > mid > top and sub > 40 and top < 5  # the June 2026 wave: 46.6, 11.1, 3.3
+    # the back door: lender-initiated closures, and the households that never applied
+    closures = by_id["lender_closures"]
+    assert len(closures["series"]) == 3 and closures["n_points"] == 38  # the score split starts one wave later
+    assert any("back door" in n for n in closures["notes"])
+    assert any("never appear in any approval" in n for n in by_id["discouraged"]["notes"])
+    # every Access chart names its sample-size caveat
+    for cid in ("rejection_by_score", "lender_closures", "discouraged"):
+        assert any("about 150 respondents" in n for n in by_id[cid]["notes"]), cid
+
+
 def test_benchmark_is_the_2015_2019_mean_of_the_first_series(page, fixture_facts):
     html, payload = page
     nco = {c["id"]: c for c in payload["charts"]}["card_nco"]
@@ -220,7 +244,7 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     html, payload = page
     items = headlines(fixture_facts, TODAY)
     labels = [h["label"] for h in items]
-    assert labels[0].startswith("Revolving consumer credit") and len(items) == 9  # no 30+ delinquency fixture
+    assert labels[0].startswith("Revolving consumer credit") and len(items) == 11  # no 30+ delinquency fixture
     rev = items[0]["text"]
     assert rev == "$1,351bn in Jun 2026, +3.8% on the year"  # October 2024 was higher, so no 'highest since' flag
     # the flag logic on a synthetic series: a record, a three-year high, and a value with no flag
@@ -255,7 +279,7 @@ def test_card_badge_and_last_attempt_when_a_source_is_not_ok(tmp_paths, fixture_
     assert by_id["nco_by_issuer"]["status"] == "failed" and by_id["nco_by_issuer"]["attempted"] == "2026-09-08"
     assert "data as of 2026-09-07" in by_id["nco_by_issuer"]["footer"]  # the data on the chart is still the last good load
     assert '<span class="badge st-failed"' in html and "last fetch attempt 2026-09-08" in html
-    assert "2 of 5 sources need attention (Failed)" in html
+    assert "2 of 6 sources need attention (Failed)" in html
 
 
 def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_facts):

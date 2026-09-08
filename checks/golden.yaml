@@ -17,6 +17,8 @@
 #   2026-09-07  nyfed_hhdc: the 2026-08-11 press release table reproduces from the 2026Q2 workbook: card balances $1.263tn,
 #               flow into serious delinquency 6.97% (Q2 2026) and 6.93% (Q2 2025). Also checked, not golden: +$21bn on the
 #               quarter, +$54bn on the year, +$85bn of card limits on the quarter (all exact from the loaded series).
+#   2026-09-08  nyfed_sce: the survey page's headline sentence reproduces from the workbook: any-credit rejection 16.1% in
+#               June 2026 (16.126) and 23.1% in June 2025 (23.126).
 #   2026-09-08  fdic: QBP Second Quarter 2026, Table II-A 'Credit cards' reproduces from the API industry sum for all three
 #               columns (2Q 2026 1,189,601, 1Q 2026 1,161,264, 2Q 2025 1,141,110, millions) and the institution count
 #               (4,238). Also checked, not golden: Table V-A 'Credit card loans' 30-89 days 1.37% and noncurrent 1.44%
@@ -348,3 +350,32 @@
   check_live: false
   origin: "FDIC Quarterly Banking Profile, Second Quarter 2026 (PDF), Table II-A, row 'Credit cards', column '2nd Quarter 2026', millions: 1,189,601. Newest quarter, can be amended; fixture-only."
   origin_url: https://www.fdic.gov/quarterly-banking-profile/quarterly-banking-profile-second-quarter-2026.pdf
+
+# NY Fed Credit Access Survey: the survey page states the headline any-credit rejection rate for the newest wave and
+# the same wave a year earlier. The workbook re-publishes the whole history every wave, so the year-old reading is the
+# live entry and the newest one is fixture-only.
+- id: sce_any_rejection_2025_06
+  metric: sce_any_rejection_rate
+  entity: SCE_ALL
+  tier: all
+  period_type: T
+  period_end: 2025-06-30
+  source: nyfed_sce
+  expected: 23.1
+  tolerance: 0.05
+  check_live: true
+  origin: "NY Fed Survey of Consumer Expectations Credit Access Survey page, June 2026 wave: 'The overall rejection rate for any kind of credit over the past twelve months increased slightly to 16.1 percent in June, but remains well below the June 2025 reading of 23.1 percent.'"
+  origin_url: https://www.newyorkfed.org/microeconomics/sce/credit-access
+
+- id: sce_any_rejection_2026_06
+  metric: sce_any_rejection_rate
+  entity: SCE_ALL
+  tier: all
+  period_type: T
+  period_end: 2026-06-30
+  source: nyfed_sce
+  expected: 16.1
+  tolerance: 0.05
+  check_live: false
+  origin: "Same page and sentence, the June 2026 reading: 16.1 percent. Newest wave, fixture-only."
+  origin_url: https://www.newyorkfed.org/microeconomics/sce/credit-access

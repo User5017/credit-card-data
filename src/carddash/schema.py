@@ -54,7 +54,7 @@ PERIOD_WORDS = {
     "A": "annual",
 }
 
-ENTITY_TYPES = {"aggregate", "issuer", "bank", "state", "age", "pce", "naics"}
+ENTITY_TYPES = {"aggregate", "issuer", "bank", "score", "state", "age", "pce", "naics"}
 
 
 def last_day(year: int, month: int) -> dt.date:
@@ -86,11 +86,18 @@ def shift_period(date: dt.date, period_type: str, n: int) -> dt.date:
 
     For a source whose own dating is off by a fixed number of periods (the SLOOS July survey asks about the quarter
     that just ended, FRED dates it to the quarter it was taken in). Weekly and daily series shift by whole weeks/days.
+
+    Four-monthly (T) series shift from the month they are dated to, without re-bucketing first: the one T source is
+    the NY Fed credit access survey, whose readings are dated to the survey month (February, June, October) rather
+    than to the end of a calendar four-month block, so bucketing would move June to August.
     """
     if period_type == "D":
         return date + dt.timedelta(days=n)
     if period_type == "W":
         return date + dt.timedelta(weeks=n)
+    if period_type == "T":
+        months = date.year * 12 + (date.month - 1) + _MONTHS_PER_PERIOD["T"] * n
+        return last_day(months // 12, months % 12 + 1)
     end = period_end(date, period_type)
     if n == 0:
         return end

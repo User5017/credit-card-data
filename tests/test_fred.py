@@ -68,7 +68,9 @@ def test_sloos_is_dated_to_the_quarter_it_asks_about(meta):
         (dt.date(2026, 1, 15), "Q", 2, dt.date(2026, 9, 30)),
         (dt.date(2026, 11, 3), "M", 2, dt.date(2027, 1, 31)),
         (dt.date(2025, 12, 31), "H", -1, dt.date(2025, 6, 30)),
-        (dt.date(2026, 5, 1), "T", 1, dt.date(2026, 12, 31)),
+        (dt.date(2026, 6, 30), "T", 1, dt.date(2026, 10, 31)),  # a survey wave shifts to the next wave month
+        (dt.date(2026, 6, 30), "T", -3, dt.date(2025, 6, 30)),  # three waves back is a year
+        (dt.date(2026, 2, 28), "T", -1, dt.date(2025, 10, 31)),
         (dt.date(2026, 5, 1), "A", -2, dt.date(2024, 12, 31)),
         (dt.date(2026, 8, 26), "W", -1, dt.date(2026, 8, 19)),
         (dt.date(2026, 8, 26), "D", 3, dt.date(2026, 8, 29)),

@@ -36,6 +36,7 @@ SOURCE_LABELS = {
     "phillyfed": "Federal Reserve Bank of Philadelphia, Large Bank Credit Card and Mortgage Data (FR Y-14M)",
     "nyfed_hhdc": "Federal Reserve Bank of New York, Quarterly Report on Household Debt and Credit (Consumer Credit Panel/Equifax)",
     "fdic": "FDIC, Call Report data via the BankFind Suite API",
+    "nyfed_sce": "Federal Reserve Bank of New York, Survey of Consumer Expectations Credit Access Survey",
 }
 STATUS_LABELS = {
     "ok": "OK",
@@ -185,6 +186,28 @@ DEBT_SERVICE_NOTE = (
     "balance is actually a burden."
 )
 
+SCE_NOTE = (
+    "New York Fed Survey of Consumer Expectations, Credit Access Survey: about 1,000 household heads, weighted to be "
+    "nationally representative, asked every four months in February, June and October about the previous twelve "
+    "months. A reading is dated to the month it was fielded in. This is the only source on the page that sees the "
+    "demand side: applications, refusals, and the households that needed credit and did not apply at all."
+)
+SCE_THIN_NOTE = (
+    "Read the level, not the wave-to-wave move: the credit score bands are self-reported and the sub-680 band rests "
+    "on about 150 respondents a wave, so single-wave swings of several points are noise. The observation counts are "
+    "in the data file."
+)
+CLOSURE_NOTE = (
+    "Accounts closed by the lender, not by the borrower. This is the back door of credit supply and no lender-reported "
+    "source publishes it: an issuer that is approving more new applicants while closing more existing weak accounts is "
+    "managing the book, not loosening. " + SCE_THIN_NOTE
+)
+DISCOURAGED_NOTE = (
+    "Households that needed credit in the past twelve months but did not apply because they expected to be turned "
+    "down. They never appear in any approval or rejection statistic, so this is the part of tightening that lender "
+    "data cannot see. " + SCE_THIN_NOTE
+)
+
 # Chart specs. Adding a chart means adding an entry here; the data comes from facts or a view in sql/views.sql.
 # Keys: `post` writes docs/img/<id>.png (one per panel); `band` fills between two series (1-based data indices);
 # `benchmark` adds a dashed 2015-2019 average of the first series; `y_zero: False` lets the y axis float (scores);
@@ -311,6 +334,62 @@ PANELS = [
                       period_type="Q"),
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Offered to 620-719 minus paid, percentage points",
                       period_type="Q", view="v_offered_vs_paid", field="spread_pct_pts", unit="pp", dash=True),
+                ],
+            },
+        ],
+    },
+    {
+        "name": "Access",
+        "blurb": "Who is asking for card credit, who is getting it, and who is being shut out. The demand side, from the only survey that asks households directly.",
+        "charts": [
+            {
+                "id": "card_access",
+                "title": "Card applications and refusals",
+                "unit": "pct",
+                "step": True,
+                "post": True,
+                "notes": [SCE_NOTE],
+                "series": [
+                    S("sce_card_application_rate", "SCE_ALL", "Applied for a card", period_type="T", source="nyfed_sce"),
+                    S("sce_card_rejection_rate", "SCE_ALL", "Refused a card, of those who applied", period_type="T", source="nyfed_sce"),
+                    S("sce_card_limit_request_rate", "SCE_ALL", "Asked for a higher limit", period_type="T", source="nyfed_sce"),
+                    S("sce_card_limit_rejection_rate", "SCE_ALL", "Refused a higher limit, of those who asked", period_type="T", source="nyfed_sce"),
+                ],
+            },
+            {
+                "id": "rejection_by_score",
+                "title": "Rejection rate for any credit, by credit score",
+                "unit": "pct",
+                "step": True,
+                "notes": [SCE_NOTE, SCE_THIN_NOTE],
+                "series": [
+                    S("sce_any_rejection_rate", "SCORE:LT680", "Score under 680", period_type="T", source="nyfed_sce"),
+                    S("sce_any_rejection_rate", "SCORE:680-760", "Score 680 to 760", period_type="T", source="nyfed_sce"),
+                    S("sce_any_rejection_rate", "SCORE:GE760", "Score over 760", period_type="T", source="nyfed_sce"),
+                ],
+            },
+            {
+                "id": "lender_closures",
+                "title": "Accounts closed by the lender, by credit score",
+                "unit": "pct",
+                "step": True,
+                "notes": [CLOSURE_NOTE],
+                "series": [
+                    S("sce_lender_closed_rate", "SCORE:LT680", "Score under 680", period_type="T", source="nyfed_sce"),
+                    S("sce_lender_closed_rate", "SCORE:680-760", "Score 680 to 760", period_type="T", source="nyfed_sce"),
+                    S("sce_lender_closed_rate", "SCORE:GE760", "Score over 760", period_type="T", source="nyfed_sce"),
+                ],
+            },
+            {
+                "id": "discouraged",
+                "title": "Needed credit but did not apply, by credit score",
+                "unit": "pct",
+                "step": True,
+                "notes": [DISCOURAGED_NOTE],
+                "series": [
+                    S("sce_discouraged_rate", "SCORE:LT680", "Score under 680", period_type="T", source="nyfed_sce"),
+                    S("sce_discouraged_rate", "SCORE:680-760", "Score 680 to 760", period_type="T", source="nyfed_sce"),
+                    S("sce_discouraged_rate", "SCORE:GE760", "Score over 760", period_type="T", source="nyfed_sce"),
                 ],
             },
         ],
@@ -564,6 +643,8 @@ HEADLINES = [
     (("card_nco_rate_sa", "COMBANKS_ALL", "all", "Q", "fred"), "Card charge-off rate, annualized, commercial banks (Fed, SA)", "rate"),
     (("hhdc_card_transition_dq90", "CCP_ALL", "all", "Q", "nyfed_hhdc"), "Card balances newly 90+ days late, annualized flow (NY Fed)", "rate"),
     (("y14_card_pay_minimum_share", "Y14_CARD_FILERS", "all", "Q", "phillyfed"), "Accounts paying only the minimum, large banks (Philly Fed)", "rate"),
+    (("sce_card_rejection_rate", "SCE_ALL", "all", "T", "nyfed_sce"), "Card applications refused, of those who applied (NY Fed survey)", "rate"),
+    (("sce_lender_closed_rate", "SCE_ALL", "all", "T", "nyfed_sce"), "Had an account closed by a lender (NY Fed survey)", "rate"),
     (("debt_service_ratio_consumer", "US_HOUSEHOLDS", "all", "Q", "fred"), "Consumer debt payments as a share of disposable income (Fed)", "rate"),
     (("unemployment_rate_sa", "US_ECONOMY", "all", "M", "fred"), "Unemployment rate (BLS)", "rate"),
     (("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "all", "Q", "fred"), "Banks tightening card standards, net (SLOOS)", "net"),
@@ -653,6 +734,8 @@ def period_label(d: dt.date, period_type: str) -> str:
         return f"{d.year} Q{(d.month - 1) // 3 + 1}"
     if period_type == "H":
         return f"{d.year} H{1 if d.month <= 6 else 2}"
+    if period_type == "T":  # a survey wave, labelled by the month it was fielded in
+        return f"{MONTHS[d.month - 1]} {d.year}"
     if period_type == "A":
         return str(d.year)
     return d.isoformat()
