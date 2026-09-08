@@ -69,6 +69,22 @@ th:first-child, td:first-child { text-align: left; }
 .changes { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
 .changes ul { margin: 4px 0 0; padding-left: 18px; }
 .method li { margin-bottom: 4px; }
+.browse { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; }
+.browse .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px; }
+.browse input[type=search] { flex:1 1 300px; min-width:0; font:inherit; font-size:14px; padding:5px 10px;
+  color:var(--ink); background:var(--bg); border:1px solid var(--border); border-radius:6px; }
+.browse select { font:inherit; font-size:13px; padding:4px 8px; color:var(--ink); background:var(--bg);
+  border:1px solid var(--border); border-radius:6px; }
+.browse .ctl { font-size:13px; color:var(--ink2); display:inline-flex; align-items:center; gap:5px; }
+.tablewrap { max-height:420px; overflow:auto; border:1px solid var(--border); border-radius:8px; }
+#browse-table { width:100%; margin:0; font-size:13px; }
+#browse-table thead th { position:sticky; top:0; background:var(--surface); z-index:1; }
+#browse-table tbody tr { cursor:pointer; }
+#browse-table tbody tr:hover { background:var(--bg); }
+#browse-table tbody tr[aria-selected="true"] { background:var(--band); }
+#browse-table td.name { max-width:340px; }
+#browse-detail { border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; }
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
 .stamp { color: var(--muted); font-size: 12px; }
 </style>
 </head>
@@ -150,6 +166,34 @@ They are checked here on every refresh.</p>
   </div>
 </section>
 {% endfor %}
+
+<h2 id="browse">Browse every series</h2>
+<p class="lede">The panels above answer particular questions. This is everything the pipeline loads:
+{{ n_browse }} series, {{ n_uncharted }} of which are not on any chart above. Search, click a row to plot it, and
+read the scope note before comparing it with anything.</p>
+<div class="browse">
+  <div class="controls">
+    <label class="sr-only" for="browse-q">Search series</label>
+    <input id="browse-q" type="search" placeholder="Search by name, entity or source, e.g. Capital One, utilization, score">
+    <label for="browse-src" class="ctl">Source</label>
+    <select id="browse-src">
+      <option value="">All sources</option>
+      {% for src, label in browse_sources %}<option value="{{ src }}">{{ label }}</option>{% endfor %}
+    </select>
+    <label class="ctl"><input id="browse-un" type="checkbox"> Only series with no chart</label>
+    <span class="note" id="browse-count"></span>
+  </div>
+  <div id="browse-detail" hidden>
+    <div class="cardhead"><h3 id="browse-title"></h3><span class="unit" id="browse-unit"></span></div>
+    <div class="plot" id="browse-plot"></div>
+    <footer id="browse-footer"></footer>
+    <details id="browse-about"><summary>About this series</summary><p id="browse-note"></p></details>
+  </div>
+  <div class="tablewrap"><table id="browse-table">
+    <thead><tr><th>Series</th><th>Entity</th><th>Source</th><th>Cadence</th><th>Latest</th><th>Value</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</div>
 
 <h2>What changed</h2>
 <div class="changes">
@@ -332,6 +376,101 @@ They are checked here on every refresh.</p>
       t.innerHTML = html + '</tbody></table>';
     }
   });
+
+  // ---- browse every series ----
+  (function () {
+    var B = D.browse, all = B.series, body = document.querySelector('#browse-table tbody');
+    if (!body || !all.length) return;
+    var q = document.getElementById('browse-q'), src = document.getElementById('browse-src');
+    var un = document.getElementById('browse-un'), count = document.getElementById('browse-count');
+    var detail = document.getElementById('browse-detail'), plotEl = document.getElementById('browse-plot');
+    var chart = null, current = null;
+
+    function fmt(s) { return fmtVal(s.last_value, s.unit); }
+    function rows(list) {
+      var html = '';
+      list.forEach(function (s, i) {
+        html += '<tr data-key="' + s.key.replace(/"/g, '&quot;') + '" tabindex="0">'
+          + '<td class="name">' + s.name + (s.charted ? '' : ' <span class="note">(no chart)</span>') + '</td>'
+          + '<td>' + s.entity + (s.tier && s.tier !== 'all' ? ' &middot; ' + s.tier : '') + '</td>'
+          + '<td>' + s.source + '</td><td>' + s.cadence + '</td>'
+          + '<td>' + s.last_period + '</td><td>' + fmt(s) + '</td></tr>';
+      });
+      body.innerHTML = html;
+    }
+    function filtered() {
+      var text = (q.value || '').toLowerCase().trim(), s0 = src.value, only = un.checked;
+      return all.filter(function (s) {
+        if (s0 && s.source !== s0) return false;
+        if (only && s.charted) return false;
+        if (!text) return true;
+        return (s.name + ' ' + s.entity + ' ' + s.metric + ' ' + s.source_label + ' ' + s.tier).toLowerCase().indexOf(text) >= 0;
+      });
+    }
+    function refresh() {
+      var list = filtered();
+      rows(list);
+      count.textContent = list.length + ' of ' + all.length + ' series';
+      if (current) markSelected(current.key);
+    }
+    function markSelected(key) {
+      Array.prototype.forEach.call(body.querySelectorAll('tr'), function (tr) {
+        tr.setAttribute('aria-selected', tr.getAttribute('data-key') === key ? 'true' : 'false');
+      });
+    }
+    function draw(s) {
+      current = s;
+      detail.hidden = false;
+      document.getElementById('browse-title').textContent = s.name;
+      document.getElementById('browse-unit').textContent = s.unit_label;
+      var foot = 'Source: ' + s.source_label + ' &middot; ' + s.cadence + ' &middot; ' + s.n
+        + ' observations &middot; latest ' + s.last_period + ' at ' + fmtVal(s.last_value, s.unit);
+      if (s.source_url) foot += ' &middot; <a href="' + s.source_url + '">source</a>';
+      document.getElementById('browse-footer').innerHTML = foot;
+      var about = document.getElementById('browse-about');
+      document.getElementById('browse-note').textContent = s.note || '';
+      about.hidden = !s.note;
+      var grid = B.grids[s.grid], xs = grid.slice(s.start, s.start + s.values.length);
+      var stepped = s.period_type !== 'D' && s.period_type !== 'W';
+      var cfg = {
+        label: s.name, stroke: v('--series-1'), width: 2, spanGaps: true, points: { show: false },
+        value: function (u, val) { return fmtVal(val, s.unit); }
+      };
+      if (stepped) cfg.paths = uPlot.paths.stepped({ align: -1 });
+      var opts = {
+        width: plotEl.clientWidth || 600, height: 260, tzDate: tz,
+        series: [{ label: 'Period', value: function (u, ts) { return fmtPeriod(ts, s.period_type); } }, cfg],
+        scales: { x: { time: true }, y: {} },
+        axes: [
+          { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { stroke: v('--grid'), width: 1 } },
+          { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { show: false }, size: 64,
+            values: function (u, vals) { return vals.map(function (x) { return fmtAxis(x, s.unit); }); } }
+        ],
+        cursor: { drag: { x: true, y: false } }, legend: { show: true },
+        hooks: { drawClear: [shadeRecessions] }
+      };
+      if (chart) { chart.destroy(); chart = null; }
+      chart = new uPlot(opts, [xs, s.values], plotEl);
+      markSelected(s.key);
+      if (history.replaceState) history.replaceState(null, '', '#series=' + encodeURIComponent(s.key));
+    }
+    var byKey = {};
+    all.forEach(function (s) { byKey[s.key] = s; });
+    body.addEventListener('click', function (e) {
+      var tr = e.target.closest('tr[data-key]');
+      if (tr && byKey[tr.getAttribute('data-key')]) draw(byKey[tr.getAttribute('data-key')]);
+    });
+    body.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var tr = e.target.closest('tr[data-key]');
+      if (tr && byKey[tr.getAttribute('data-key')]) { e.preventDefault(); draw(byKey[tr.getAttribute('data-key')]); }
+    });
+    [q, src, un].forEach(function (el) { el.addEventListener('input', refresh); });
+    window.addEventListener('resize', function () { if (chart) chart.setSize({ width: plotEl.clientWidth, height: 260 }); });
+    refresh();
+    var m = /#series=([^&]+)/.exec(location.hash || '');
+    if (m && byKey[decodeURIComponent(m[1])]) draw(byKey[decodeURIComponent(m[1])]);
+  })();
 })();
 </script>
 </body>

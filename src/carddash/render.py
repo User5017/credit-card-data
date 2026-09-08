@@ -1057,6 +1057,71 @@ def headlines_text(items: list[dict], generated_at: str, thesis: list[dict] | No
     return "\n".join(lines) + "\n"
 
 
+# ---------- the series browser ----------
+
+# Every series in facts, embedded so the page can chart any of them without a runtime fetch. Dates are not repeated
+# per series: series that share a source and a cadence share one date grid, and a series stores the index it starts
+# at plus its values (with nulls for gaps inside its own span). That is about 0.4 MB for the whole dataset.
+
+
+def browse_payload(facts: pd.DataFrame, meta_idx: dict, today: dt.date) -> dict:
+    """{'grids': {key: [epoch]}, 'series': [...]} covering every series in facts, newest value first in the table."""
+    if facts.empty:
+        return {"grids": {}, "series": []}
+    facts = facts[facts["period_end"].dt.date <= today]
+    charted = {
+        (s["metric"], s["entity"], s["tier"], s["period_type"], s["source"])
+        for panel in PANELS
+        for chart in panel["charts"]
+        for s in chart["series"]
+    }
+    grids: dict[str, list[dt.date]] = {}
+    for (source, period_type), grp in facts.groupby(["source", "period_type"], sort=True):
+        grids[f"{source}|{period_type}"] = sorted({d.date() for d in grp["period_end"]})
+    index = {k: {d: i for i, d in enumerate(v)} for k, v in grids.items()}
+
+    out = []
+    for key, grp in facts.groupby(SERIES_KEY, sort=False):
+        metric, entity, tier, period_type, source = key
+        grid_key = f"{source}|{period_type}"
+        positions = index[grid_key]
+        grp = grp.sort_values("period_end")
+        pos = [positions[d.date()] for d in grp["period_end"]]
+        start = pos[0]
+        values: list[float | None] = [None] * (pos[-1] - start + 1)
+        for p, v in zip(pos, grp["value"]):
+            values[p - start] = round(float(v), 6)
+        m = meta_idx.get(tuple(key))
+        unit = (m["unit"] if m is not None else "")
+        last_date = grp["period_end"].iloc[-1].date()
+        out.append(
+            {
+                "key": "|".join(str(k) for k in key),
+                "name": (m["display_name"] if m is not None else metric),
+                "metric": metric,
+                "entity": entity,
+                "tier": tier,
+                "source": source,
+                "source_label": SOURCE_LABELS.get(source, source),
+                "source_url": (m["source_url"] if m is not None else ""),
+                "note": (m["scope_note"] if m is not None else ""),
+                "unit": unit,
+                "unit_label": UNIT_LABELS.get(unit, unit),
+                "period_type": period_type,
+                "cadence": PERIOD_WORDS.get(period_type, period_type),
+                "grid": grid_key,
+                "start": start,
+                "values": values,
+                "last_period": period_label(last_date, period_type),
+                "last_value": round(float(grp["value"].iloc[-1]), 6),
+                "n": int(len(grp)),
+                "charted": tuple(key) in charted,
+            }
+        )
+    out.sort(key=lambda s: (s["source"], s["name"], s["entity"]))
+    return {"grids": {k: [_epoch(d) for d in v] for k, v in grids.items()}, "series": out}
+
+
 # ---------- health, revisions, new periods ----------
 
 
@@ -1200,11 +1265,13 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
     generated_at = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     latest = headlines(facts, today)
     thesis_holds = all(t["holds"] for t in thesis if t["holds"] is not None)
+    browse = browse_payload(facts, meta_idx, today)
     payload = {
         "generated_at": generated_at,
         "default_years": DEFAULT_YEARS,
         "recessions": _recessions(),
         "charts": [c for p in panels for c in p["charts"]],
+        "browse": browse,
     }
     payload_json = json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
 
@@ -1230,6 +1297,9 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
         default_years=DEFAULT_YEARS,
         benchmark_label=BENCHMARK_LABEL,
         n_facts=len(facts),
+        n_browse=len(browse["series"]),
+        n_uncharted=sum(1 for s in browse["series"] if not s["charted"]),
+        browse_sources=sorted({(s["source"], s["source_label"]) for s in browse["series"]}, key=lambda x: x[1]),
         n_series=int(facts.groupby(SERIES_KEY).ngroups) if not facts.empty else 0,
         payload_json=payload_json,
         uplot_js=(VENDOR / "uPlot.iife.min.js").read_text(encoding="utf-8"),

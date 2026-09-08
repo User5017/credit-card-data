@@ -66,7 +66,8 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Keep this repo out of OneDrive.
 
 ## Rendering
-- docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON.
+- docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON. That now
+  includes every series, for the browser at the foot of the page, so the file is about 1.4 MB.
   No CDN, no runtime fetches. Must render identically from file:// and GitHub Pages.
 - Chart specs live in PANELS in src/carddash/render.py. Every chart shows source, cadence, latest period,
   data-as-of, a status badge when its source is not OK, the scope notes from series.csv with source links, and the

@@ -22,7 +22,7 @@ from carddash.render import (
     headlines,
     render,
 )
-from carddash.schema import coerce_facts
+from carddash.schema import SERIES_KEY, coerce_facts
 from conftest import FIXTURES, PULLED_AT, REPO
 
 RUN1 = "2026-09-06T00:00:00Z"
@@ -389,6 +389,53 @@ def test_a_broken_thesis_test_says_so(tmp_paths, fixture_facts):
     assert "this test has broken" in watch
     text = (tmp_paths.docs / "latest.txt").read_text(encoding="utf-8")
     assert "(BROKEN)" in text and "- [BROKEN]" in text
+
+
+def test_browse_payload_covers_every_series_and_reconstructs_it(page, fixture_facts):
+    """Every series in facts is browsable, and its compact encoding rebuilds the original values exactly."""
+    from carddash.render import browse_payload
+    from carddash.series import load_series, series_index
+
+    html, payload = page
+    b = payload["browse"]
+    meta_idx = series_index(load_series(REPO / "crosswalks" / "series.csv"))
+    direct = browse_payload(fixture_facts, meta_idx, TODAY)
+    keys = {s["key"] for s in b["series"]}
+    assert len(b["series"]) == len(direct["series"]) == len(keys)  # keys are unique
+    in_facts = {"|".join(str(x) for x in k)
+                for k in fixture_facts[SERIES_KEY].drop_duplicates().itertuples(index=False, name=None)}
+    assert keys == in_facts  # nothing loaded is missing from the browser
+    assert b["grids"] and all(g in b["grids"] for g in {s["grid"] for s in b["series"]})
+    # rebuild one series from the grid and compare against facts
+    one = next(s for s in b["series"] if s["key"].startswith("y14_card_utilization_active_p50|"))
+    grid = b["grids"][one["grid"]]
+    xs = grid[one["start"]: one["start"] + len(one["values"])]
+    pairs = [(dt.datetime.fromtimestamp(x, dt.timezone.utc).date(), v)
+             for x, v in zip(xs, one["values"]) if v is not None]
+    src = fixture_facts[(fixture_facts["metric"] == "y14_card_utilization_active_p50")].sort_values("period_end")
+    assert len(pairs) == len(src) == one["n"]
+    assert [p[0] for p in pairs] == [d.date() for d in src["period_end"]]
+    assert [p[1] for p in pairs] == [round(float(v), 6) for v in src["value"]]
+    assert one["last_value"] == pytest.approx(float(src["value"].iloc[-1]))
+    assert one["cadence"] == "quarterly" and one["unit"] == "pct" and one["note"]
+    # the charted flag matches the panels, and most series have no chart
+    charted = {s["key"] for s in b["series"] if s["charted"]}
+    plotted = {"|".join([x["metric"], x["entity"], x["tier"], x["period_type"], x["source"]])
+               for pa in PANELS for c in pa["charts"] for x in c["series"]}
+    assert charted == plotted & keys
+    assert len(b["series"]) - len(charted) > 100  # the fixtures carry 5 FDIC charters, the live pull carries 35
+    # no series is dated into the future
+    for s in b["series"]:
+        end = b["grids"][s["grid"]][s["start"] + len(s["values"]) - 1]
+        assert dt.datetime.fromtimestamp(end, dt.timezone.utc).date() <= TODAY
+    # the section is on the page with a working control set
+    assert 'id="browse"' in html and 'id="browse-table"' in html and 'id="browse-q"' in html
+    assert f'{len(b["series"])} series' in html
+
+
+def test_browse_payload_is_empty_without_facts(tmp_paths):
+    from carddash.render import browse_payload
+    assert browse_payload(coerce_facts(pd.DataFrame(columns=SERIES_KEY + ["period_end", "value", "entity_type", "pulled_at"])), {}, TODAY) == {"grids": {}, "series": []}
 
 
 def test_rel_display_is_capped_when_the_old_value_is_zero():
