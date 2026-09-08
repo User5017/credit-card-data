@@ -63,7 +63,7 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Context"]
-    assert len(payload["charts"]) == 30
+    assert len(payload["charts"]) == 32
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
@@ -193,9 +193,16 @@ def test_access_panel_draws_the_credit_access_survey(page):
     assert len(closures["series"]) == 3 and closures["n_points"] == 38  # the score split starts one wave later
     assert any("back door" in n for n in closures["notes"])
     assert any("never appear in any approval" in n for n in by_id["discouraged"]["notes"])
-    # every Access chart names its sample-size caveat
+    # every survey chart names its sample-size caveat
     for cid in ("rejection_by_score", "lender_closures", "discouraged"):
         assert any("about 150 respondents" in n for n in by_id[cid]["notes"]), cid
+    # the front door, and the size of the line behind it, from the Y-14 series
+    mix = by_id["origination_mix"]
+    accounts, dollars = (next(v for v in reversed(mix["data"][k]) if v is not None) for k in (1, 2))
+    assert accounts > dollars * 3  # subprime is about a fifth of new accounts and a twenty-fifth of new credit lines
+    limits = by_id["origination_limits"]
+    sub, mid, top = (next(v for v in reversed(limits["data"][k]) if v is not None) for k in (1, 2, 3))
+    assert sub < mid < top and limits["unit"] == "usd"
 
 
 def test_benchmark_is_the_2015_2019_mean_of_the_first_series(page, fixture_facts):

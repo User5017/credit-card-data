@@ -369,6 +369,43 @@ PANELS = [
                 ],
             },
             {
+                "id": "origination_mix",
+                "title": "Who is getting new card accounts",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "New accounts opened in the quarter with a credit score below 660, as a share of all new accounts, "
+                    "and the share of new credit line dollars going to them. The two lines separating is the point: a "
+                    "rising account share against a flat dollar share means lenders are opening more subprime accounts "
+                    "on small lines, which is a test, not an expansion. " + Y14_NOTE
+                ],
+                "series": [
+                    S("y14_card_new_accounts_share", "Y14_CARD_FILERS", "Share of new accounts, score below 660",
+                      tier="lt660", period_type="Q", source="phillyfed"),
+                    S("y14_card_new_commitments_share", "Y14_CARD_FILERS", "Share of new credit lines, score below 660",
+                      tier="lt660", period_type="Q", source="phillyfed"),
+                ],
+            },
+            {
+                "id": "origination_limits",
+                "title": "Credit line on a new account, by credit score",
+                "unit": "usd",
+                "step": True,
+                "notes": [
+                    "Median credit limit at origination for accounts opened in the quarter, by the borrower's score "
+                    "band. The size of the line is the risk the lender is actually taking, as distinct from the number "
+                    "of accounts it opens. " + Y14_NOTE
+                ],
+                "series": [
+                    S("y14_card_orig_credit_limit_median", "Y14_CARD_FILERS", "Score below 660", tier="lt660",
+                      period_type="Q", source="phillyfed"),
+                    S("y14_card_orig_credit_limit_median", "Y14_CARD_FILERS", "Score 660 to 719", tier="660_719",
+                      period_type="Q", source="phillyfed"),
+                    S("y14_card_orig_credit_limit_median", "Y14_CARD_FILERS", "Score 720 and up", tier="superprime",
+                      period_type="Q", source="phillyfed"),
+                ],
+            },
+            {
                 "id": "lender_closures",
                 "title": "Accounts closed by the lender, by credit score",
                 "unit": "pct",

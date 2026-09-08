@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thesis 2026-09-08: US card credit is re-segmenting, not cycling</title>
+<style>
+:root { color-scheme: light dark; --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#43423f; --muted:#6f6d67;
+  --border:rgba(11,11,11,.12); --grid:#e1e0d9; --accent:#2a78d6; --warn:#c9541c; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7;
+  --muted:#9b9a94; --border:rgba(255,255,255,.12); --grid:#2c2c2a; --accent:#4d8fe0; --warn:#f07a3c; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+main { max-width:860px; margin:0 auto; padding:34px 22px 80px; }
+h1 { font-size:27px; line-height:1.25; margin:0 0 6px; }
+h2 { font-size:20px; margin:38px 0 8px; padding-top:14px; border-top:1px solid var(--border); }
+h3 { font-size:16px; margin:22px 0 4px; }
+p { margin:0 0 12px; }
+.stamp { color:var(--muted); font-size:13px; margin-bottom:22px; }
+.lede { font-size:18px; color:var(--ink2); }
+blockquote { margin:16px 0; padding:12px 18px; background:var(--surface); border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0; font-size:17px; }
+table { border-collapse:collapse; width:100%; font-size:14px; margin:12px 0 18px; font-variant-numeric:tabular-nums; }
+th, td { padding:5px 10px; border-bottom:1px solid var(--grid); text-align:right; }
+th:first-child, td:first-child { text-align:left; }
+thead th { color:var(--muted); font-weight:600; border-bottom:1px solid var(--border); }
+td.num { white-space:nowrap; }
+ul, ol { margin:0 0 12px; padding-left:22px; }
+li { margin-bottom:5px; }
+.contents { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 18px; }
+.contents ol { margin:0; }
+.note { color:var(--muted); font-size:14px; }
+.call { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--warn);
+  border-radius:0 10px 10px 0; padding:14px 18px; margin:18px 0; }
+code { font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--surface);
+  border:1px solid var(--border); border-radius:4px; padding:1px 5px; }
+a { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>US card credit is re-segmenting, not cycling</h1>
+<p class="stamp">Analysis note, 2026-09-08. Every figure comes from the dashboard's own loaded data
+(<code>data/facts.csv</code>) as of the 2026-09-08 refresh. Large-bank Y-14 data runs to 2026 Q1; everything else to
+2026 Q2 or later. Written after adding the macro context series and the NY Fed credit access survey specifically to
+test this.</p>
+
+<blockquote>The 2022 to 2024 deterioration in US card credit was a vintage and underwriting event, not a
+macroeconomic one, and it has largely resolved. What has not reverted is the price. Issuers took roughly five points
+of margin over prime during the loss cycle and have kept it, while the product itself split into a growing payments
+business and a shrinking lending business. Lenders are now reopening the front door to subprime borrowers on very
+small lines while closing more existing weak accounts than at any point in the survey's history. This is portfolio
+re-segmentation, not a credit cycle turning.</blockquote>
+
+<div class="contents">
+<ol>
+  <li>The loss cycle was a vintage event and it is over</li>
+  <li>There is no aggregate debt problem</li>
+  <li>The product has split into payments and lending</li>
+  <li>The repricing was permanent</li>
+  <li>The front door is open and the back door is closing</li>
+  <li>What follows, and what would prove it wrong</li>
+  <li>What the data cannot settle</li>
+</ol>
+</div>
+
+<h2>1. The loss cycle was a vintage event and it is over</h2>
+
+<p>Every loss measure on the dashboard peaked between late 2023 and early 2025 and has fallen since. None has
+returned to its pre-pandemic average.</p>
+
+<table>
+<thead><tr><th>Measure</th><th>Peak</th><th>When</th><th>2026 Q2</th><th>2015-19 avg</th></tr></thead>
+<tbody>
+<tr><td>Card charge-off rate, all banks (Fed, SA)</td><td class="num">4.57%</td><td class="num">2024 Q4</td><td class="num">3.82%</td><td class="num">3.40%</td></tr>
+<tr><td>Net charge-off rate, large banks (Y-14)</td><td class="num">6.02%</td><td class="num">2025 Q1</td><td class="num">5.20%</td><td class="num">n/a</td></tr>
+<tr><td>Charge-off rate, all insured banks (FDIC)</td><td class="num">4.82%</td><td class="num">2024 Q2</td><td class="num">4.00%</td><td class="num">n/a</td></tr>
+<tr><td>Delinquency 30+ days, all banks (Fed, SA)</td><td class="num">3.10%</td><td class="num">2023 Q4</td><td class="num">2.85%</td><td class="num">2.39%</td></tr>
+<tr><td>Flow into 90+ days late (NY Fed)</td><td class="num">7.18%</td><td class="num">2024 Q4</td><td class="num">6.97%</td><td class="num">4.36%</td></tr>
+</tbody>
+</table>
+
+<p>The stronger evidence is that losses were never explicable by the economy. Fitting the card charge-off rate on
+the unemployment rate across 166 quarters back to 1985 gives</p>
+
+<p><code>charge-off rate = 0.468 &times; unemployment rate + 1.590</code></p>
+
+<p>and the residual is the part the labour market does not explain. It ran between +0.88 and +1.18 points through
+2024 and 2025 Q1. It is now +0.26 points.</p>
+
+<table>
+<thead><tr><th>Quarter</th><th>Unemployment</th><th>Charge-offs</th><th>Implied</th><th>Excess</th></tr></thead>
+<tbody>
+<tr><td>2024 Q3</td><td class="num">4.1%</td><td class="num">4.69%</td><td class="num">3.51%</td><td class="num">+1.18</td></tr>
+<tr><td>2025 Q1</td><td class="num">4.2%</td><td class="num">4.44%</td><td class="num">3.56%</td><td class="num">+0.88</td></tr>
+<tr><td>2025 Q3</td><td class="num">4.4%</td><td class="num">4.18%</td><td class="num">3.65%</td><td class="num">+0.53</td></tr>
+<tr><td>2026 Q2</td><td class="num">4.2%</td><td class="num">3.82%</td><td class="num">3.56%</td><td class="num">+0.26</td></tr>
+</tbody>
+</table>
+
+<p>Unemployment barely moved across the whole episode: 3.9% to 4.4%. A loss surge that appears and then disappears
+without the labour market moving is not a macroeconomic event. It is the 2021 and 2022 origination vintages, opened
+into pandemic-inflated credit scores and stimulus-flattered payment histories, seasoning and then washing out.</p>
+
+<h2>2. There is no aggregate debt problem</h2>
+
+<p>The headline that card balances are at a record is true in nominal dollars and misleading in every other unit.</p>
+
+<table>
+<thead><tr><th>Measure</th><th>2008 peak</th><th>2019</th><th>Latest</th></tr></thead>
+<tbody>
+<tr><td>Revolving credit, share of disposable income</td><td class="num">9.47%</td><td class="num">6.67%</td><td class="num">5.71%</td></tr>
+<tr><td>Revolving credit at today's prices</td><td class="num">$1,585bn</td><td class="num">$1,405bn</td><td class="num">$1,352bn</td></tr>
+<tr><td>Consumer debt service, share of income</td><td class="num">7.31%<span class="note"> (2005)</span></td><td class="num">5.73%</td><td class="num">5.29%</td></tr>
+<tr><td>Household debt service, share of income</td><td class="num">15.85%</td><td class="num">11.63%</td><td class="num">11.16%</td></tr>
+</tbody>
+</table>
+
+<p>Card debt is a smaller claim on household income than at any point before the pandemic, and 40 percent smaller
+than in 2008. In constant dollars, balances are 15 percent below their 2008 peak. The cost of servicing all consumer
+debt is below its 2019 average despite card rates being seven points higher, because the balances carrying those
+rates have not grown in real terms.</p>
+
+<h2>3. The product has split into payments and lending</h2>
+
+<p>This is the finding that reframes everything else, and it comes from series that were already loaded before this
+analysis started. The Y-14 accounting identity gives a payment rate: payments as a share of the opening balance.</p>
+
+<table>
+<thead><tr><th>Year</th><th>Payment rate</th><th>Revolving share of balances</th><th>Purchases per account</th><th>Balance per account</th></tr></thead>
+<tbody>
+<tr><td>2012</td><td class="num">58.3%</td><td class="num">77.8%</td><td class="num">$681</td><td class="num">$1,146</td></tr>
+<tr><td>2019</td><td class="num">79.4%</td><td class="num">72.4%</td><td class="num">$1,055</td><td class="num">$1,324</td></tr>
+<tr><td>2022</td><td class="num">106.1%</td><td class="num">67.7%</td><td class="num">$1,382</td><td class="num">$1,307</td></tr>
+<tr><td>2026 Q1</td><td class="num">96.7%</td><td class="num">70.2%</td><td class="num">$1,551</td><td class="num">$1,607</td></tr>
+</tbody>
+</table>
+
+<p>The payment rate rose for seven straight years before the pandemic, jumped through it, and has given back only a
+fraction. Cardholders now put 47 percent more spend per account through the product than in 2019 and pay off almost
+all of it. The share of accounts paying in full is 36.9 percent, the highest in the series; the share paying only the
+minimum is 10.2 percent, below its 2024 peak. Utilisation among active accounts has a median of 6.8 percent.</p>
+
+<p>For an issuer this is good credit and poor spread revenue. The asset that earns interest is shrinking as a share
+of a book whose transaction volume is growing. The economics shift toward interchange, and the interest-earning
+balance concentrates in a smaller, worse-performing tail.</p>
+
+<h2>4. The repricing was permanent</h2>
+
+<p>Most variable card APRs are set as the prime rate plus a margin. Prime tracks monetary policy; the margin is the
+issuer's decision. The margin is at a record.</p>
+
+<table>
+<thead><tr><th>Period</th><th>APR paid by revolvers</th><th>Prime</th><th>Margin over prime</th></tr></thead>
+<tbody>
+<tr><td>1990-94</td><td class="num">15.77%</td><td class="num">8.50%</td><td class="num">7.27 pts</td></tr>
+<tr><td>2000-04</td><td class="num">13.69%</td><td class="num">5.82%</td><td class="num">7.86 pts</td></tr>
+<tr><td>2010-14</td><td class="num">13.29%</td><td class="num">3.25%</td><td class="num">10.04 pts</td></tr>
+<tr><td>2015-19</td><td class="num">14.93%</td><td class="num">4.23%</td><td class="num">10.70 pts</td></tr>
+<tr><td>2026 Q2</td><td class="num">22.15%</td><td class="num">6.75%</td><td class="num">15.40 pts</td></tr>
+</tbody>
+</table>
+
+<p>Roughly five points of margin were added between 2015 and today, on top of the four points added between 2004 and
+2014. The margin peaked at 15.47 points in 2025 Q4, when losses were already falling, and it has not come back. Note
+what has moved instead: the CFPB survey shows median APRs <em>offered</em> to new applicants falling in the second
+half of 2025, from 28.2 to 26.7 percent for the 620 to 719 band and from 22.2 to 20.0 percent for superprime, while
+the rate actually <em>paid</em> on existing balances did not move. Competition is showing up in acquisition pricing
+and not in back-book pricing, which is the textbook signature of a market where switching costs are high.</p>
+
+<h2>5. The front door is open and the back door is closing</h2>
+
+<p>Two independent sources agree that supply loosened sharply between mid-2025 and early 2026.</p>
+
+<table>
+<thead><tr><th>Measure</th><th>2019 avg</th><th>2024</th><th>2025</th><th>Latest</th></tr></thead>
+<tbody>
+<tr><td>Card applications refused (survey, 3-wave avg)</td><td class="num">16.4%</td><td class="num">19.4%</td><td class="num">22.0%</td><td class="num">16.5%</td></tr>
+<tr><td>Limit increases refused (survey, 3-wave avg)</td><td class="num">30.8%</td><td class="num">35.5%</td><td class="num">38.9%</td><td class="num">25.2%</td></tr>
+<tr><td>New accounts with score under 660 (Y-14)</td><td class="num">24.4%<span class="note"> (2019 Q4)</span></td><td class="num">16.7%</td><td class="num">16.2%</td><td class="num">19.1%</td></tr>
+<tr><td>10th percentile score at origination (Y-14)</td><td class="num">621</td><td class="num">632</td><td class="num">632</td><td class="num">619</td></tr>
+</tbody>
+</table>
+
+<p>Refusal rates are back to 2019 levels and limit refusals are below them. But three things say this is not a
+risk-on expansion.</p>
+
+<h3>Lender-initiated closures are at a series high</h3>
+<p>The share of households that had an account closed by the lender is 8.3 percent on a three-wave average, the
+highest since the survey began in 2013, against 6.3 percent in 2019. For households with a self-reported score under
+680 it is 22.8 percent, against 16.0 percent in 2019. Y-14 line decreases are at 1.65 percent of accounts, the
+highest since 2020. No lender-reported source publishes this; it is visible only because the survey asks households
+directly.</p>
+
+<h3>The money is not following the accounts</h3>
+<p>Sub-660 borrowers are 19.1 percent of new accounts but only 4.0 percent of new credit line dollars, against 6.0
+percent in 2019. The median credit line on a new sub-660 account is $500, down from $700 through 2021 to 2024. The
+median new superprime line is $7,500, up from $5,295 in 2019. Lenders are opening subprime accounts as cheap options
+and concentrating actual credit on prime borrowers who do not borrow.</p>
+
+<h3>Account growth is decelerating even as limits grow</h3>
+<p>Open card accounts on credit reports grew 7.0 percent year over year in 2025 Q3 and 2.6 percent in 2026 Q1. Total
+limits grew 6.1 percent over the same period. Limits per account are rising because closures are removing small
+accounts while lines grow on the ones that remain.</p>
+
+<h2>6. What follows, and what would prove it wrong</h2>
+
+<p>If the loosening that began in the second half of 2025 holds, those vintages season into delinquency between late
+2026 and 2027. The dashboard can test this.</p>
+
+<div class="call">
+<p><strong>Prediction.</strong> Delinquency <em>rates</em> rise modestly through 2027 while dollar losses stay near
+current levels, because the new subprime exposure is being written at a $500 median line. Specifically: the NY Fed
+flow into 90+ day delinquency, flat between 6.93 and 7.18 percent for six quarters, ticks up but stays below 7.5
+percent, while the Fed charge-off rate stays under 4.2 percent.</p>
+<p><strong>What would falsify the thesis.</strong> The 90+ flow breaking above 7.5 percent, or the charge-off excess
+over what unemployment implies widening back above 0.75 points, would mean the loosening was larger than the line
+sizes suggest and this is a cycle after all. A margin over prime falling below 14 points would mean the repricing was
+cyclical rather than structural.</p>
+</div>
+
+<p>Two other things to watch. The concentration is extreme and is not narrowing: annualised charge-off rates run from
+American Express at 2.3 percent through JPMorgan at 3.2 and Capital One at 4.8 to Bread at 7.1, Credit One at 11.8
+and Merrick at 13.3. Banks outside the largest 100 have a 30+ delinquency rate of 6.49 percent against 2.74 percent
+for the top 100. And borrowers aged 70 and over have a serious delinquency flow that has risen from 5.33 to 6.34
+percent since 2023, the only age band still deteriorating.</p>
+
+<h2>7. What the data cannot settle</h2>
+
+<ul>
+<li><strong>Why older borrowers keep deteriorating.</strong> The NY Fed publishes the delinquency flow by age but not
+balances by age, so composition cannot be separated from distress. The credit access survey shows households aged 60
+and over have the <em>lowest</em> rejection rate of any age band, 6.1 percent, so it is not a supply story.</li>
+<li><strong>Whether the sentiment gap means anything.</strong> Consumer sentiment is 55.2 against a 2015-19 average of
+95.2, with a record low of 44.8 in May 2026, and the saving rate is 3.0 percent against 6.1 percent. Households say
+they are in trouble and simultaneously pay their cards off at record rates. Both are true of different people, but
+nothing here measures how many are in each group.</li>
+<li><strong>Timing.</strong> Call reports arrive 55 days after quarter end and the Y-14 three and a half months
+after. Monthly issuer 8-K master trust data would cut that to about two weeks and is the single highest-value
+addition left.</li>
+<li><strong>Sample size.</strong> The survey's sub-680 credit score band rests on about 150 respondents a wave. Every
+figure quoted from it here is a three-wave average for that reason, and single-wave moves of several points in that
+cell are noise.</li>
+</ul>
+
+<p class="note">Sources: Federal Reserve Board (G.19, H.8, charge-off and delinquency rates, Senior Loan Officer
+Opinion Survey, household debt service ratios) via FRED; Bureau of Labor Statistics; Bureau of Economic Analysis;
+University of Michigan; CFPB Terms of Credit Card Plans survey; Federal Reserve Bank of Philadelphia FR Y-14M;
+Federal Reserve Bank of New York Quarterly Report on Household Debt and Credit and Survey of Consumer Expectations
+Credit Access Survey; FDIC Call Report data. Every series is reproducible from
+<a href="https://user5017.github.io/credit-card-data/data/facts.csv">the published CSV</a> and 26 golden numbers on
+the dashboard are checked against the source release pages on every run.</p>
+
+</main>
+</body>
+</html>

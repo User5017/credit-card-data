@@ -194,6 +194,7 @@ th:first-child, td:first-child { text-align: left; }
   <li>"Data as of" on a chart is when its newest value was loaded. A card carries a status badge when its source is not OK; "last fetch attempt" is then the run that failed. "Checked against the release" lists the numbers the pipeline reproduces from the source's own release page on every run.</li>
   <li>The latest readings are computed from the series on the page: latest value, change against the same period a year earlier, the {{ benchmark_label }} for rates, and whether the value is the highest or lowest in at least three years. No model writes any of it.</li>
   <li>Sources: {{ sources | join('; ') }}. The Federal Reserve Board series (G.19 Consumer Credit, H.8 Assets and Liabilities of Commercial Banks, Charge-Off and Delinquency Rates, Senior Loan Officer Opinion Survey) are retrieved from FRED, Federal Reserve Bank of St. Louis.</li>
+  <li>A dated analysis note reading the whole page together, with the numbers behind it and the test that would prove it wrong, is at <a href="https://github.com/User5017/credit-card-data/blob/main/design/thesis-2026-09-08.html">design/thesis-2026-09-08.html</a> in the repository. The page above is mechanical; that note is editorial and dated.</li>
   <li>One chart per panel is also written as a PNG (the link in its footer), drawn from the same data as the page and showing the same {{ default_years }}-year window. The image carries no pull date, so it changes only when the data does.</li>
 </ul>
 </main>
