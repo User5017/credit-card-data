@@ -1,0 +1,7 @@
+pulled_at,source,metric,entity,tier,period_type,period_end,old_value,new_value,abs_change,rel_change
+2026-09-06T00:00:00Z,fred,revolving_credit_sa,ALL_HOLDERS,all,M,2026-05-31,1344,1344.3,0.3,0.0002232142857
+2026-09-06T00:00:00Z,fred,revolving_credit_sa,ALL_HOLDERS,all,M,2026-06-30,1350,1351.1,1.1,0.0008148148148
+2026-09-06T00:00:00Z,phillyfed,y14_card_balances,Y14_CARD_FILERS,all,Q,2026-03-31,940,948.7,8.7,0.009255319149
+2026-09-07T00:00:00Z,nyfed_hhdc,hhdc_card_balances,CCP_ALL,all,Q,2026-03-31,1252,1242,-10,0.007987220447
+2026-09-07T00:00:00Z,tccp,tccp_issuers_max_apr_over_30_count,TCCP_ALL,all,H,2025-12-31,0,13,13,inf
+2026-09-07T00:00:00Z,fred,card_apr_all_accounts,COMBANKS_ALL,all,Q,2026-06-30,20.93,20.94,0.01,0.0004777830865

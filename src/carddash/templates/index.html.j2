@@ -85,15 +85,29 @@ th:first-child, td:first-child { text-align: left; }
 
 <h2>What changed</h2>
 <div class="changes">
-  {% if recent_revisions %}
-  <div>Values revised by the source in the latest run (largest first):</div>
+  {% if not run %}
+  <div>No refresh run recorded yet.</div>
+  {% else %}
+  <div>Latest run {{ run[:16].replace('T', ' ') }} UTC.
+    {% if revisions.n %}{{ revisions.n }} value{{ 's' if revisions.n != 1 else '' }} revised by the source{% if revisions.listed %}, largest first{% endif %}{% if revisions.n > revisions.listed | length %} ({{ revisions.listed | length }} listed; revisions under 0.1% are only counted){% endif %}.{% else %}No values revised by the source.{% endif %}
+    {% if has_revisions_csv %}<a href="data/revisions.csv">Every revision ever logged</a>.{% endif %}</div>
+  {% if revisions.listed %}
   <ul>
-  {% for r in recent_revisions %}
-    <li>{{ r.name }}, {{ r.period_end }}: {{ '%.4g' | format(r.old) }} → {{ '%.4g' | format(r.new) }} ({{ '%.2f' | format(r.rel) }}%)</li>
+  {% for r in revisions.listed %}
+    <li>{{ r.name }}, {{ r.period }}: {{ '%.4g' | format(r.old) }} → {{ '%.4g' | format(r.new) }} ({{ r.rel }})</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% if new_periods %}
+  <div>New periods loaded in this run:</div>
+  <ul>
+  {% for p in new_periods %}
+    <li>{{ p.label }}: {{ p.periods | join('; ') }}</li>
   {% endfor %}
   </ul>
   {% else %}
-  <div>No revisions larger than 0.1% in the latest run.</div>
+  <div>No new periods in this run.</div>
+  {% endif %}
   {% endif %}
 </div>
 
@@ -106,7 +120,7 @@ th:first-child, td:first-child { text-align: left; }
     <figure class="card" id="{{ c.id }}">
       <figcaption><h3>{{ c.title }}</h3><span class="unit">{{ c.unit_label }}</span></figcaption>
       <div class="plot" data-chart="{{ c.id }}"></div>
-      <footer>{{ c.footer }}</footer>
+      <footer>{{ c.footer }}{% if c.post %} · <a href="img/{{ c.id }}.png">PNG</a>{% endif %}</footer>
       {% if c.notes %}
       <details><summary>About this series</summary>
         <ul>{% for n in c.notes %}<li>{{ n }}</li>{% endfor %}</ul>
@@ -126,7 +140,8 @@ th:first-child, td:first-child { text-align: left; }
   <li>Step charts hold each reading across its own period. Nothing is interpolated between readings.</li>
   <li>SA means seasonally adjusted. Series are labeled SA or NSA and are never compared across that line.</li>
   <li>Different sources measure different populations. G.19 covers all lenders; the H.8, charge-off and APR series cover commercial banks only; the CFPB card-terms survey describes terms offered per card product, not rates actually paid. Notes under each chart say which.</li>
-  <li>Sources: Board of Governors of the Federal Reserve System (G.19 Consumer Credit, H.8 Assets and Liabilities of Commercial Banks, Charge-Off and Delinquency Rates, Senior Loan Officer Opinion Survey), retrieved from FRED, Federal Reserve Bank of St. Louis.</li>
+  <li>Sources: {{ sources | join('; ') }}. The Federal Reserve Board series (G.19 Consumer Credit, H.8 Assets and Liabilities of Commercial Banks, Charge-Off and Delinquency Rates, Senior Loan Officer Opinion Survey) are retrieved from FRED, Federal Reserve Bank of St. Louis.</li>
+  <li>One chart per panel is also written as a PNG (the link in its footer), drawn from the same data as the page. The image carries no pull date, so it changes only when the data does.</li>
 </ul>
 </main>
 

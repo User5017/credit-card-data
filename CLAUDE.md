@@ -70,6 +70,10 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Chart specs live in PANELS in src/carddash/render.py. Every chart shows source, cadence, latest period,
   pull date, and the scope notes from series.csv. Step charts for period data; never interpolate.
 - Palette and mark rules: thin 2px lines, hairline grid, fixed series colors, legend for 2+ series, table twin.
+- One chart per panel carries `post: True` and is also written to docs/img/<id>.png by src/carddash/png.py (matplotlib Agg,
+  drawn from the same payload dict as the page, steps-pre for period data, no pull date, no Software chunk) so the
+  bytes change only when the data does. The 'What changed' block is keyed on health.json generated_at, never on the
+  newest row of revisions.csv.
 
 ## GitHub accounts (two, on purpose)
 - `User5017` owns the repo and the Pages site (https://user5017.github.io/credit-card-data/). Its CLI token has no

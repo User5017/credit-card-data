@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import shutil
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from .fetchers import tccp
 from .issuers import ISSUER_TYPES
 from .loader import read_facts, read_revisions
 from .paths import Paths
+from .png import write_png
 from .schema import PERIOD_WORDS, SERIES_KEY
 from .series import load_series, series_index
 
@@ -64,6 +66,7 @@ def S(metric, entity, label, tier="all", period_type="M", source="fred", view="f
 
 
 # Chart specs. Adding a chart means adding an entry here; the data comes from facts or a view in sql/views.sql.
+# `post: True` marks the one chart per panel that `carddash render` also writes as docs/img/<id>.png (see png.py).
 PANELS = [
     {
         "name": "Growth",
@@ -74,6 +77,7 @@ PANELS = [
                 "title": "Revolving consumer credit, all holders",
                 "unit": "usd_bn",
                 "step": False,
+                "post": True,
                 "series": [S("revolving_credit_sa", "ALL_HOLDERS", "Revolving credit, SA")],
             },
             {
@@ -102,6 +106,7 @@ PANELS = [
                 "title": "Commercial bank credit card APR",
                 "unit": "pct",
                 "step": True,
+                "post": True,
                 "series": [
                     S("card_apr_all_accounts", "COMBANKS_ALL", "All accounts", period_type="Q"),
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Accounts assessed interest", period_type="Q"),
@@ -134,6 +139,7 @@ PANELS = [
                 "title": "Credit card charge-off rate, annualized",
                 "unit": "pct",
                 "step": True,
+                "post": True,
                 "series": [
                     S("card_nco_rate_sa", "COMBANKS_ALL", "All commercial banks", period_type="Q"),
                     S("card_nco_rate_sa", "COMBANKS_TOP100", "Top 100 banks", period_type="Q"),
@@ -261,12 +267,14 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
     with_data = [p for p in per_series if p["last_period_iso"]]
     last = max(with_data, key=lambda p: p["last_period_iso"])["last_period"] if with_data else None
     pulled = max((p["pulled_at"] for p in per_series if p["pulled_at"]), default=None)
-    footer = f"Source: {', '.join(sources)} · {', '.join(cadences)}"
+    caption = f"Source: {', '.join(sources)} · {', '.join(cadences)}"
     if last:
-        footer += f" · latest period {last}"
+        caption += f" · latest period {last}"
+    footer = caption
     if pulled:
         footer += f" · pulled {pulled[:10]}"
     if since:
+        caption += f" · shown from {since[:4]}"
         footer += f" · shown from {since[:4]}"
     notes = []
     for p in per_series:
@@ -279,10 +287,12 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
         "unit": spec["unit"],
         "unit_label": UNIT_LABELS.get(spec["unit"], spec["unit"]),
         "step": spec["step"],
+        "post": bool(spec.get("post")),
         "period_type": period_types.pop() if len(period_types) == 1 else None,
         "series": per_series,
         "data": data,
         "footer": footer,
+        "caption": caption,  # the footer without the pull date: what the PNG prints
         "notes": notes,
         "n_points": len(xs),
     }
@@ -320,28 +330,78 @@ def _health_rows(health: dict, latest_by_source: dict[str, str]) -> list[dict]:
     return rows
 
 
-def _recent_revisions(revisions: pd.DataFrame, meta_idx: dict, limit: int = 12) -> list[dict]:
-    if revisions.empty:
-        return []
-    df = revisions.copy()
+REVISION_MIN_REL = 0.001  # revisions smaller than 0.1% are counted but not listed (float noise, rounding)
+MAX_LISTED_REVISIONS = 12
+MAX_LISTED_PERIODS = 6
+
+
+def _rel_display(old: float, rel: float) -> str:
+    """'0.80%' or, when the old value was 0 (rel_change is inf in revisions.csv), 'from 0'."""
+    if old == 0 or rel is None or not math.isfinite(rel):
+        return "from 0"
+    return f"{rel * 100:.2f}%"
+
+
+def _run_revisions(revisions: pd.DataFrame, meta_idx: dict, run: str | None) -> dict:
+    """The revisions logged by the run stamped `run` (the health file's generated_at), largest first.
+
+    Keyed on the run, not on the newest row in the file: after the first revision ever, the newest row would
+    otherwise be listed on every later run."""
+    empty = {"n": 0, "listed": []}
+    if revisions.empty or not run:
+        return empty
+    df = revisions[revisions["pulled_at"] == run].copy()
+    if df.empty:
+        return empty
     df["rel_change"] = pd.to_numeric(df["rel_change"], errors="coerce")
     df["old_value"] = pd.to_numeric(df["old_value"], errors="coerce")
     df["new_value"] = pd.to_numeric(df["new_value"], errors="coerce")
-    latest_pull = df["pulled_at"].max()
-    df = df[(df["pulled_at"] == latest_pull) & (df["rel_change"] > 0.001)]
-    df = df.sort_values("rel_change", ascending=False).head(limit)
-    out = []
+    n = int(len(df))
+    df = df[(df["rel_change"] > REVISION_MIN_REL) | (df["old_value"] == 0)]
+    df = df.sort_values("rel_change", ascending=False).head(MAX_LISTED_REVISIONS)
+    listed = []
     for _, r in df.iterrows():
         m = meta_idx.get((r["metric"], r["entity"], r["tier"], r["period_type"], r["source"]))
-        out.append(
+        listed.append(
             {
                 "name": m["display_name"] if m is not None else f"{r['metric']} {r['entity']}",
-                "period_end": str(r["period_end"])[:10],
+                "source_label": SOURCE_LABELS.get(r["source"], r["source"]),
+                "period": period_label(pd.Timestamp(r["period_end"]).date(), r["period_type"]),
                 "old": r["old_value"],
                 "new": r["new_value"],
-                "rel": r["rel_change"] * 100,
+                "rel": _rel_display(r["old_value"], r["rel_change"]),
             }
         )
+    return {"n": n, "listed": listed}
+
+
+def _new_periods(facts: pd.DataFrame, run: str | None) -> list[dict]:
+    """Per source and cadence, the periods the run stamped `run` added beyond what earlier runs had loaded: rows
+    carrying the run's pulled_at whose period_end is later than every period_end loaded by an earlier run (unchanged
+    values keep the pulled_at of the run that first loaded them). A revised value in an old period is not a new
+    period, even when a source re-publishes a whole quarter."""
+    if facts.empty or not run:
+        return []
+    out = []
+    for source, grp in facts.groupby("source", sort=True):
+        this = grp[grp["pulled_at"] == run]
+        if this.empty:
+            continue
+        prior = grp[grp["pulled_at"] != run]
+        items = []
+        for pt, sub in this.groupby("period_type", sort=True):
+            earlier = prior.loc[prior["period_type"] == pt, "period_end"]
+            frontier = earlier.max() if not earlier.empty else None
+            new = sorted({d for d in sub["period_end"] if frontier is None or d > frontier})
+            if not new:
+                continue
+            word = PERIOD_WORDS.get(pt, pt)
+            if prior.empty or len(new) > MAX_LISTED_PERIODS:
+                items.append(f"{len(new)} {word} periods through {period_label(new[-1].date(), pt)}")
+            else:
+                items.append(", ".join(period_label(d.date(), pt) for d in new) + f" ({word})")
+        if items:
+            out.append({"source": str(source), "label": SOURCE_LABELS.get(str(source), str(source)), "periods": items})
     return out
 
 
@@ -360,6 +420,7 @@ def render(paths: Paths) -> Path:
         panels.append({"name": panel["name"], "blurb": panel["blurb"], "charts": charts})
     con.close()
 
+    run = health_doc.get("generated_at")  # the stamp every row and revision of the latest refresh carries
     generated_at = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     payload = {
         "generated_at": generated_at,
@@ -374,7 +435,11 @@ def render(paths: Paths) -> Path:
         health=_health_rows(health, _latest_by_source(facts, meta_idx)),
         health_generated=health_doc.get("generated_at", "never"),
         panels=panels,
-        recent_revisions=_recent_revisions(revisions, meta_idx),
+        run=run,
+        revisions=_run_revisions(revisions, meta_idx, run),
+        new_periods=_new_periods(facts, run),
+        has_revisions_csv=paths.revisions_csv.exists(),
+        sources=[SOURCE_LABELS[s] for s in SOURCE_LABELS if s in health],
         n_facts=len(facts),
         n_series=int(facts.groupby(SERIES_KEY).ngroups) if not facts.empty else 0,
         payload_json=payload_json,
@@ -388,5 +453,10 @@ def render(paths: Paths) -> Path:
     (paths.docs / "data").mkdir(exist_ok=True)
     if paths.facts_csv.exists():
         shutil.copyfile(paths.facts_csv, paths.docs / "data" / "facts.csv")
+    if paths.revisions_csv.exists():
+        shutil.copyfile(paths.revisions_csv, paths.docs / "data" / "revisions.csv")
+    for chart in payload["charts"]:
+        if chart["post"]:
+            write_png(chart, paths.docs / "img" / f"{chart['id']}.png")
     (paths.docs / ".nojekyll").write_text("", encoding="utf-8")
     return out

@@ -108,7 +108,9 @@ never interpolated. Charts label the true cadence.
 
 ### 4.6 Revisions
 
-Latest value wins. Every changed value is appended to `data/revisions.csv` (old, new, when). Git history of
+Latest value wins. Every changed value is appended to `data/revisions.csv` (old, new, when), which is copied under
+docs/data/ and linked from the page; the 'What changed' block lists the revisions and new periods of the latest run
+(keyed on health.json generated_at). Git history of
 `facts.csv` is the vintage log. The raw download of each source is committed under `data/raw/<source>/latest/`,
 so any vintage can be rebuilt from git. No vintage column in facts.
 
