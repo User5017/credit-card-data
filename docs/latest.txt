@@ -1,0 +1,12 @@
+US credit card data, latest readings (2026-09-08)
+
+- Revolving consumer credit, all lenders (Fed G.19, SA): $1,351bn in Jun 2026, +3.8% on the year
+- Card balances on credit reports (NY Fed): $1,263bn in 2026 Q2, +4.5% on the year
+- APR paid by revolvers at commercial banks (Fed G.19): 22.15% in 2026 Q2, -0.10 pp on the year, 2015-2019 average 14.93%
+- Card delinquency, 30+ days past due, commercial banks (Fed, SA): 2.85% in 2026 Q2, -0.19 pp on the year, 2015-2019 average 2.39%, lowest since 2023 Q2
+- Card charge-off rate, annualized, commercial banks (Fed, SA): 3.82% in 2026 Q2, -0.37 pp on the year, 2015-2019 average 3.40%
+- Card balances newly 90+ days late, annualized flow (NY Fed): 6.97% in 2026 Q2, +0.04 pp on the year, 2015-2019 average 4.36%
+- Accounts paying only the minimum, large banks (Philly Fed): 10.24% in 2026 Q1, -0.30 pp on the year, 2015-2019 average 9.58%
+- Banks tightening card standards, net (SLOOS): 6.70% in 2026 Q2, -3.70 pp on the year
+
+Source: https://user5017.github.io/credit-card-data/ (public data, checked against the releases)

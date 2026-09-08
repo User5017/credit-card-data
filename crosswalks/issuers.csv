@@ -29,3 +29,8 @@ LEAD,Lead Bank,8283,Lead Bank,sponsor,,1928-01-12,,,,Garden City Bank until 2010
 WEBBANK,WebBank,34404,WebBank,sponsor,,1997-05-15,,,,Utah industrial bank; sponsor bank for fintech card programs. Card charge-off fields are zero in every quarter since 2005 (a few thousand dollars a quarter in 2000-2004). FDIC cert verified 2026-09-07 via api.fdic.gov.
 EVOLVE,Evolve Bank & Trust,1299,Evolve Bank & Trust,sponsor,,1925-06-05,,,Evolve Bank and Trust,Sponsor bank for fintech card programs.
 SUTTON,Sutton Bank,5962,Sutton Bank,sponsor,,1878-01-01,,,,Sponsor bank for fintech card programs.
+CREDIT_ONE,Credit One,25620,"Credit One Bank, National Association",issuer,,1984-07-30,,,"Credit One Bank, N.A.|Credit One","Subprime card issuer (First National Bank of Marin until 2006). Most of its receivables are securitized, so the on-balance-sheet card loans understate the program. Added 2026-09-08 from the crosswalk report."
+MERRICK,Merrick Bank,34519,Merrick Bank,issuer,,1997-09-22,,,,"Subprime card issuer, Utah industrial bank (CardWorks). Added 2026-09-08 from the crosswalk report."
+FIFTH_THIRD,Fifth Third,6672,"Fifth Third Bank, National Association",issuer,,1865-01-01,,,"Fifth Third Bank, N.A.|Fifth Third",Regional bank with a card book of about $1.7bn. Added 2026-09-08 from the crosswalk report.
+REGIONS,Regions,12368,Regions Bank,issuer,,1928-01-01,,,Regions,Regional bank with a card book of about $1.5bn. Added 2026-09-08 from the crosswalk report.
+STRIDE,Stride Bank,4091,"Stride Bank, National Association",sponsor,,1913-01-01,,,"Stride Bank, N.A.|Stride","Sponsor bank for fintech card programs (Chime); $2.9bn of card loans on book with zero charge-offs, the programs' losses sit with the partners. Added 2026-09-08 from the crosswalk report."

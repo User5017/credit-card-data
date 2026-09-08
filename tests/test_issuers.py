@@ -25,13 +25,8 @@ H2_2025 = "2025-12-31"
 UNMATCHED_H2_2025 = [
     "America First Federal Credit Union",
     "Boeing Employees' Credit Union",
-    "Credit One Bank, National Association",
-    "Fifth Third Bank, National Association",
-    "Merrick Bank",
     "Navy Federal Credit Union",
     "Pentagon Federal Credit Union",
-    "Regions Bank",
-    "Stride Bank, National Association",
 ]
 
 
@@ -49,7 +44,7 @@ def h2_2025_products() -> pd.DataFrame:
 
 
 def test_every_charter_has_the_fdic_established_date_and_merger_facts(issuers):
-    assert len(issuers) == 30
+    assert len(issuers) == 35
     assert issuers["valid_from"].notna().all()
     by = issuers.set_index("fdic_cert")
     assert by.loc[4297, "valid_from"] == pd.Timestamp("1933-05-22")  # Hibernia National Bank's charter
@@ -153,13 +148,13 @@ def test_tccp_top_names_come_from_the_newest_file(h2_2025_products):
 def test_tccp_report_lists_the_top25_names_the_crosswalk_does_not_know(issuers, h2_2025_products):
     (line,) = iss.tccp_report(h2_2025_products, issuers)
     assert line.startswith(iss.REPORT_PREFIX)
-    assert f"9 of 28 top-25 institution names in the {H2_2025} TCCP file are not in issuers.csv: " in line
+    assert f"4 of 28 top-25 institution names in the {H2_2025} TCCP file are not in issuers.csv: " in line
     assert line.endswith(", ".join(UNMATCHED_H2_2025))
     matched, unmatched = iss.match_names(issuers, iss.tccp_top_names(h2_2025_products)[1])
     assert unmatched == UNMATCHED_H2_2025
     assert set(matched.values()) == {
-        "AMEX", "BARCLAYS", "BOFA", "BREAD", "CAPITAL_ONE", "CITI", "CITIZENS", "FNBO", "GOLDMAN", "JPMORGAN", "PNC",
-        "SYNCHRONY", "TD", "TRUIST", "US_BANK", "USAA", "WELLS_FARGO",
+        "AMEX", "BARCLAYS", "BOFA", "BREAD", "CAPITAL_ONE", "CITI", "CITIZENS", "CREDIT_ONE", "FIFTH_THIRD", "FNBO", "GOLDMAN",
+        "JPMORGAN", "MERRICK", "PNC", "REGIONS", "STRIDE", "SYNCHRONY", "TD", "TRUIST", "US_BANK", "USAA", "WELLS_FARGO",
     }
 
 
@@ -197,9 +192,9 @@ def test_crosswalk_report_reads_the_raw_files(tmp_path, h2_2025_products):
     (latest / fdic.INSTITUTIONS_FILE).write_bytes((FDIC_FIXTURE_DIR / fdic.INSTITUTIONS_FILE).read_bytes())
     report = iss.crosswalk_report(paths)
     assert set(report) == {"tccp", "fdic"}
-    assert "9 of 28 top-25 institution names" in report["tccp"][0]
-    # the institutions file covers five charters, the crosswalk thirty: the other 25 have no record in it
-    assert len(report["fdic"]) == 25 and all("has no FDIC institution record" in line for line in report["fdic"])
+    assert "4 of 28 top-25 institution names" in report["tccp"][0]
+    # the institutions file covers five charters, the crosswalk 35: the other 30 have no record in it
+    assert len(report["fdic"]) == 30 and all("has no FDIC institution record" in line for line in report["fdic"])
 
 
 # ---------- the FDIC institution records ----------

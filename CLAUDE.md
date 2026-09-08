@@ -69,9 +69,14 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON.
   No CDN, no runtime fetches. Must render identically from file:// and GitHub Pages.
 - Chart specs live in PANELS in src/carddash/render.py. Every chart shows source, cadence, latest period,
-  pull date, and the scope notes from series.csv. Step charts for period data; never interpolate. A period that has
-  not ended is never labelled as the latest (render takes `today`). A series may carry its own unit (a spread in
-  percentage points on a percent chart) and a chart may fill a band between two series.
+  data-as-of, a status badge when its source is not OK, the scope notes from series.csv with source links, and the
+  golden numbers it was checked against. Step charts for period data; never interpolate. A period that has not ended
+  is never labelled as the latest (render takes `today`). A series may carry its own unit (a spread in percentage
+  points on a percent chart); a chart may fill a band between two series, carry a dashed 2015-2019 benchmark of its
+  first series, or let its y axis float (`y_zero: False`, credit scores). Every chart opens on the last five years
+  with the full history one click away and NBER recessions shaded (RECESSIONS in render.py).
+- The latest-readings block and docs/latest.txt are computed from facts in render.py (headlines). No model writes
+  anything on the page.
 - Palette and mark rules: thin 2px lines, hairline grid, fixed series colors, legend for 2+ series, table twin.
 - One chart per panel carries `post: True` and is also written to docs/img/<id>.png by src/carddash/png.py (matplotlib Agg,
   drawn from the same payload dict as the page, steps-pre for period data, no pull date, no Software chunk) so the

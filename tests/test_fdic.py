@@ -69,9 +69,9 @@ def test_quarter_end_before(merger, last_report):
 
 def test_issuers_csv_lists_the_handoff_charters_with_their_mergers():
     issuers = fdic.load_issuers(REPO / "crosswalks" / "issuers.csv")
-    assert len(issuers) == 30 and issuers["fdic_cert"].is_unique
+    assert len(issuers) == 35 and issuers["fdic_cert"].is_unique
     assert set(issuers["kind"]) == {"issuer", "sponsor"}
-    assert int((issuers["kind"] == "sponsor").sum()) == 6
+    assert int((issuers["kind"] == "sponsor").sum()) == 7
     merged = issuers[issuers["valid_to"].notna()].set_index("fdic_cert")
     assert {int(c): (d.date().isoformat(), int(t)) for c, d, t in zip(merged.index, merged["valid_to"], merged["merged_into"])} == {
         5649: ("2025-05-18", 4297),
@@ -81,7 +81,7 @@ def test_issuers_csv_lists_the_handoff_charters_with_their_mergers():
         34351: ("2024-06-01", 32188),
     }
     active = set(issuers.loc[issuers["valid_to"].isna(), "fdic_cert"])
-    assert len(active) == 25 and set(merged["merged_into"].astype(int)) <= active
+    assert len(active) == 30 and set(merged["merged_into"].astype(int)) <= active
     by_cert = issuers.set_index("fdic_cert")
     assert by_cert.loc[5649, "issuer_id"] == "DISCOVER" and by_cert.loc[33954, "issuer_id"] == "CAPITAL_ONE"
     assert by_cert.loc[34404, "issuer_id"] == "WEBBANK" and by_cert.loc[34404, "kind"] == "sponsor"
@@ -96,7 +96,7 @@ def test_series_csv_matches_issuers_csv(meta):
     assert set(mine["metric"]) == metrics and len(metrics) == 6
     expected_entities = {fdic.entity_for(int(c)) for c in issuers["fdic_cert"]} | {fdic.ENTITY_ALL}
     assert set(mine["entity"]) == expected_entities
-    assert len(mine) == 6 * len(expected_entities) == 186
+    assert len(mine) == 6 * len(expected_entities) == 216
     assert set(mine.loc[mine["entity"] == fdic.ENTITY_ALL, "entity_type"]) == {"aggregate"}
     assert set(mine.loc[mine["entity"] != fdic.ENTITY_ALL, "entity_type"]) == {"bank"}
     assert (mine["period_type"] == "Q").all() and (mine["tier"] == "all").all() and (mine["unit"] == "usd_bn").all()

@@ -188,6 +188,16 @@ Estimates from the original plan are doubled.
 - DuckDB in a cloud-synced folder. Mitigation: repo outside OneDrive; no database file committed.
 - Single maintainer. Mitigation: every judgment row has a note; CLAUDE.md carries the contracts.
 
+## 11a. v1.1: the page on its own (2026-09-08)
+
+After the adversarial review of the v1 page: four panels (Growth, Pricing, Performance, Borrowers) drawn only
+from series already in facts, a latest-readings block computed from those series, NBER recession shading, a
+2015-2019 benchmark on rate charts, a five-year default view, per-card status and data-as-of, the golden numbers
+listed on each chart, and the health strip below the charts. Charts: revolving credit level and growth, weekly
+bank card loans, card loans by issuer; APR paid, offered vs paid (tier range band); charge-off rate, 30+
+delinquency, delinquency triangulation across four sources, net charge-off rate by issuer, SLOOS; 90+ flow by age,
+payment behavior, utilization, origination credit scores. TASKS.md tasks 9 to 15.
+
 ## 12. Definition of done for v1
 
 - Five fetchers loading on the daily cron with zero manual steps.

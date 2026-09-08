@@ -25,6 +25,15 @@ Live page: https://user5017.github.io/credit-card-data/
 
 Design and rationale: `PLAN.md`, `design/PLAN-review.md`. Task board: `TASKS.md`. Working agreement: `CLAUDE.md`.
 
+## What the page shows
+
+Latest readings computed from the data (no model), then four panels: Growth (revolving credit, weekly bank card
+loans, card loans by issuer), Pricing (APR paid, APR offered by credit tier against APR paid), Performance
+(charge-offs, delinquency on four measures, net charge-offs by issuer, bank lending standards) and Borrowers
+(serious delinquency by age, how cardholders pay, utilization, credit scores of new accounts). Every chart opens on
+the last five years with the full history one click away, shades NBER recessions, names its source and cadence,
+shows when its data was loaded, and lists the release numbers it was checked against.
+
 ## Sources in v1
 
 Federal Reserve Board (G.19 consumer credit, H.8 bank credit, charge-off and delinquency rates, SLOOS) via FRED;

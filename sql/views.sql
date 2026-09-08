@@ -91,3 +91,53 @@ WHERE f.source = 'fdic' AND f.entity_type = 'bank'
   AND CAST(f.period_end AS DATE) >= d.valid_from
   AND (d.valid_to IS NULL OR CAST(f.period_end AS DATE) < d.valid_to)
 GROUP BY f.metric, d.rollup_issuer_id, d.rollup_issuer_name, f.tier, f.period_type, f.source, f.period_end;
+
+-- Offered range: the highest, lowest and middle (620-719) of the three TCCP tier medians per half-year, keyed on the
+-- 620-719 series so render.py can select the band edges as fields. The sub-620 median is often the lowest of the
+-- three (secured-card products dominate that tier), which is why the band is min to max, not sub-620 to superprime.
+CREATE OR REPLACE VIEW v_tccp_offered_range AS
+SELECT metric, entity, entity_type, '620_719' AS tier, period_type, source, CAST(period_end AS DATE) AS period_end,
+       max(value) AS hi, min(value) AS lo,
+       max(CASE WHEN tier = '620_719' THEN value END) AS mid
+FROM facts
+WHERE metric = 'tccp_purchase_apr_median' AND entity = 'TCCP_ALL' AND source = 'tccp'
+  AND tier IN ('le619', '620_719', 'superprime')
+GROUP BY metric, entity, entity_type, period_type, source, period_end;
+
+-- FDIC rates: per issuer roll-up and for all insured institutions, the delinquency shares and the annualized net
+-- charge-off rate the way the FDIC computes its own (4 x the quarter's net charge-offs over the average of the
+-- beginning and end-of-quarter card loans, so it reproduces IDNTCRDQR to the rounding). The average needs the
+-- previous quarter to be consecutive. Keyed on metric fdic_card_nco_q so render.py can select the rate fields. In a
+-- merger quarter the acquirer's quarterly charge-offs cover the acquired book only from the merger date, so a
+-- roll-up rate dips that quarter (Capital One 2025 Q2, Discover's April to mid-May losses were never reported).
+CREATE OR REPLACE VIEW v_fdic_rates AS
+WITH base AS (
+  SELECT metric, entity, entity_type, tier, period_type, source, period_end, value, issuer_name FROM v_fdic_issuer
+  UNION ALL
+  SELECT metric, entity, entity_type, tier, period_type, source, CAST(period_end AS DATE) AS period_end, value,
+         'All FDIC-insured institutions' AS issuer_name
+  FROM facts WHERE source = 'fdic' AND entity = 'FDIC_ALL_INSURED'
+),
+w AS (
+  SELECT entity, entity_type, tier, period_type, source, period_end, issuer_name,
+         max(CASE WHEN metric = 'fdic_card_loans' THEN value END) AS loans,
+         max(CASE WHEN metric = 'fdic_card_nco_q' THEN value END) AS nco_q,
+         max(CASE WHEN metric = 'fdic_card_dq30_89' THEN value END) AS dq30_89,
+         max(CASE WHEN metric = 'fdic_card_noncurrent' THEN value END) AS noncurrent
+  FROM base
+  GROUP BY entity, entity_type, tier, period_type, source, period_end, issuer_name
+),
+l AS (
+  SELECT *,
+         lag(loans) OVER (PARTITION BY entity, tier, period_type, source ORDER BY period_end) AS loans_prev,
+         lag(period_end) OVER (PARTITION BY entity, tier, period_type, source ORDER BY period_end) AS period_prev
+  FROM w
+)
+SELECT 'fdic_card_nco_q' AS metric, entity, entity_type, tier, period_type, source, period_end, issuer_name,
+       loans, nco_q, dq30_89, noncurrent,
+       CASE WHEN loans > 0 THEN 100.0 * dq30_89 / loans END AS dq30_89_share,
+       CASE WHEN loans > 0 THEN 100.0 * noncurrent / loans END AS noncurrent_share,
+       CASE WHEN loans_prev IS NOT NULL AND period_end = last_day(period_prev + INTERVAL 3 MONTH)
+                 AND (loans + loans_prev) > 0
+            THEN 400.0 * nco_q / ((loans + loans_prev) / 2.0) END AS nco_rate_annualized
+FROM l;

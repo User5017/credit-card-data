@@ -8,19 +8,22 @@
 {{ uplot_css | safe }}
 :root {
   color-scheme: light;
-  --bg: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --bg: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #6f6d67;
   --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,.10);
-  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #8a63d2; --series-5: #6b6a66;
-  --band: rgba(42,120,214,.12);
-  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
+  --series-1: #2a78d6; --series-2: #c9541c; --series-3: #0f8a5e; --series-4: #7a4fd0;
+  --series-5: #6b6a66; --series-6: #b5176a; --series-7: #8d5524; --series-8: #0e7c8a;
+  --band: rgba(42,120,214,.12); --recession: rgba(11,11,11,.06);
+  --good: #0ca30c; --warning: #d99a0b; --critical: #d03b3b;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --bg: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+    --bg: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #9b9a94;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,.10);
-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #9a78e0; --series-5: #9b9a94;
-    --band: rgba(57,135,229,.18);
+    --series-1: #4d8fe0; --series-2: #f07a3c; --series-3: #2dbd86; --series-4: #a78bea;
+    --series-5: #a3a29b; --series-6: #ef5aa0; --series-7: #d3945a; --series-8: #3cb7c8;
+    --band: rgba(77,143,224,.18); --recession: rgba(255,255,255,.06);
+    --warning: #fab219;
   }
 }
 * { box-sizing: border-box; }
@@ -31,24 +34,34 @@ header p { color: var(--ink2); margin: 0; }
 h2 { font-size: 19px; margin: 36px 0 4px; }
 .lede { color: var(--ink2); margin: 0 0 14px; }
 a { color: var(--series-1); }
-.health { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-.health li { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
 .status { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; flex: none; }
 .st-ok .dot { background: var(--good); }
 .st-stale .dot, .st-restated .dot, .st-golden_mismatch .dot { background: var(--warning); }
 .st-failed .dot, .st-suspect .dot { background: var(--critical); }
+.readings { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px 12px 34px; margin: 0; }
+.readings li { margin: 4px 0; }
+.health { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.health li { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
 .health small { color: var(--ink2); display: block; margin-top: 2px; }
 .health details { margin-top: 6px; }
 .health details ul { margin: 4px 0 0; padding-left: 18px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
 figure.card { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 14px 10px; min-width: 0; }
+.cardhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 figure h3 { font-size: 15px; margin: 0; font-weight: 600; }
+.tools { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--ink2); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; }
+.badge .dot { width: 8px; height: 8px; }
+button.range { font: inherit; font-size: 11px; color: var(--ink2); background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+button.range:hover { color: var(--ink); }
 .unit { color: var(--muted); font-size: 12px; }
 .plot { width: 100%; margin-top: 8px; }
 figure footer { color: var(--muted); font-size: 12px; margin-top: 6px; }
+ul.lines { color: var(--muted); font-size: 12px; margin: 2px 0 0; padding-left: 18px; }
 details { font-size: 12px; color: var(--ink2); margin-top: 6px; }
 summary { cursor: pointer; }
+details ul { margin: 4px 0 0; padding-left: 18px; }
 table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 12px; margin-top: 6px; }
 td, th { padding: 2px 8px; text-align: right; border-bottom: 1px solid var(--grid); }
 th:first-child, td:first-child { text-align: left; }
@@ -63,27 +76,66 @@ th:first-child, td:first-child { text-align: left; }
 <main>
 <header>
   <h1>US credit card data</h1>
-  <p>Balances, pricing and performance from public sources, refreshed daily and checked against the releases they come from.</p>
-  <p class="stamp">Generated {{ generated_at }} · {{ n_series }} series · {{ n_facts }} observations · <a href="{{ repo_url }}">code and data</a></p>
+  <p>Balances, pricing, performance and borrower behavior from public sources, refreshed daily and checked against the releases they come from.</p>
+  <p class="stamp">Generated {{ generated_at }} · {{ n_series }} series · {{ n_facts }} observations · <a href="{{ repo_url }}">code and data</a> ·
+    <span class="status st-{{ health_summary.worst }}"><span class="dot" aria-hidden="true"></span>{% if health_summary.n == 0 %}no sources loaded{% elif health_summary.n_ok == health_summary.n %}{{ health_summary.n }} source{{ 's' if health_summary.n != 1 else '' }} OK{% else %}{{ health_summary.n - health_summary.n_ok }} of {{ health_summary.n }} sources need attention ({{ health_summary.worst_label }}){% endif %}</span>
+    as of {{ health_generated }} UTC · <a href="#health">source health</a></p>
 </header>
 
-<h2>Source health</h2>
-<p class="lede">Each source is fetched in full every run. A failed source keeps its previous data and is flagged here; a chart is never silently stale.</p>
-<ul class="health">
-{% for s in health %}
-  <li class="st-{{ s.status }}">
-    <span class="status"><span class="dot" aria-hidden="true"></span>{{ s.label }} · {{ s.status_label }}</span>
-    <small>latest period {{ s.last_period_end }} · pulled {{ s.pulled_at }} · {{ s.n_series }} series, {{ s.rows }} rows</small>
-    {% if s.messages %}
-    <details><summary>{{ s.messages | length }} note{{ 's' if s.messages | length != 1 else '' }}</summary>
-      <ul>{% for m in s.messages %}<li>{{ m }}</li>{% endfor %}</ul>
-    </details>
-    {% endif %}
-  </li>
+<h2>Latest readings</h2>
+<p class="lede">Computed from the series charted below, nothing else. Change is against the same period a year earlier; the benchmark is the {{ benchmark_label }}.</p>
+<ul class="readings">
+{% for h in headlines %}
+  <li><strong>{{ h.label }}:</strong> {{ h.text }}</li>
 {% else %}
-  <li class="st-failed"><span class="status"><span class="dot"></span>No sources loaded yet</span></li>
+  <li>No data loaded yet.</li>
 {% endfor %}
 </ul>
+<p class="stamp"><a href="latest.txt">Plain-text version</a> of these readings, for pasting into a post. Charts open on the last {{ default_years }} years; the button on each card shows the full history. Shaded bands are NBER recessions.</p>
+
+{% for panel in panels %}
+<section class="panel">
+  <h2>{{ panel.name }}</h2>
+  <p class="lede">{{ panel.blurb }}</p>
+  <div class="grid">
+  {% for c in panel.charts %}
+    <figure class="card" id="{{ c.id }}">
+      <figcaption>
+        <div class="cardhead">
+          <h3>{{ c.title }}</h3>
+          <div class="tools">
+            {% if c.status != 'ok' %}<span class="badge st-{{ c.status }}" title="Source status"><span class="dot" aria-hidden="true"></span>{{ c.status_label }}</span>{% endif %}
+            <button type="button" class="range" data-range="{{ c.id }}" hidden>Full history</button>
+          </div>
+        </div>
+        <span class="unit">{{ c.unit_label }}</span>
+      </figcaption>
+      <div class="plot" data-chart="{{ c.id }}"></div>
+      <footer>{{ c.footer }}{% if c.attempted %} · last fetch attempt {{ c.attempted }}{% endif %}{% if c.post %} · <a href="img/{{ c.id }}.png">PNG</a>{% endif %}</footer>
+      {% if c.footer_lines %}
+      <ul class="lines">{% for l in c.footer_lines %}<li>{{ l }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if c.notes or c.about %}
+      <details><summary>About this chart</summary>
+        <ul>
+        {% for n in c.notes %}<li>{{ n }}</li>{% endfor %}
+        {% for a in c.about %}<li><strong>{{ a.label }}</strong>: {{ a.note }}{% if a.source_url %} <a href="{{ a.source_url }}">{{ a.source_label }}</a>{% endif %}</li>{% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+      {% if c.checks %}
+      <details><summary>Checked against the release ({{ c.checks | length }})</summary>
+        <ul>
+        {% for k in c.checks %}<li>{{ '✓' if k.ok else '✗' }} {{ k.series_label }}, {{ k.period }}: {{ '%.4g' | format(k.expected) }} per <a href="{{ k.origin_url }}">the release</a>{% if not k.ok %} (got {{ '%.4g' | format(k.actual) if k.actual is not none else 'nothing' }}){% endif %}</li>{% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+      <details><summary>Table (last 36)</summary><div data-table="{{ c.id }}"></div></details>
+    </figure>
+  {% endfor %}
+  </div>
+</section>
+{% endfor %}
 
 <h2>What changed</h2>
 <div class="changes">
@@ -113,37 +165,36 @@ th:first-child, td:first-child { text-align: left; }
   {% endif %}
 </div>
 
-{% for panel in panels %}
-<section class="panel">
-  <h2>{{ panel.name }}</h2>
-  <p class="lede">{{ panel.blurb }}</p>
-  <div class="grid">
-  {% for c in panel.charts %}
-    <figure class="card" id="{{ c.id }}">
-      <figcaption><h3>{{ c.title }}</h3><span class="unit">{{ c.unit_label }}</span></figcaption>
-      <div class="plot" data-chart="{{ c.id }}"></div>
-      <footer>{{ c.footer }}{% if c.post %} · <a href="img/{{ c.id }}.png">PNG</a>{% endif %}</footer>
-      {% if c.notes %}
-      <details><summary>About this series</summary>
-        <ul>{% for n in c.notes %}<li>{{ n }}</li>{% endfor %}</ul>
-      </details>
-      {% endif %}
-      <details><summary>Table (last 36)</summary><div data-table="{{ c.id }}"></div></details>
-    </figure>
-  {% endfor %}
-  </div>
-</section>
+<h2 id="health">Source health</h2>
+<p class="lede">Each source is fetched in full every run. A failed source keeps its previous data and is flagged here and on its charts; a chart is never silently stale.</p>
+<ul class="health">
+{% for s in health %}
+  <li class="st-{{ s.status }}">
+    <span class="status"><span class="dot" aria-hidden="true"></span>{{ s.label }} · {{ s.status_label }}</span>
+    <small>latest period {{ s.last_period_end }} · last fetch {{ s.pulled_at }} · {{ s.n_series }} series, {{ s.rows }} rows</small>
+    {% if s.messages %}
+    <details><summary>{{ s.messages | length }} note{{ 's' if s.messages | length != 1 else '' }}</summary>
+      <ul>{% for m in s.messages %}<li>{{ m }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </li>
+{% else %}
+  <li class="st-failed"><span class="status"><span class="dot"></span>No sources loaded yet</span></li>
 {% endfor %}
+</ul>
 
 <h2>Data and method</h2>
 <ul class="method">
   <li><a href="data/facts.csv">Download every series as one CSV</a> (metric, entity, tier, period_end, period_type, value, source, pulled_at).</li>
-  <li>Every period is dated to its last day: month end, quarter end, or the Wednesday for weekly bank data. A quarterly survey taken in May is shown at June 30.</li>
-  <li>Step charts hold each reading across its own period. Nothing is interpolated between readings.</li>
+  <li>Every period is dated to its last day: month end, quarter end, or the Wednesday for weekly bank data. A quarterly survey taken in May is shown at June 30; the July Senior Loan Officer survey, which asks about the quarter just ended, is shown at June 30.</li>
+  <li>Step charts hold each reading across its own period. Nothing is interpolated between readings. Charts open on the last {{ default_years }} years; the button on each card shows the full history.</li>
+  <li>Shaded bands are NBER recessions (peak month to trough month). Dashed grey lines are the {{ benchmark_label }} of the first series on the chart, the last full expansion before the pandemic.</li>
   <li>SA means seasonally adjusted. Series are labeled SA or NSA and are never compared across that line.</li>
-  <li>Different sources measure different populations. G.19 covers all lenders; the H.8, charge-off and APR series cover commercial banks only; the CFPB card-terms survey describes terms offered per card product, not rates actually paid. Notes under each chart say which.</li>
+  <li>Different sources measure different populations. G.19 covers all lenders; the H.8, charge-off and APR series cover commercial banks only; the Y-14 series cover the largest banks; the NY Fed series are credit reports, all lenders; the FDIC series are bank charters. Notes under each chart say which, with a link to the source.</li>
+  <li>"Data as of" on a chart is when its newest value was loaded. A card carries a status badge when its source is not OK; "last fetch attempt" is then the run that failed. "Checked against the release" lists the numbers the pipeline reproduces from the source's own release page on every run.</li>
+  <li>The latest readings are computed from the series on the page: latest value, change against the same period a year earlier, the {{ benchmark_label }} for rates, and whether the value is the highest or lowest in at least three years. No model writes any of it.</li>
   <li>Sources: {{ sources | join('; ') }}. The Federal Reserve Board series (G.19 Consumer Credit, H.8 Assets and Liabilities of Commercial Banks, Charge-Off and Delinquency Rates, Senior Loan Officer Opinion Survey) are retrieved from FRED, Federal Reserve Bank of St. Louis.</li>
-  <li>One chart per panel is also written as a PNG (the link in its footer), drawn from the same data as the page. The image carries no pull date, so it changes only when the data does.</li>
+  <li>One chart per panel is also written as a PNG (the link in its footer), drawn from the same data as the page and showing the same {{ default_years }}-year window. The image carries no pull date, so it changes only when the data does.</li>
 </ul>
 </main>
 
@@ -160,6 +211,7 @@ th:first-child, td:first-child { text-align: left; }
     if (unit === 'pct') return x.toFixed(2) + '%';
     if (unit === 'pp') return x.toFixed(2) + ' pp';
     if (unit === 'usd_bn') return '$' + x.toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'bn';
+    if (unit === 'score') return Math.round(x).toString();
     return x.toLocaleString('en-US');
   }
   function fmtAxis(x, unit) {
@@ -177,7 +229,19 @@ th:first-child, td:first-child { text-align: left; }
     if (pt === 'A') return String(y);
     return d.toISOString().slice(0, 10);
   }
-  var HEIGHT = 250;
+  var HEIGHT = 250, YEAR = 365.25 * 86400;
+
+  // NBER recessions, painted under the series
+  function shadeRecessions(u) {
+    var ctx = u.ctx, left = u.bbox.left, right = left + u.bbox.width;
+    ctx.save();
+    ctx.fillStyle = v('--recession');
+    D.recessions.forEach(function (r) {
+      var x0 = Math.max(u.valToPos(r[0], 'x', true), left), x1 = Math.min(u.valToPos(r[1], 'x', true), right);
+      if (x1 > x0) ctx.fillRect(x0, u.bbox.top, x1 - x0, u.bbox.height);
+    });
+    ctx.restore();
+  }
 
   D.charts.forEach(function (c) {
     var el = document.querySelector('[data-chart="' + c.id + '"]');
@@ -186,42 +250,62 @@ th:first-child, td:first-child { text-align: left; }
     c.series.forEach(function (s, i) {
       var cfg = {
         label: s.label,
-        stroke: v('--series-' + (i + 1)) || '#2a78d6',
-        width: 2,
+        stroke: s.benchmark ? v('--muted') : (v('--series-' + (i + 1)) || v('--series-1')),
+        width: s.benchmark ? 1 : 2,
         spanGaps: true,
         points: { show: false },
         value: function (u, val) { return fmtVal(val, s.unit || c.unit); }
       };
-      if (c.step) cfg.paths = uPlot.paths.stepped({ align: -1 });
-      if (s.dash) cfg.dash = [6, 4];
+      if (c.step && !s.benchmark) cfg.paths = uPlot.paths.stepped({ align: -1 });
+      if (s.dash || s.benchmark) cfg.dash = [6, 4];
       series.push(cfg);
     });
+    var scales = { x: { time: true }, y: {} };
+    if (c.y_zero) {
+      // y includes zero so a rate chart is never zoomed into a misleading window; score charts opt out
+      scales.y.range = function (u, dmin, dmax) {
+        var lo = Math.min(0, dmin), hi = Math.max(0, dmax), pad = (hi - lo) * 0.06 || 1;
+        return [lo < 0 ? lo - pad : 0, hi + pad];
+      };
+    }
     var opts = {
       width: el.clientWidth || 600,
       height: HEIGHT,
       tzDate: tz,
       series: series,
-      // y always includes zero so a rate chart is never zoomed into a misleading window
-      scales: { x: { time: true }, y: { range: function (u, dmin, dmax) {
-        var lo = Math.min(0, dmin), hi = Math.max(0, dmax), pad = (hi - lo) * 0.06 || 1;
-        return [lo < 0 ? lo - pad : 0, hi + pad];
-      } } },
+      scales: scales,
       axes: [
         { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { stroke: v('--grid'), width: 1 } },
         { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { show: false }, size: 64,
           values: function (u, vals) { return vals.map(function (x) { return fmtAxis(x, c.unit); }); } }
       ],
       cursor: { drag: { x: true, y: false } },
-      legend: { show: true }
+      legend: { show: true },
+      hooks: { drawClear: [shadeRecessions] }
     };
     // a band fills between two series: the range of terms offered across credit tiers
     if (c.band) opts.bands = [{ series: c.band, fill: v('--band') }];
     var u = new uPlot(opts, c.data, el);
     window.addEventListener('resize', function () { u.setSize({ width: el.clientWidth, height: HEIGHT }); });
 
+    // the page opens on the last N years; the button shows the full history
+    var xs = c.data[0], n = xs.length;
+    var btn = document.querySelector('[data-range="' + c.id + '"]');
+    if (btn && n > 1 && (xs[n - 1] - xs[0]) > (D.default_years + 0.5) * YEAR) {
+      var full = false;
+      var apply = function () {
+        if (full) u.setScale('x', { min: xs[0], max: xs[n - 1] });
+        else u.setScale('x', { min: xs[n - 1] - D.default_years * YEAR, max: xs[n - 1] });
+        btn.textContent = full ? 'Last ' + D.default_years + ' years' : 'Full history';
+      };
+      btn.hidden = false;
+      btn.addEventListener('click', function () { full = !full; apply(); });
+      apply();
+    }
+
     var t = document.querySelector('[data-table="' + c.id + '"]');
     if (t) {
-      var xs = c.data[0], n = xs.length, start = Math.max(0, n - 36);
+      var start = Math.max(0, n - 36);
       var html = '<table><thead><tr><th>Period</th>';
       c.series.forEach(function (s) { html += '<th>' + s.label + '</th>'; });
       html += '</tr></thead><tbody>';
