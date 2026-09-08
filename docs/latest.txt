@@ -7,6 +7,8 @@ US credit card data, latest readings (2026-09-08)
 - Card charge-off rate, annualized, commercial banks (Fed, SA): 3.82% in 2026 Q2, -0.37 pp on the year, 2015-2019 average 3.40%
 - Card balances newly 90+ days late, annualized flow (NY Fed): 6.97% in 2026 Q2, +0.04 pp on the year, 2015-2019 average 4.36%
 - Accounts paying only the minimum, large banks (Philly Fed): 10.24% in 2026 Q1, -0.30 pp on the year, 2015-2019 average 9.58%
+- Consumer debt payments as a share of disposable income (Fed): 5.29% in 2026 Q1, -0.06 pp on the year, 2015-2019 average 5.71%
+- Unemployment rate (BLS): 4.10% in Aug 2026, -0.20 pp on the year, 2015-2019 average 4.42%
 - Banks tightening card standards, net (SLOOS): 6.70% in 2026 Q2, -3.70 pp on the year
 
 Source: https://user5017.github.io/credit-card-data/ (public data, checked against the releases)

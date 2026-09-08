@@ -28,7 +28,7 @@ from conftest import FIXTURES, PULLED_AT
 RUN1 = "2026-09-06T00:00:00Z"
 RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
-POST_CHARTS = {"revolving_level", "card_apr", "card_nco", "hhdc_dq90_by_age"}
+POST_CHARTS = {"revolving_level", "card_apr", "card_nco", "hhdc_dq90_by_age", "debt_service"}
 ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic")
 
 
@@ -62,11 +62,12 @@ def test_page_is_self_contained_and_carries_every_chart(page):
     for panel in PANELS:
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
-    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Performance", "Borrowers"]
-    assert len(payload["charts"]) == 15
+    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Performance", "Borrowers", "Context"]
+    assert len(payload["charts"]) == 26
+    assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
-    assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Borrowers</h2>")
+    assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
     assert "5 sources OK" in html.split("<h2>Latest readings</h2>")[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
@@ -75,13 +76,15 @@ def test_fred_charts(page):
     html, payload = page
     by_id = {c["id"]: c for c in payload["charts"]}
     assert by_id["revolving_level"]["n_points"] > 600
-    assert by_id["card_apr"]["n_points"] > 100 and by_id["card_apr"]["period_type"] == "Q"
+    assert by_id["card_apr"]["n_points"] > 1000 and by_id["card_apr"]["period_type"] is None  # quarterly plus weekly
     assert 400 < by_id["revolving_yoy"]["n_points"] < 700  # v_growth works and the 'since' cut applies
-    assert "latest period 2026 Q2" in by_id["card_apr"]["footer"]
-    assert "data as of 2026-09-07" in by_id["card_apr"]["footer"] and "data as of" not in by_id["card_apr"]["caption"]
-    assert by_id["card_apr"]["caption"].startswith("Source: Federal Reserve Board, via FRED · quarterly · latest period 2026 Q2")
-    assert by_id["card_apr"]["footer_lines"] == []  # one source, one cadence: nothing to split out
+    assert len(by_id["card_apr"]["footer_lines"]) == 3  # two cadences: one line per series
+    assert "latest period 2026-09-02" in by_id["card_apr"]["footer"]  # the weekly advertised rate is the newest
     assert by_id["card_apr"]["status"] == "ok" and by_id["card_apr"]["attempted"] is None
+    apr_only = by_id["card_nco"]  # one source, one cadence, and it has fixture rows
+    assert "data as of 2026-09-07" in apr_only["footer"] and "data as of" not in apr_only["caption"]
+    assert apr_only["caption"].startswith("Source: Federal Reserve Board, via FRED · quarterly · latest period 2026 Q2")
+    assert apr_only["footer_lines"] == []  # one source, one cadence: nothing to split out
     # SLOOS is dated to the quarter it asks about: the July 2026 survey is 2026 Q2, nothing is in the future
     assert by_id["sloos_cards"]["n_points"] > 100 and "latest period 2026 Q2" in by_id["sloos_cards"]["footer"]
 
@@ -130,6 +133,47 @@ def test_new_charts_draw_the_other_sources(page):
     assert 'href="img/hhdc_dq90_by_age.png"' in html and 'href="img/card_dq.png"' not in html
 
 
+def test_derived_views_draw_the_context_charts(page):
+    """The macro series and the views over them: burden, real balances, spread over prime, payment flows."""
+    html, payload = page
+    by_id = {c["id"]: c for c in payload["charts"]}
+    # card debt as a share of income: quarterly points only, from a monthly-keyed view
+    burden = by_id["card_debt_burden"]
+    assert burden["n_points"] > 200 and len([v for v in burden["data"][1] if v is not None]) > 90
+    assert burden["series"][1]["benchmark"]
+    # nominal and real on one chart, equal at the latest CPI reading by construction
+    real = by_id["revolving_real"]
+    nom = [v for v in real["data"][1] if v is not None]
+    defl = [v for v in real["data"][2] if v is not None]
+    assert abs(len(nom) - len(defl)) <= 1 and len(defl) > 600  # the deflated line needs a CPI month to match
+    assert abs(nom[-1] - defl[-1]) / nom[-1] < 0.01  # the base period is the latest CPI month
+    assert defl[0] > nom[0] * 3  # 1968 dollars restated at today's prices
+    # spread over prime
+    spread = by_id["apr_over_prime"]
+    assert len(spread["series"]) == 3 and spread["series"][2]["unit"] == "pp" and spread["series"][2]["dash"]
+    apr, prime, sp = (spread["data"][k] for k in (1, 2, 3))
+    pairs = [(a, p, s) for a, p, s in zip(apr, prime, sp) if a is not None and p is not None and s is not None]
+    assert len(pairs) > 100 and all(abs((a - p) - s) < 1e-9 for a, p, s in pairs)
+    # payment rate and revolver share from the Y-14 identity
+    flows = by_id["y14_payment_flows"]
+    assert len([v for v in flows["data"][1] if v is not None]) > 50
+    assert all(55 < v < 130 for v in flows["data"][1] if v is not None)  # payment rate, percent of opening balance
+    assert all(60 < v < 85 for v in flows["data"][2] if v is not None)  # revolving share of balances
+    assert max(v for v in flows["data"][1] if v is not None) > 105  # the 2021-22 payment-rate spike clears 100
+    # per-account credit: limit above unused above balance, every quarter
+    per = by_id["per_account_credit"]
+    rows = [(lim, avail, bal) for lim, avail, bal in zip(per["data"][1], per["data"][2], per["data"][3])
+            if None not in (lim, avail, bal)]
+    assert len(rows) > 90 and all(lim > avail > bal for lim, avail, bal in rows)
+    assert all(abs(lim - avail - bal) < 1e-6 for lim, avail, bal in rows)
+    # the Context panel
+    assert by_id["debt_service"]["n_points"] == 85 and len(by_id["debt_service"]["series"]) == 2
+    assert by_id["sentiment"]["y_zero"] is False and by_id["sentiment"]["unit"] == "index"
+    assert by_id["consumer_credit_mix"]["n_points"] > 600
+    assert by_id["losses_vs_labor"]["n_points"] > 400 and len(by_id["losses_vs_labor"]["series"]) == 2
+    assert len(by_id["card_vs_consumer"]["series"]) == 4
+
+
 def test_benchmark_is_the_2015_2019_mean_of_the_first_series(page, fixture_facts):
     html, payload = page
     nco = {c["id"]: c for c in payload["charts"]}["card_nco"]
@@ -176,7 +220,7 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     html, payload = page
     items = headlines(fixture_facts, TODAY)
     labels = [h["label"] for h in items]
-    assert labels[0].startswith("Revolving consumer credit") and len(items) == 7  # no 30+ delinquency fixture
+    assert labels[0].startswith("Revolving consumer credit") and len(items) == 9  # no 30+ delinquency fixture
     rev = items[0]["text"]
     assert rev == "$1,351bn in Jun 2026, +3.8% on the year"  # October 2024 was higher, so no 'highest since' flag
     # the flag logic on a synthetic series: a record, a three-year high, and a value with no flag
@@ -248,7 +292,7 @@ def test_what_changed_lists_only_the_latest_run(tmp_paths, fixture_facts):
     assert 'href="data/revisions.csv"' in html and (tmp_paths.docs / "data" / "revisions.csv").exists()
     # every fixture row carries RUN2, so every source is a first load: new periods are summarized per cadence
     assert "New periods loaded in this run:" in html
-    assert "Federal Reserve Board, via FRED: " in html and " monthly periods through Jun 2026" in html
+    assert "Federal Reserve Board, via FRED: " in html and " monthly periods through Aug 2026" in html
     # keyed on the run: pointing health at run 1 lists run 1, even though run 2's rows are newer in the file
     tmp_paths.health_json.write_text(json.dumps(_health(RUN1)), encoding="utf-8")
     html = render(tmp_paths, today=TODAY).read_text(encoding="utf-8")
@@ -291,7 +335,7 @@ def test_new_periods_are_the_periods_only_this_run_loaded(fixture_facts):
     facts.loc[facts["source"] == "tccp", "pulled_at"] = RUN2  # a source loaded for the first time in this run
     out = _new_periods(coerce_facts(facts), RUN2)
     assert [o["source"] for o in out] == ["fred", "tccp"]
-    assert out[0]["periods"] == ["May 2026, Jun 2026 (monthly)"]
+    assert out[0]["periods"] == ["Jul 2026, Aug 2026 (monthly)"]
     assert out[1]["periods"] == ["2 semiannual periods through 2025 H2"]  # the two checked-in workbooks
     assert _new_periods(coerce_facts(facts), None) == []
     assert _new_periods(coerce_facts(facts.iloc[0:0]), RUN2) == []

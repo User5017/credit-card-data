@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T06:36:33Z",
+  "generated_at": "2026-09-08T07:30:11Z",
   "sources": {
     "fdic": {
       "source": "fdic",
@@ -16,11 +16,13 @@
     "fred": {
       "source": "fred",
       "status": "ok",
-      "messages": [],
-      "last_period_end": "2026-08-26",
-      "pulled_at": "2026-09-08T06:36:33Z",
-      "rows": 5386,
-      "n_series": 14,
+      "messages": [
+        "7666 new row(s)"
+      ],
+      "last_period_end": "2026-09-02",
+      "pulled_at": "2026-09-08T07:30:11Z",
+      "rows": 13052,
+      "n_series": 26,
       "n_revisions": 0
     },
     "nyfed_hhdc": {

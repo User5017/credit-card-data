@@ -140,6 +140,51 @@ Y14_NOTE = (
     "seasonally adjusted."
 )
 
+BURDEN_NOTE = (
+    "Revolving credit outstanding as a percentage of disposable personal income, which the income series reports at an "
+    "annual rate; the ratio therefore reads as card balances per dollar of annual after-tax income. It is the burden "
+    "measure the level alone cannot give: balances at a record in dollars can still be a smaller claim on income than "
+    "they were in 2008."
+)
+REAL_NOTE = (
+    "The same balances in nominal dollars and restated at the latest CPI price level. Consumer prices rose about 25 "
+    "percent between 2020 and 2026, so a flat nominal balance is a falling real one."
+)
+PRIME_NOTE = (
+    "Most variable card APRs are set as the prime rate plus a margin. The prime rate follows the federal funds target, "
+    "so the spread over prime is the part of the price the issuer chooses and the level is mostly the part it does not. "
+    "A widening spread while prime is flat is issuers repricing risk or rebuilding margin."
+)
+CONSUMER_NOTE = (
+    "Card losses and delinquencies against the same measures for all consumer loans at commercial banks (cards, auto, "
+    "personal, student held on bank books). Cards are the largest and worst-performing part of that aggregate, so the "
+    "gap says whether card stress is idiosyncratic or the leading edge of a broader consumer credit cycle."
+)
+LABOR_NOTE = (
+    "Card charge-offs against the unemployment rate. Losses are historically a job-loss phenomenon more than an "
+    "interest-rate one: every past charge-off peak followed an unemployment peak within a few quarters. Charge-offs "
+    "well above what the labour market implies is the signal that underwriting, not the economy, is the cause."
+)
+FLOWS_NOTE = (
+    "Two measures of how cardholders use the product, from the Y-14 series already loaded. The revolving share is the "
+    "percentage of balances carrying interest. The payment rate is payments as a percentage of the opening balance, "
+    "derived from the accounting identity (closing balance equals opening plus purchases minus payments and "
+    "charge-offs); charge-offs are left inside payments because the Y-14 publishes a charge-off rate rather than a "
+    "dollar amount, which overstates the payment rate by a few tenths of a point. A rising payment rate with a falling "
+    "revolving share means the growth is transactors, not borrowers. " + Y14_NOTE
+)
+PER_ACCOUNT_NOTE = (
+    "Balances, limits and unused credit per open card account on credit reports. Joint accounts are counted twice in "
+    "the NY Fed's account series, so these are lower bounds on the per-borrower figures. The gap between the limit and "
+    "the balance line is the unused credit the household is carrying."
+)
+DEBT_SERVICE_NOTE = (
+    "The Federal Reserve Board's own estimates of required debt payments as a share of disposable personal income: the "
+    "household ratio includes mortgages, the consumer ratio covers cards, auto and student debt. Published about five "
+    "months after the quarter, so this is the slowest series on the page and the one that settles whether a record "
+    "balance is actually a burden."
+)
+
 # Chart specs. Adding a chart means adding an entry here; the data comes from facts or a view in sql/views.sql.
 # Keys: `post` writes docs/img/<id>.png (one per panel); `band` fills between two series (1-based data indices);
 # `benchmark` adds a dashed 2015-2019 average of the first series; `y_zero: False` lets the y axis float (scores);
@@ -174,6 +219,29 @@ PANELS = [
                 "series": [S("bank_card_loans_sa", "COMBANKS_ALL", "Card loans, SA", period_type="W")],
             },
             {
+                "id": "card_debt_burden",
+                "title": "Card debt as a share of disposable income",
+                "unit": "pct",
+                "step": False,
+                "benchmark": True,
+                "notes": [BURDEN_NOTE],
+                "series": [
+                    S("revolving_credit_sa", "ALL_HOLDERS", "Revolving credit per dollar of annual after-tax income",
+                      view="v_card_burden", field="pct_of_disposable_income"),
+                ],
+            },
+            {
+                "id": "revolving_real",
+                "title": "Revolving credit, nominal and in today's dollars",
+                "unit": "usd_bn",
+                "step": False,
+                "notes": [REAL_NOTE],
+                "series": [
+                    S("revolving_credit_sa", "ALL_HOLDERS", "Nominal", view="v_card_burden", field="revolving"),
+                    S("revolving_credit_sa", "ALL_HOLDERS", "At the latest price level", view="v_card_burden", field="revolving_real"),
+                ],
+            },
+            {
                 "id": "card_loans_by_issuer",
                 "title": "Card loans on the books of the largest issuers",
                 "unit": "usd_bn",
@@ -196,6 +264,22 @@ PANELS = [
                 "series": [
                     S("card_apr_all_accounts", "COMBANKS_ALL", "All accounts", period_type="Q"),
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Accounts assessed interest", period_type="Q"),
+                    S("card_apr_advertised", "BANKRATE_SURVEY", "Advertised on new offers (Bankrate, weekly)", period_type="W"),
+                ],
+            },
+            {
+                "id": "apr_over_prime",
+                "title": "Card APR against the prime rate",
+                "unit": "pct",
+                "step": True,
+                "notes": [PRIME_NOTE],
+                "series": [
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "APR paid by revolvers", period_type="Q",
+                      view="v_apr_spread", field="apr"),
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Prime rate", period_type="Q",
+                      view="v_apr_spread", field="prime"),
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Spread over prime, percentage points", period_type="Q",
+                      view="v_apr_spread", field="spread_over_prime", unit="pp", dash=True),
                 ],
             },
             {
@@ -258,6 +342,30 @@ PANELS = [
                     S("card_dq_rate_sa", "COMBANKS_ALL", "All commercial banks", period_type="Q"),
                     S("card_dq_rate_sa", "COMBANKS_TOP100", "Top 100 banks", period_type="Q"),
                     S("card_dq_rate_sa", "COMBANKS_OTHER", "Banks outside top 100", period_type="Q"),
+                ],
+            },
+            {
+                "id": "card_vs_consumer",
+                "title": "Card losses against all consumer credit",
+                "unit": "pct",
+                "step": True,
+                "notes": [CONSUMER_NOTE],
+                "series": [
+                    S("card_nco_rate_sa", "COMBANKS_ALL", "Card charge-off rate", period_type="Q"),
+                    S("consumer_nco_rate_sa", "COMBANKS_ALL", "All consumer loan charge-off rate", period_type="Q"),
+                    S("card_dq_rate_sa", "COMBANKS_ALL", "Card delinquency, 30+ days", period_type="Q"),
+                    S("consumer_dq_rate_sa", "COMBANKS_ALL", "All consumer loan delinquency, 30+ days", period_type="Q"),
+                ],
+            },
+            {
+                "id": "losses_vs_labor",
+                "title": "Card charge-offs against unemployment",
+                "unit": "pct",
+                "step": True,
+                "notes": [LABOR_NOTE],
+                "series": [
+                    S("card_nco_rate_sa", "COMBANKS_ALL", "Card charge-off rate, annualized", period_type="Q"),
+                    S("unemployment_rate_sa", "US_ECONOMY", "Unemployment rate", period_type="M"),
                 ],
             },
             {
@@ -333,6 +441,34 @@ PANELS = [
                 ],
             },
             {
+                "id": "y14_payment_flows",
+                "title": "Payment rate and the revolving share of balances",
+                "unit": "pct",
+                "step": True,
+                "notes": [FLOWS_NOTE],
+                "series": [
+                    S("y14_card_balances", "Y14_CARD_FILERS", "Payments as a share of the opening balance", period_type="Q",
+                      source="phillyfed", view="v_y14_flows", field="payment_rate"),
+                    S("y14_card_balances", "Y14_CARD_FILERS", "Balances carrying interest, share of total", period_type="Q",
+                      source="phillyfed", view="v_y14_flows", field="revolver_share"),
+                ],
+            },
+            {
+                "id": "per_account_credit",
+                "title": "Balances, limits and unused credit per card account",
+                "unit": "usd",
+                "step": True,
+                "notes": [PER_ACCOUNT_NOTE],
+                "series": [
+                    S("hhdc_card_balances", "CCP_ALL", "Credit limit per account", period_type="Q", source="nyfed_hhdc",
+                      view="v_hhdc_per_account", field="limit_per_account"),
+                    S("hhdc_card_balances", "CCP_ALL", "Unused credit per account", period_type="Q", source="nyfed_hhdc",
+                      view="v_hhdc_per_account", field="available_per_account"),
+                    S("hhdc_card_balances", "CCP_ALL", "Balance per account", period_type="Q", source="nyfed_hhdc",
+                      view="v_hhdc_per_account", field="balance_per_account"),
+                ],
+            },
+            {
                 "id": "y14_utilization",
                 "title": "Card utilization, large banks",
                 "unit": "pct",
@@ -362,6 +498,60 @@ PANELS = [
             },
         ],
     },
+    {
+        "name": "Context",
+        "blurb": "What the card numbers sit inside: the cost of household debt, the buffer behind it, and how people say they feel.",
+        "charts": [
+            {
+                "id": "debt_service",
+                "title": "Debt payments as a share of disposable income",
+                "unit": "pct",
+                "step": False,
+                "post": True,
+                "notes": [DEBT_SERVICE_NOTE],
+                "series": [
+                    S("debt_service_ratio_household", "US_HOUSEHOLDS", "All household debt, including mortgages", period_type="Q"),
+                    S("debt_service_ratio_consumer", "US_HOUSEHOLDS", "Consumer debt only (cards, auto, student)", period_type="Q"),
+                ],
+            },
+            {
+                "id": "household_buffer",
+                "title": "Personal saving rate",
+                "unit": "pct",
+                "step": False,
+                "benchmark": True,
+                "series": [S("saving_rate", "US_HOUSEHOLDS", "Saving as a share of disposable income", period_type="M")],
+            },
+            {
+                "id": "sentiment",
+                "title": "Consumer sentiment",
+                "unit": "index",
+                "step": False,
+                "y_zero": False,
+                "benchmark": True,
+                "notes": [
+                    "University of Michigan index of consumer sentiment, 1966 Q1 = 100. On the page because stated "
+                    "sentiment and card behaviour have diverged since 2022: sentiment near historic lows while payment "
+                    "rates and full-payer shares set records. One of the two is not describing the median cardholder."
+                ],
+                "series": [S("consumer_sentiment", "US_ECONOMY", "Index of consumer sentiment", period_type="M")],
+            },
+            {
+                "id": "consumer_credit_mix",
+                "title": "Revolving and nonrevolving consumer credit",
+                "unit": "usd_bn",
+                "step": False,
+                "notes": [
+                    "The two halves of the Fed's consumer credit measure. Nonrevolving is mostly auto and student "
+                    "loans. Revolving growing faster than nonrevolving is a different economy from the reverse."
+                ],
+                "series": [
+                    S("nonrevolving_credit_sa", "ALL_HOLDERS", "Nonrevolving (auto, student)"),
+                    S("revolving_credit_sa", "ALL_HOLDERS", "Revolving (mostly cards)"),
+                ],
+            },
+        ],
+    },
 ]
 
 # The latest-readings block: (series key, label, kind). kind: level (dollar amount, change in percent on the year),
@@ -374,6 +564,8 @@ HEADLINES = [
     (("card_nco_rate_sa", "COMBANKS_ALL", "all", "Q", "fred"), "Card charge-off rate, annualized, commercial banks (Fed, SA)", "rate"),
     (("hhdc_card_transition_dq90", "CCP_ALL", "all", "Q", "nyfed_hhdc"), "Card balances newly 90+ days late, annualized flow (NY Fed)", "rate"),
     (("y14_card_pay_minimum_share", "Y14_CARD_FILERS", "all", "Q", "phillyfed"), "Accounts paying only the minimum, large banks (Philly Fed)", "rate"),
+    (("debt_service_ratio_consumer", "US_HOUSEHOLDS", "all", "Q", "fred"), "Consumer debt payments as a share of disposable income (Fed)", "rate"),
+    (("unemployment_rate_sa", "US_ECONOMY", "all", "M", "fred"), "Unemployment rate (BLS)", "rate"),
     (("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "all", "Q", "fred"), "Banks tightening card standards, net (SLOOS)", "net"),
 ]
 

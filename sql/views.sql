@@ -141,3 +141,106 @@ SELECT 'fdic_card_nco_q' AS metric, entity, entity_type, tier, period_type, sour
                  AND (loans + loans_prev) > 0
             THEN 400.0 * nco_q / ((loans + loans_prev) / 2.0) END AS nco_rate_annualized
 FROM l;
+
+-- Derived measures over series already in facts. Each view is keyed on one of its input series (metric, entity, tier,
+-- period_type, source) so render.py can select a field from it exactly like a fact. Nothing here fetches anything.
+
+-- Y-14 flows: what the large banks' cardholders actually do. revolver_share is the share of balances carrying interest.
+-- payment_rate is payments as a share of the opening balance, derived as purchases minus the change in balances (the
+-- accounting identity closing = opening + purchases - payments - charge-offs, with charge-offs left in payments
+-- because the Y-14 charge-off series is a rate, not a dollar amount; the error is a few tenths of a point). It needs
+-- consecutive quarters, so a gap in the panel leaves the quarter null. Per-account figures turn billions over
+-- millions of accounts into dollars.
+CREATE OR REPLACE VIEW v_y14_flows AS
+WITH w AS (
+  SELECT CAST(period_end AS DATE) AS period_end,
+         max(CASE WHEN metric = 'y14_card_balances' THEN value END) AS balances,
+         max(CASE WHEN metric = 'y14_card_revolving_balances' THEN value END) AS revolving,
+         max(CASE WHEN metric = 'y14_card_purchase_volume' THEN value END) AS purchases,
+         max(CASE WHEN metric = 'y14_card_accounts' THEN value END) AS accounts,
+         max(CASE WHEN metric = 'y14_card_commitments' THEN value END) AS commitments
+  FROM facts
+  WHERE source = 'phillyfed' AND entity = 'Y14_CARD_FILERS' AND tier = 'all'
+  GROUP BY period_end
+),
+l AS (
+  SELECT *,
+         lag(balances) OVER (ORDER BY period_end) AS prev_balances,
+         lag(period_end) OVER (ORDER BY period_end) AS prev_period
+  FROM w
+)
+SELECT 'y14_card_balances' AS metric, 'Y14_CARD_FILERS' AS entity, 'aggregate' AS entity_type, 'all' AS tier,
+       'Q' AS period_type, 'phillyfed' AS source, period_end,
+       balances, revolving, purchases, accounts, commitments,
+       CASE WHEN balances > 0 THEN 100.0 * revolving / balances END AS revolver_share,
+       CASE WHEN prev_balances > 0 AND period_end = last_day(prev_period + INTERVAL 3 MONTH)
+            THEN 100.0 * (purchases - (balances - prev_balances)) / prev_balances END AS payment_rate,
+       CASE WHEN accounts > 0 THEN 1000.0 * purchases / accounts END AS purchase_per_account,
+       CASE WHEN accounts > 0 THEN 1000.0 * balances / accounts END AS balance_per_account,
+       CASE WHEN accounts > 0 THEN 1000.0 * commitments / accounts END AS limit_per_account
+FROM l;
+
+-- NY Fed per-account measures: the same arithmetic on the all-lender credit report panel. Joint accounts are counted
+-- twice in the account series (the NY Fed's own note), so the per-account dollars are a lower bound.
+CREATE OR REPLACE VIEW v_hhdc_per_account AS
+WITH w AS (
+  SELECT CAST(period_end AS DATE) AS period_end,
+         max(CASE WHEN metric = 'hhdc_card_balances' THEN value END) AS balances,
+         max(CASE WHEN metric = 'hhdc_card_limit' THEN value END) AS limits,
+         max(CASE WHEN metric = 'hhdc_card_accounts' THEN value END) AS accounts
+  FROM facts
+  WHERE source = 'nyfed_hhdc' AND entity = 'CCP_ALL' AND tier = 'all'
+  GROUP BY period_end
+)
+SELECT 'hhdc_card_balances' AS metric, 'CCP_ALL' AS entity, 'aggregate' AS entity_type, 'all' AS tier,
+       'Q' AS period_type, 'nyfed_hhdc' AS source, period_end,
+       balances, limits, accounts,
+       CASE WHEN limits > 0 THEN 100.0 * balances / limits END AS utilization,
+       CASE WHEN accounts > 0 THEN 1000.0 * balances / accounts END AS balance_per_account,
+       CASE WHEN accounts > 0 THEN 1000.0 * limits / accounts END AS limit_per_account,
+       CASE WHEN accounts > 0 THEN 1000.0 * (limits - balances) / accounts END AS available_per_account
+FROM w;
+
+-- Card debt in context: as a share of disposable income (an annual rate, so the ratio reads as balances per dollar of
+-- annual after-tax income) and restated in the price level of the latest CPI reading. The income ratio is only
+-- defined at quarter ends, where the quarterly income series lands.
+CREATE OR REPLACE VIEW v_card_burden AS
+WITH rev AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS revolving
+  FROM facts WHERE metric = 'revolving_credit_sa' AND entity = 'ALL_HOLDERS' AND source = 'fred'
+),
+dpi AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS dpi
+  FROM facts WHERE metric = 'disposable_income_sa' AND entity = 'US_HOUSEHOLDS' AND source = 'fred'
+),
+cpi AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS cpi
+  FROM facts WHERE metric = 'cpi_all_urban_sa' AND entity = 'US_ECONOMY' AND source = 'fred'
+),
+base AS (SELECT cpi AS cpi_base FROM cpi ORDER BY period_end DESC LIMIT 1)
+SELECT 'revolving_credit_sa' AS metric, 'ALL_HOLDERS' AS entity, 'aggregate' AS entity_type, 'all' AS tier,
+       'M' AS period_type, 'fred' AS source, r.period_end,
+       r.revolving,
+       r.revolving * b.cpi_base / c.cpi AS revolving_real,
+       100.0 * r.revolving / d.dpi AS pct_of_disposable_income
+FROM rev r
+CROSS JOIN base b
+LEFT JOIN cpi c ON c.period_end = r.period_end
+LEFT JOIN dpi d ON d.period_end = r.period_end;
+
+-- Card APR against the prime rate. Most variable card APRs are prime plus a margin, so the spread is the part the
+-- issuer sets and the level is not. Prime is monthly and the G.19 card rate is quarterly, so they meet at quarter ends.
+CREATE OR REPLACE VIEW v_apr_spread AS
+WITH apr AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS apr
+  FROM facts WHERE metric = 'card_apr_assessed_interest' AND entity = 'COMBANKS_ALL' AND source = 'fred'
+),
+prime AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS prime
+  FROM facts WHERE metric = 'prime_rate' AND entity = 'COMBANKS_ALL' AND source = 'fred'
+)
+SELECT 'card_apr_assessed_interest' AS metric, 'COMBANKS_ALL' AS entity, 'aggregate' AS entity_type, 'all' AS tier,
+       'Q' AS period_type, 'fred' AS source, a.period_end,
+       a.apr, p.prime, a.apr - p.prime AS spread_over_prime
+FROM apr a
+JOIN prime p ON p.period_end = a.period_end;
