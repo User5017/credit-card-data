@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T05:39:16Z",
+  "generated_at": "2026-09-08T05:44:39Z",
   "sources": {
     "fdic": {
       "source": "fdic",
@@ -16,9 +16,11 @@
     "fred": {
       "source": "fred",
       "status": "ok",
-      "messages": [],
-      "last_period_end": "2026-09-30",
-      "pulled_at": "2026-09-08T05:39:16Z",
+      "messages": [
+        "123 new row(s)"
+      ],
+      "last_period_end": "2026-08-26",
+      "pulled_at": "2026-09-08T05:44:39Z",
       "rows": 5386,
       "n_series": 14,
       "n_revisions": 0

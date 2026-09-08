@@ -33,9 +33,12 @@ JOIN f b
       END
 WHERE b.value <> 0;
 
--- Offered vs paid: the TCCP median of the highest purchase APR issuers offer (semiannual, every respondent)
--- matched as-of to the G.19 rate on accounts assessed interest (quarterly). Keyed on the G.19 series so
--- render.py can select it like any other, with the offered value and the spread as extra fields.
+-- Offered vs paid: the TCCP median purchase APR offered to applicants with scores 620 to 719 (semiannual, every
+-- respondent, the middle of the three tier bands the chart draws) matched as-of to the G.19 rate on accounts assessed
+-- interest (quarterly). Keyed on the G.19 series so render.py can select it like any other, with the offered value
+-- and the spread (percentage points) as extra fields. The spread exists only through the last offered period: a
+-- quarter after it has no offered reading to compare with, so the line stops instead of carrying the last semiannual
+-- value forward.
 CREATE OR REPLACE VIEW v_offered_vs_paid AS
 WITH paid AS (
   SELECT metric, entity, entity_type, tier, period_type, source,
@@ -46,13 +49,14 @@ WITH paid AS (
 offered AS (
   SELECT CAST(period_end AS DATE) AS period_end, value AS offered_apr
   FROM facts
-  WHERE metric = 'tccp_purchase_apr_max_median' AND entity = 'TCCP_ALL' AND tier = 'all' AND source = 'tccp'
+  WHERE metric = 'tccp_purchase_apr_median' AND entity = 'TCCP_ALL' AND tier = '620_719' AND source = 'tccp'
 )
 SELECT p.metric, p.entity, p.entity_type, p.tier, p.period_type, p.source, p.period_end,
        p.paid_apr, o.offered_apr, o.period_end AS offered_period_end,
        o.offered_apr - p.paid_apr AS spread_pct_pts
 FROM paid p
-ASOF JOIN offered o ON p.period_end >= o.period_end;
+ASOF JOIN offered o ON p.period_end >= o.period_end
+WHERE p.period_end <= (SELECT max(period_end) FROM offered);
 
 -- FDIC issuer roll-up: the per-charter series (entity CERT:<n>, source fdic) summed by issuer and period, acquirer
 -- plus acquired charters, so an issuer's line does not jump when a book moves between charters (Discover Bank into

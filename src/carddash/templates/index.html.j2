@@ -10,7 +10,8 @@
   color-scheme: light;
   --bg: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
   --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,.10);
-  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #8a63d2; --series-5: #6b6a66;
+  --band: rgba(42,120,214,.12);
   --good: #0ca30c; --warning: #fab219; --critical: #d03b3b;
 }
 @media (prefers-color-scheme: dark) {
@@ -18,7 +19,8 @@
     color-scheme: dark;
     --bg: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,.10);
-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #9a78e0; --series-5: #9b9a94;
+    --band: rgba(57,135,229,.18);
   }
 }
 * { box-sizing: border-box; }
@@ -156,6 +158,7 @@ th:first-child, td:first-child { text-align: left; }
   function fmtVal(x, unit) {
     if (x == null || isNaN(x)) return '–';
     if (unit === 'pct') return x.toFixed(2) + '%';
+    if (unit === 'pp') return x.toFixed(2) + ' pp';
     if (unit === 'usd_bn') return '$' + x.toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'bn';
     return x.toLocaleString('en-US');
   }
@@ -187,9 +190,10 @@ th:first-child, td:first-child { text-align: left; }
         width: 2,
         spanGaps: true,
         points: { show: false },
-        value: function (u, val) { return fmtVal(val, c.unit); }
+        value: function (u, val) { return fmtVal(val, s.unit || c.unit); }
       };
       if (c.step) cfg.paths = uPlot.paths.stepped({ align: -1 });
+      if (s.dash) cfg.dash = [6, 4];
       series.push(cfg);
     });
     var opts = {
@@ -210,6 +214,8 @@ th:first-child, td:first-child { text-align: left; }
       cursor: { drag: { x: true, y: false } },
       legend: { show: true }
     };
+    // a band fills between two series: the range of terms offered across credit tiers
+    if (c.band) opts.bands = [{ series: c.band, fill: v('--band') }];
     var u = new uPlot(opts, c.data, el);
     window.addEventListener('resize', function () { u.setSize({ width: el.clientWidth, height: HEIGHT }); });
 
@@ -221,7 +227,7 @@ th:first-child, td:first-child { text-align: left; }
       html += '</tr></thead><tbody>';
       for (var i = n - 1; i >= start; i--) {
         html += '<tr><td>' + fmtPeriod(xs[i], c.period_type) + '</td>';
-        for (var k = 1; k < c.data.length; k++) html += '<td>' + fmtVal(c.data[k][i], c.unit) + '</td>';
+        for (var k = 1; k < c.data.length; k++) html += '<td>' + fmtVal(c.data[k][i], c.series[k - 1].unit || c.unit) + '</td>';
         html += '</tr>';
       }
       t.innerHTML = html + '</tbody></table>';

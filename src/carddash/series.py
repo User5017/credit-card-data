@@ -25,6 +25,7 @@ SERIES_COLUMNS = [
     "vmin",
     "vmax",
     "max_age_days",
+    "period_offset",  # periods to shift the source's own dating by (SLOOS: -1, the July survey asks about Q2)
 ]
 
 
@@ -37,6 +38,7 @@ def load_series(path: Path) -> pd.DataFrame:
     for c in ("vmin", "vmax", "max_age_days"):
         df[c] = pd.to_numeric(df[c].replace("", None), errors="coerce")
     df["sa"] = df["sa"].str.lower().isin({"true", "1", "yes", "y"})
+    df["period_offset"] = pd.to_numeric(df["period_offset"].replace("", "0")).astype(int)
     dupes = df[df.duplicated(SERIES_KEY, keep=False)]
     if not dupes.empty:
         raise ValueError(f"duplicate series keys in {path}:\n{dupes[SERIES_KEY]}")

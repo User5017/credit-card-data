@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import shutil
 
@@ -62,12 +63,18 @@ def test_render_produces_self_contained_page(tmp_paths, fixture_facts):
     assert 400 < by_id["revolving_yoy"]["n_points"] < 700  # v_growth view works and the 'since' cut applies
     assert by_id["card_apr"]["period_type"] == "Q"
     assert "latest period 2026 Q2" in by_id["card_apr"]["footer"]
-    # charts with no data in the fixtures still render (empty), never crash
-    assert by_id["sloos_cards"]["n_points"] == 0
-    # the first cross-source chart: TCCP (semiannual) and G.19 (quarterly) lines plus the as-of spread from the view
+    # SLOOS is dated to the quarter it asks about: the July 2026 survey is 2026 Q2, nothing is in the future
+    assert by_id["sloos_cards"]["n_points"] > 100 and "latest period 2026 Q2" in by_id["sloos_cards"]["footer"]
+    # the first cross-source chart: three TCCP tier medians (a band), the G.19 paid rate, the spread in points
     ovp = by_id["offered_vs_paid"]
-    assert len(ovp["series"]) == 3 and ovp["n_points"] > 10
-    assert any(v is not None for v in ovp["data"][3])
+    assert len(ovp["series"]) == 5 and ovp["n_points"] > 10 and ovp["band"] == [1, 3]
+    assert [s["unit"] for s in ovp["series"]] == ["pct", "pct", "pct", "pct", "pp"]
+    assert ovp["series"][4]["dash"] and not ovp["series"][3]["dash"]
+    assert "percentage points" in ovp["series"][4]["label"]
+    last = lambda k: max(i for i, v in enumerate(ovp["data"][k]) if v is not None)  # noqa: E731
+    assert last(5) <= max(last(1), last(2), last(3))  # the spread stops at the last offered period
+    assert last(4) > last(5)  # the paid rate runs on past it
+    assert ovp["data"][0][last(5)] < ovp["data"][0][last(4)]
     assert "CFPB Terms of Credit Card Plans" in ovp["footer"] and "Federal Reserve Board" in ovp["footer"]
     # the PNG caption is the footer without the pull date
     assert "pulled" in by_id["card_apr"]["footer"] and "pulled" not in by_id["card_apr"]["caption"]
@@ -123,6 +130,20 @@ def test_what_changed_lists_only_the_latest_run(tmp_paths, fixture_facts):
     # no health file yet: the block says so instead of guessing
     tmp_paths.health_json.unlink()
     assert "No refresh run recorded yet." in render(tmp_paths).read_text(encoding="utf-8")
+
+
+def test_a_period_that_has_not_ended_is_never_the_latest(tmp_paths, fixture_facts):
+    future = fixture_facts[(fixture_facts["metric"] == "sloos_card_standards_net_tightening")].tail(1).copy()
+    future["period_end"] = pd.Timestamp("2099-12-31")
+    write_facts(pd.concat([fixture_facts, future], ignore_index=True), tmp_paths.facts_csv)
+    tmp_paths.health_json.write_text(json.dumps(_health(RUN2)), encoding="utf-8")
+    html = render(tmp_paths, today=dt.date(2026, 9, 8)).read_text(encoding="utf-8")
+    start = html.index("window.CARDDASH = ") + len("window.CARDDASH = ")
+    payload = json.loads(html[start:html.index(";</script>", start)])
+    sloos = next(c for c in payload["charts"] if c["id"] == "sloos_cards")
+    assert sloos["series"][0]["last_period"] == "2026 Q2" and "latest period 2026 Q2" in sloos["footer"]
+    assert sloos["data"][0][-1] > 4_000_000_000  # the row itself is still drawn, it is just not called latest
+    assert "2099" not in html.split("<h2>What changed</h2>")[0]  # the health strip's latest period is an ended one
 
 
 def test_rel_display_is_capped_when_the_old_value_is_zero():

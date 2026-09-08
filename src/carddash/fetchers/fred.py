@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from ..schema import FACT_COLUMNS, period_end
+from ..schema import FACT_COLUMNS, period_end, shift_period
 
 SOURCE = "fred"
 FREDGRAPH_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}"
@@ -88,13 +88,14 @@ def to_facts(obs: pd.DataFrame, meta: pd.Series, pulled_at: str) -> pd.DataFrame
     """Observations for one series -> facts rows, using the series.csv metadata row."""
     ptype = meta["period_type"]
     scale = float(meta["scale"]) if meta["scale"] not in ("", None) else 1.0
+    offset = int(meta.get("period_offset", 0) or 0)  # series.csv: the SLOOS July survey describes Q2, not Q3
     df = pd.DataFrame(
         {
             "metric": meta["metric"],
             "entity": meta["entity"],
             "entity_type": meta["entity_type"],
             "tier": meta["tier"],
-            "period_end": [pd.Timestamp(period_end(d.date(), ptype)) for d in obs["date"]],
+            "period_end": [pd.Timestamp(shift_period(d.date(), ptype, offset)) for d in obs["date"]],
             "period_type": ptype,
             "value": obs["value"].astype("float64") * scale,
             "source": SOURCE,

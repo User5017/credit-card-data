@@ -78,6 +78,26 @@ def period_end(date: dt.date, period_type: str) -> dt.date:
     raise ValueError(f"unknown period_type {period_type!r}")
 
 
+_MONTHS_PER_PERIOD = {"M": 1, "Q": 3, "T": 4, "H": 6, "A": 12}
+
+
+def shift_period(date: dt.date, period_type: str, n: int) -> dt.date:
+    """The period end n periods after (n < 0: before) the period containing `date`.
+
+    For a source whose own dating is off by a fixed number of periods (the SLOOS July survey asks about the quarter
+    that just ended, FRED dates it to the quarter it was taken in). Weekly and daily series shift by whole weeks/days.
+    """
+    if period_type == "D":
+        return date + dt.timedelta(days=n)
+    if period_type == "W":
+        return date + dt.timedelta(weeks=n)
+    end = period_end(date, period_type)
+    if n == 0:
+        return end
+    months = end.year * 12 + (end.month - 1) + _MONTHS_PER_PERIOD[period_type] * n
+    return period_end(dt.date(months // 12, months % 12 + 1, 1), period_type)
+
+
 def empty_facts() -> pd.DataFrame:
     return pd.DataFrame({c: pd.Series(dtype=t) for c, t in FACT_DTYPES.items()})
 

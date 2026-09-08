@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pandas as pd
 
+import datetime as dt
+
+import pytest
+
 from carddash.fetchers import fred
+from carddash.schema import shift_period
 from conftest import FIXTURES, PULLED_AT
 
 
@@ -35,6 +40,42 @@ def test_quarterly_survey_month_maps_to_quarter_end(meta):
     assert len(q1) == 1 and abs(q1["value"].iloc[0] - 21.00) < 0.006
     # blank padding rows (non-survey months) must not become facts
     assert not facts.duplicated(["period_end"]).any()
+
+
+def test_sloos_is_dated_to_the_quarter_it_asks_about(meta):
+    """FRED dates the July 2026 survey to 2026-07-01 (Q3); it asks about April to June, so it lands on 2026-06-30."""
+    obs = fred.parse_fredgraph((FIXTURES / "fred" / "DRTSCLCC.csv").read_text())
+    row = _row(meta, "DRTSCLCC")
+    assert int(row["period_offset"]) == -1
+    assert obs[obs["date"] == pd.Timestamp("2026-07-01")]["value"].iloc[0] == 6.7
+    facts = fred.to_facts(obs, row, PULLED_AT).set_index("period_end")["value"]
+    assert facts[pd.Timestamp("2026-06-30")] == 6.7
+    assert facts[pd.Timestamp("2026-03-31")] == 2.0
+    assert facts[pd.Timestamp("1995-12-31")] == 25.0  # the January 1996 survey describes 1995 Q4
+    assert facts.index.max() == pd.Timestamp("2026-06-30")  # nothing dated to a quarter that has not ended
+    assert (facts.index == facts.index + pd.offsets.QuarterEnd(0)).all()
+    # every other FRED series has no offset and keeps its dating
+    assert int((meta.loc[meta["source"] == "fred", "period_offset"] != 0).sum()) == 1
+
+
+@pytest.mark.parametrize(
+    "date, pt, n, expected",
+    [
+        (dt.date(2026, 7, 1), "Q", -1, dt.date(2026, 6, 30)),
+        (dt.date(2026, 9, 30), "Q", -1, dt.date(2026, 6, 30)),
+        (dt.date(2026, 1, 15), "Q", -1, dt.date(2025, 12, 31)),
+        (dt.date(2026, 1, 15), "Q", 0, dt.date(2026, 3, 31)),
+        (dt.date(2026, 1, 15), "Q", 2, dt.date(2026, 9, 30)),
+        (dt.date(2026, 11, 3), "M", 2, dt.date(2027, 1, 31)),
+        (dt.date(2025, 12, 31), "H", -1, dt.date(2025, 6, 30)),
+        (dt.date(2026, 5, 1), "T", 1, dt.date(2026, 12, 31)),
+        (dt.date(2026, 5, 1), "A", -2, dt.date(2024, 12, 31)),
+        (dt.date(2026, 8, 26), "W", -1, dt.date(2026, 8, 19)),
+        (dt.date(2026, 8, 26), "D", 3, dt.date(2026, 8, 29)),
+    ],
+)
+def test_shift_period(date, pt, n, expected):
+    assert shift_period(date, pt, n) == expected
 
 
 def test_weekly_keeps_its_date(meta):

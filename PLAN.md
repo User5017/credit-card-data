@@ -73,7 +73,8 @@ with a vendored chart library and the data embedded. GitHub Actions runs the cha
 ### 4.2 dim_series (crosswalks/series.csv)
 
 One row per series, keyed (metric, entity, tier, period_type, source): source_id, unit, scale, sa,
-display_name, scope_note, source_url, vmin, vmax, max_age_days. The scope note is what makes cross-source
+display_name, scope_note, source_url, vmin, vmax, max_age_days, period_offset (whole periods the source's own
+dating is shifted by, applied in the fetcher; SLOOS -1). The scope note is what makes cross-source
 charts honest: G.19 covers all lenders, H.8 and charge-off series cover commercial banks only, Philly Fed
 covers Y-14 filers only, NY Fed is an Equifax panel. Every chart footnote comes from this table.
 

@@ -27,8 +27,9 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   Key: (metric, entity, tier, period_end, period_type, source). See src/carddash/schema.py.
 - period_end is the LAST day of the period. Quarterly survey taken in May is dated June 30.
 - Seasonal adjustment is in the metric name (`_sa` / `_nsa`) whenever the source offers both.
-- unit, cadence, display name, scope note, value range, and staleness limit live in crosswalks/series.csv,
-  one row per series. A fetcher may only emit series that exist there; validation rejects the rest.
+- unit, cadence, display name, scope note, value range, staleness limit, and period offset live in crosswalks/series.csv,
+  one row per series. A fetcher may only emit series that exist there; validation rejects the rest. period_offset shifts a
+  source's own dating by whole periods (SLOOS -1: the July survey asks about the quarter that just ended), applied in the fetcher.
 - Entities: prefixed ids (`ALL_HOLDERS`, `COMBANKS_TOP100`, `CERT:4297`, `FDIC_ALL_INSURED`, later `STATE:ME`), with
   entity_type set. Views never parse prefixes.
 - Sources finer than the fact key (TCCP card products, complaints) keep their own raw table and feed
@@ -68,7 +69,9 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON.
   No CDN, no runtime fetches. Must render identically from file:// and GitHub Pages.
 - Chart specs live in PANELS in src/carddash/render.py. Every chart shows source, cadence, latest period,
-  pull date, and the scope notes from series.csv. Step charts for period data; never interpolate.
+  pull date, and the scope notes from series.csv. Step charts for period data; never interpolate. A period that has
+  not ended is never labelled as the latest (render takes `today`). A series may carry its own unit (a spread in
+  percentage points on a percent chart) and a chart may fill a band between two series.
 - Palette and mark rules: thin 2px lines, hairline grid, fixed series colors, legend for 2+ series, table twin.
 - One chart per panel carries `post: True` and is also written to docs/img/<id>.png by src/carddash/png.py (matplotlib Agg,
   drawn from the same payload dict as the page, steps-pre for period data, no pull date, no Software chunk) so the

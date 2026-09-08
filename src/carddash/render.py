@@ -46,13 +46,16 @@ UNIT_LABELS = {
     "usd": "Dollars",
     "millions": "Millions",
     "pct": "Percent",
+    "pp": "Percentage points",
     "count": "Count",
     "score": "Credit score",
     "index": "Index",
 }
 
 
-def S(metric, entity, label, tier="all", period_type="M", source="fred", view="facts", field="value"):
+def S(metric, entity, label, tier="all", period_type="M", source="fred", view="facts", field="value", unit=None, dash=False):
+    """One series of a chart. `unit` overrides the chart unit for this series (a spread in percentage points on a
+    percent chart); `dash` draws it dashed."""
     return {
         "metric": metric,
         "entity": entity,
@@ -62,6 +65,8 @@ def S(metric, entity, label, tier="all", period_type="M", source="fred", view="f
         "label": label,
         "view": view,
         "field": field,
+        "unit": unit,
+        "dash": dash,
     }
 
 
@@ -113,19 +118,26 @@ PANELS = [
                 ],
             },
             {
-                # first cross-source chart: the terms issuers advertise (TCCP) against the rate revolvers pay (G.19)
+                # first cross-source chart: the terms issuers advertise (TCCP, a band of three credit-tier medians)
+                # against the rate revolvers pay (G.19). The spread is the middle tier minus paid, in percentage
+                # points, and stops at the last offered period (sql/views.sql v_offered_vs_paid).
                 "id": "offered_vs_paid",
                 "title": "Card APR offered vs APR paid",
                 "unit": "pct",
                 "step": True,
                 "since": "2022-01-01",
+                "band": [1, 3],  # fill between the first and third series: the offered range across credit tiers
                 "series": [
-                    S("tccp_purchase_apr_max_median", "TCCP_ALL", "Offered: median highest purchase APR (TCCP)",
-                      period_type="H", source="tccp"),
+                    S("tccp_purchase_apr_median", "TCCP_ALL", "Offered to scores 619 or less, median (TCCP)",
+                      tier="le619", period_type="H", source="tccp"),
+                    S("tccp_purchase_apr_median", "TCCP_ALL", "Offered to scores 620 to 719, median (TCCP)",
+                      tier="620_719", period_type="H", source="tccp"),
+                    S("tccp_purchase_apr_median", "TCCP_ALL", "Offered to scores 720 and up, median (TCCP)",
+                      tier="superprime", period_type="H", source="tccp"),
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Paid: APR on accounts assessed interest (G.19)",
                       period_type="Q"),
-                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Offered minus paid", period_type="Q",
-                      view="v_offered_vs_paid", field="spread_pct_pts"),
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Offered to 620-719 minus paid, percentage points",
+                      period_type="Q", view="v_offered_vs_paid", field="spread_pct_pts", unit="pp", dash=True),
                 ],
             },
         ],
@@ -231,22 +243,25 @@ def period_label(d: dt.date, period_type: str) -> str:
     return d.isoformat()
 
 
-def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
+def _chart_payload(con, spec: dict, meta_idx: dict, health: dict, today: dt.date) -> dict:
     per_series = []
     all_rows = []
     since = spec.get("since")
     for s in spec["series"]:
         rows = _series_rows(con, s, since)
         all_rows.append(rows)
+        ended = [r for r in rows if r[0] <= today]  # a period that has not ended is never called the latest
         m = meta_idx.get((s["metric"], s["entity"], s["tier"], s["period_type"], s["source"]))
         src_health = health.get(s["source"], {})
         per_series.append(
             {
                 "label": s["label"],
+                "unit": s.get("unit") or spec["unit"],
+                "dash": bool(s.get("dash")),
                 "period_type": s["period_type"],
                 "cadence": PERIOD_WORDS.get(s["period_type"], s["period_type"]),
-                "last_period": period_label(rows[-1][0], s["period_type"]) if rows else None,
-                "last_period_iso": rows[-1][0].isoformat() if rows else None,
+                "last_period": period_label(ended[-1][0], s["period_type"]) if ended else None,
+                "last_period_iso": ended[-1][0].isoformat() if ended else None,
                 "source_label": SOURCE_LABELS.get(s["source"], s["source"]),
                 "source_url": (m["source_url"] if m is not None else ""),
                 "scope_note": (m["scope_note"] if m is not None else ""),
@@ -288,6 +303,7 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
         "unit_label": UNIT_LABELS.get(spec["unit"], spec["unit"]),
         "step": spec["step"],
         "post": bool(spec.get("post")),
+        "band": spec.get("band"),
         "period_type": period_types.pop() if len(period_types) == 1 else None,
         "series": per_series,
         "data": data,
@@ -298,9 +314,10 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict) -> dict:
     }
 
 
-def _latest_by_source(facts: pd.DataFrame, meta_idx: dict) -> dict[str, str]:
-    """source -> 'Jun 2026 (Revolving consumer credit (SA))' for the series with the newest period."""
+def _latest_by_source(facts: pd.DataFrame, meta_idx: dict, today: dt.date) -> dict[str, str]:
+    """source -> 'Jun 2026 (Revolving consumer credit (SA))' for the series with the newest ended period."""
     out = {}
+    facts = facts[facts["period_end"].dt.date <= today] if not facts.empty else facts
     if facts.empty:
         return out
     for source, grp in facts.groupby("source"):
@@ -405,7 +422,8 @@ def _new_periods(facts: pd.DataFrame, run: str | None) -> list[dict]:
     return out
 
 
-def render(paths: Paths) -> Path:
+def render(paths: Paths, today: dt.date | None = None) -> Path:
+    today = today or dt.datetime.now(dt.timezone.utc).date()
     facts = read_facts(paths.facts_csv)
     meta = load_series(paths.series_csv)
     meta_idx = series_index(meta)
@@ -416,7 +434,7 @@ def render(paths: Paths) -> Path:
     con = _connect(facts, paths.views_sql, paths.tccp_products_csv, paths.issuers_csv)
     panels = []
     for panel in PANELS:
-        charts = [_chart_payload(con, spec, meta_idx, health) for spec in panel["charts"]]
+        charts = [_chart_payload(con, spec, meta_idx, health, today) for spec in panel["charts"]]
         panels.append({"name": panel["name"], "blurb": panel["blurb"], "charts": charts})
     con.close()
 
@@ -432,7 +450,7 @@ def render(paths: Paths) -> Path:
     tpl = env.get_template("index.html.j2")
     html = tpl.render(
         generated_at=generated_at,
-        health=_health_rows(health, _latest_by_source(facts, meta_idx)),
+        health=_health_rows(health, _latest_by_source(facts, meta_idx, today)),
         health_generated=health_doc.get("generated_at", "never"),
         panels=panels,
         run=run,
