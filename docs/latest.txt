@@ -1,6 +1,6 @@
-US credit card data, latest readings (2026-09-08)
+US credit card data, latest readings (2026-09-09)
 
-- Revolving consumer credit, all lenders (Fed G.19, SA): $1,351bn in Jun 2026, +3.8% on the year
+- Revolving consumer credit, all lenders (Fed G.19, SA): $1,357bn in Jul 2026, +3.6% on the year, highest on record (since Jan 1968)
 - Card balances on credit reports (NY Fed): $1,263bn in 2026 Q2, +4.5% on the year
 - APR paid by revolvers at commercial banks (Fed G.19): 22.15% in 2026 Q2, -0.10 pp on the year, 2015-2019 average 14.93%
 - Card delinquency, 30+ days past due, commercial banks (Fed, SA): 2.85% in 2026 Q2, -0.19 pp on the year, 2015-2019 average 2.39%, lowest since 2023 Q2
