@@ -3,6 +3,10 @@
 One bounded task per session. Each has a pass condition written before work starts.
 Status: `todo` | `doing` | `done YYYY-MM-DD` | `blocked (why)`.
 
+## Handoff 2026-09-10
+
+Everything on the board through task 29 is done, committed and pushed; the working tree is clean, 310 tests and 47 goldens pass, the push run 34536039008 was green with all ten sources ok, and the live page shows the three credit-union charts. The only open v1 item is task 8, whose count restarted today: the 2026-09-09 and 2026-09-10 scheduled runs were amber because the 2026-09-08 G.19 release revised Q1 2026 revolving credit (the job still says 'success' for amber), and the goldens and fixtures were re-based on that release in commit ab6772d. First thing next session: `uv run python checks/verify_releases.py`; if the two newest scheduled runs are green, mark task 8 done and v1 is closed. Then task 30 (FDIC realized card yield) is the next bounded task; task 31 stays blocked on SEC access from the home ISP. Two routines were added to the open items today and should not be rediscovered: what to do after each G.19 release (verify_g19, re-base, refresh fixtures, re-pin the reading strings) and how to rebase local task commits over the bot's daily refresh commits. The credit union finding (losses above banks, two of the four on the 18 percent cap) is in the findings bullet and is a candidate for the next thesis revision, not a task yet.
+
 ## v1: five fetchers, three panels, self-updating
 
 | # | Task | Pass condition | Status |
