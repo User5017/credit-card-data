@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-09T00:01:18Z",
+  "generated_at": "2026-09-10T00:03:10Z",
   "sources": {
     "fdic": {
       "source": "fdic",
@@ -8,7 +8,7 @@
         "issuer crosswalk: all 35 charter names match the FDIC institution records"
       ],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-09T00:01:18Z",
+      "pulled_at": "2026-09-10T00:03:10Z",
       "rows": 28942,
       "n_series": 216,
       "n_revisions": 0
@@ -17,22 +17,20 @@
       "source": "fred",
       "status": "golden_mismatch",
       "messages": [
-        "54 revised value(s) since last load",
-        "4 new row(s)",
         "golden check failed: g19_revolving_sa_2026_03: got 1338.18, expected 1338 +/-0.06 (Fed G.19 release of 2026-08-07, Revolving, SA, 'Q1 2026' column (quarter-end level))"
       ],
       "last_period_end": "2026-09-02",
-      "pulled_at": "2026-09-09T00:01:18Z",
+      "pulled_at": "2026-09-10T00:03:10Z",
       "rows": 13056,
       "n_series": 26,
-      "n_revisions": 54
+      "n_revisions": 0
     },
     "nyfed_hhdc": {
       "source": "nyfed_hhdc",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-09T00:01:18Z",
+      "pulled_at": "2026-09-10T00:03:10Z",
       "rows": 1200,
       "n_series": 12,
       "n_revisions": 0
@@ -42,7 +40,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-09T00:01:18Z",
+      "pulled_at": "2026-09-10T00:03:10Z",
       "rows": 2006,
       "n_series": 52,
       "n_revisions": 0
@@ -52,7 +50,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-09T00:01:18Z",
+      "pulled_at": "2026-09-10T00:03:10Z",
       "rows": 2804,
       "n_series": 51,
       "n_revisions": 0
@@ -64,7 +62,7 @@
         "issuer crosswalk: 4 of 28 top-25 institution names in the 2025-12-31 TCCP file are not in issuers.csv: America First Federal Credit Union, Boeing Employees' Credit Union, Navy Federal Credit Union, Pentagon Federal Credit Union"
       ],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-09-09T00:01:18Z",
+      "pulled_at": "2026-09-10T00:03:10Z",
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
