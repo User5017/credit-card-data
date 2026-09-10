@@ -38,8 +38,10 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 ## Fetcher contract (src/carddash/fetchers/<source>.py)
 - `SOURCE` and `fetch(meta, raw_dir, session, pulled_at) -> DataFrame` in the facts schema.
 - Pull the full history every run. Idempotent. Save the raw download under `raw_dir/latest/` before parsing.
-  One documented exception: the BEA NIPA flat file is 36.7 MB, so `fetchers/bea.py` saves only the lines of the series in
-  series.csv (header included, the file's own format) and parses the full file in memory.
+  Two documented exceptions: the BEA NIPA flat file is 36.7 MB, so `fetchers/bea.py` saves only the lines of the series in
+  series.csv (header included, the file's own format) and parses the full file in memory; the NCUA call-report zips are
+  about 8 MB for each of 41 quarters, so `fetchers/ncua.py` writes a per-quarter extract (the tracked credit unions plus
+  the industry sums) under `raw_dir/quarters/` and downloads only quarters without an extract plus the newest two.
 - Parse by header text, never by column position. Fail loudly on anything unexpected.
 - Never write facts.csv, health.json, or DuckDB. The loader does that.
 - Send the pipeline's own User-Agent (src/carddash/http.py). The CFPB's edge blocks browser-like agents sent from
@@ -68,10 +70,12 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   come from sql/<source>_facts.sql, which the fetcher runs in memory: aggregation choices stay in SQL.
 - Keep this repo out of OneDrive.
 
-## Sources (nine as of 2026-09-08)
+## Sources (ten as of 2026-09-10)
 fred, tccp, phillyfed, nyfed_hhdc, fdic, nyfed_sce (credit access, four-monthly), nyfed_sce_monthly (core survey),
-bea (PCE by type of product, keyless flat file), census (Monthly Retail Trade workbook). Each has a typical release lag in
-`RELEASE_RHYTHM` (render.py) that the health strip turns into a 'next expected' date.
+bea (PCE by type of product, keyless flat file), census (Monthly Retail Trade workbook), ncua (5300 call report quarterly
+zips, per-quarter extracts). Each has a typical release lag in `RELEASE_RHYTHM` (render.py) that the health strip turns
+into a 'next expected' date. After each G.19 release run `uv run python checks/verify_g19.py`; a revision that moves a
+live golden shows as fred `golden_mismatch` (amber, the job still passes) until the golden is re-based.
 
 ## Rendering
 - docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON. That now
