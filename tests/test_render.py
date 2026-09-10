@@ -229,7 +229,7 @@ def test_checks_list_the_golden_numbers_of_the_chart(page):
     by_id = {c["id"]: c for c in payload["charts"]}
     checks = by_id["revolving_level"]["checks"]
     assert len(checks) == 5 and all(c["ok"] for c in checks)
-    assert checks[0]["period"] == "Jun 2026" and checks[0]["expected"] == 1351.1  # newest first
+    assert checks[0]["period"] == "Jun 2026" and checks[0]["expected"] == 1354.4  # newest first
     assert checks[0]["origin_url"].startswith("https://www.federalreserve.gov/releases/g19/")
     assert "Checked against the release (5)" in html
     assert {c["id"] for c in by_id["card_apr"]["checks"]} == {
@@ -255,7 +255,8 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     labels = [h["label"] for h in items]
     assert labels[0].startswith("Revolving consumer credit") and len(items) == 12  # no 30+ delinquency fixture
     rev = items[0]["text"]
-    assert rev == "$1,351bn in Jun 2026, +3.8% on the year"  # October 2024 was higher, so no 'highest since' flag
+    # the 2026-09-08 G.19 vintage added July 2026 at $1,357bn, above the October 2024 peak, so the record flag fires
+    assert rev == "$1,357bn in Jul 2026, +3.6% on the year, highest on record (since Jan 1968)"
     # the flag logic on a synthetic series: a record, a three-year high, and a value with no flag
     base = fixture_facts[(fixture_facts["metric"] == "revolving_credit_sa")].sort_values("period_end").copy()
     record = base.copy()
@@ -268,7 +269,7 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     assert apr.startswith("22.15% in 2026 Q2, ") and "pp on the year" in apr and BENCHMARK_LABEL in apr
     sloos = next(h for h in items if h["label"].startswith("Banks tightening"))["text"]
     assert sloos.startswith("6.70% in 2026 Q2") and BENCHMARK_LABEL not in sloos  # a net balance has no benchmark
-    assert ('<strong><a href="#revolving_level" title="Go to the chart">Revolving consumer credit, all lenders (Fed G.19, SA)</a>:</strong> $1,351bn in Jun 2026' in html)
+    assert ('<strong><a href="#revolving_level" title="Go to the chart">Revolving consumer credit, all lenders (Fed G.19, SA)</a>:</strong> $1,357bn in Jul 2026' in html)
     text = (tmp_paths.docs / "latest.txt").read_text(encoding="utf-8")
     assert text.startswith("US credit card data, latest readings (") and "- Revolving consumer credit" in text
     assert 'href="latest.txt"' in html
@@ -484,7 +485,7 @@ def test_page_carries_link_previews_nav_and_next_release(page, tmp_paths, fixtur
     html, payload = page
     head = html.split("</head>")[0]
     assert '<meta property="og:image" content="https://user5017.github.io/credit-card-data/img/revolving_level.png">' in head
-    assert '<meta name="description" content="Revolving consumer credit, all lenders: $1,351bn in Jun 2026; ' in head
+    assert '<meta name="description" content="Revolving consumer credit, all lenders: $1,357bn in Jul 2026; ' in head
     assert '<meta name="twitter:card" content="summary_large_image">' in head
     assert '<link rel="icon" href="data:image/svg+xml,' in head
     assert '<nav class="nav" aria-label="Sections">' in html and 'href="#panel-performance"' in html
@@ -499,7 +500,7 @@ def test_page_carries_link_previews_nav_and_next_release(page, tmp_paths, fixtur
     assert '<a class="chartlink" href="#card_nco"' in html
     # next expected release per source, from the newest loaded period plus the typical lag
     health = html.split('<h2 id="health">')[1]
-    assert "Jul 2026 data expected any day (around 2026-09-07)" in health  # due yesterday: within the grace week
+    assert "Aug 2026 data expected around 2026-10-08" in health  # July loaded (2026-09-08 vintage): month end plus 38 days
     assert "2026 Q3 data expected around 2026-11-11" in health  # NY Fed HHDC: quarter end plus 42 days
     assert 'id="theme"' in html and '@media (max-width: 640px)' in html
 

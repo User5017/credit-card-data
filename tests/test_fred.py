@@ -25,8 +25,8 @@ def test_revolsl_month_end_and_billions(meta):
     assert facts["entity_type"].unique().tolist() == ["aggregate"]
     june = facts[facts["period_end"] == pd.Timestamp("2026-06-30")]
     assert len(june) == 1
-    # G.19 release table (2026-08-07) shows June 2026 revolving, SA = $1,351.1 bn
-    assert abs(june["value"].iloc[0] - 1351.1) < 0.06
+    # G.19 release table (2026-09-08) shows June 2026 revolving, SA = $1,354.4 bn (revised from 1,351.1 on 2026-08-07)
+    assert abs(june["value"].iloc[0] - 1354.4) < 0.06
     # every period_end is a month end
     assert (facts["period_end"] == facts["period_end"] + pd.offsets.MonthEnd(0)).all()
 

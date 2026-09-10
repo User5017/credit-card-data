@@ -57,10 +57,10 @@
   period_type: M
   period_end: 2026-03-31
   source: fred
-  expected: 1338.0
+  expected: 1338.2
   tolerance: 0.06
   check_live: true
-  origin: "Fed G.19 release of 2026-08-07, Revolving, SA, 'Q1 2026' column (quarter-end level)"
+  origin: "Fed G.19 release of 2026-09-08, Revolving, SA, 'Q1 2026' column (quarter-end level; 1338.0 in the 2026-08-07 release, revised with the July data)"
   origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
 
 - id: g19_revolving_sa_2026_05
@@ -70,10 +70,10 @@
   period_type: M
   period_end: 2026-05-31
   source: fred
-  expected: 1344.3
+  expected: 1347.7
   tolerance: 0.06
   check_live: false
-  origin: "Fed G.19 release of 2026-08-07, Revolving, SA, 'May 2026' column. Recent month, will be revised; fixture-only."
+  origin: "Fed G.19 release of 2026-09-08, Revolving, SA, 'May 2026' column (1344.3 in the 2026-08-07 release). Recent month, will be revised; fixture-only."
   origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
 
 - id: g19_revolving_sa_2026_06
@@ -83,10 +83,10 @@
   period_type: M
   period_end: 2026-06-30
   source: fred
-  expected: 1351.1
+  expected: 1354.4
   tolerance: 0.06
   check_live: false
-  origin: "Fed G.19 release of 2026-08-07, Revolving, SA, 'Jun 2026' column. Recent month, will be revised; fixture-only."
+  origin: "Fed G.19 release of 2026-09-08, Revolving, SA, 'Jun 2026' column (1351.1 in the 2026-08-07 release). Recent month, will be revised; fixture-only."
   origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
 
 - id: g19_card_apr_all_2026_q1
@@ -428,10 +428,10 @@
   period_type: M
   period_end: 2026-06-30
   source: fred
-  expected: 1202.6
+  expected: 1206.0
   tolerance: 0.06
   check_live: false
-  origin: "Same table, Revolving, Depository institutions, 'Jun 2026 p' column (preliminary, fixture-only)"
+  origin: "Same table, Revolving, Depository institutions, 'Jun 2026' column of the 2026-09-08 release (1202.6 p in the 2026-08-07 release; fixture-only)"
   origin_url: https://www.federalreserve.gov/releases/g19/current/default.htm
 
 # SLOOS card demand: the July 2026 survey's Table 1, question 24, publishes bank counts and shares, not the net

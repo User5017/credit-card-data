@@ -20,11 +20,16 @@ import yaml
 G19_URL = "https://www.federalreserve.gov/releases/g19/current/default.htm"
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-# golden metric -> (row label on the page, which table)
+# golden metric -> (row label on the page, which table). Series that exist per holder are keyed on (metric, entity)
+# and read from the 'by major holder' table, where each holder label appears three times (total, revolving,
+# nonrevolving); the revolving block is the second occurrence.
 ROW_FOR_METRIC = {
     "revolving_credit_sa": ("Revolving", "level_sa"),
     "card_apr_all_accounts": ("All accounts", "rates"),
     "card_apr_assessed_interest": ("Accounts assessed interest", "rates"),
+    ("revolving_credit_nsa", "DEPOSITORY_INSTITUTIONS"): ("Depository institutions", "holder_revolving"),
+    ("revolving_credit_nsa", "CREDIT_UNIONS"): ("Credit unions", "holder_revolving"),
+    ("revolving_credit_nsa", "FINANCE_COMPANIES"): ("Finance companies", "holder_revolving"),
 }
 
 
@@ -78,6 +83,13 @@ def parse_tables(page: str) -> list[dict[str, dict[str, str]]]:
 
 
 def find_row(tables, label: str, kind: str) -> dict[str, str] | None:
+    if kind == "holder_revolving":
+        # the outstanding-by-holder table (Total above $4,000bn), not the flows table with the same row labels
+        for t in tables:
+            total = [n for n in (_num(v) for v in t.get("Total", {}).values()) if n is not None]
+            if total and max(total) > 4000 and f"{label}#1" in t:
+                return t[f"{label}#1"]
+        return None
     for t in tables:
         for name, row in t.items():
             if not name.split("#")[0] == label:
@@ -126,7 +138,11 @@ def main() -> int:
     for e in entries:
         if "g19" not in e.get("origin_url", ""):
             continue
-        label, kind = ROW_FOR_METRIC[e["metric"]]
+        key = (e["metric"], e["entity"]) if (e["metric"], e["entity"]) in ROW_FOR_METRIC else e["metric"]
+        if key not in ROW_FOR_METRIC:
+            print(f"SKIP {e['id']}: no page row mapped for {key}")
+            continue
+        label, kind = ROW_FOR_METRIC[key]
         row = find_row(tables, label, kind)
         cands = columns_for(dt.date.fromisoformat(str(e["period_end"])), e["period_type"])
         col, got = None, None
