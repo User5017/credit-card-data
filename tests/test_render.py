@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+from pathlib import Path
 import shutil
 
 import pandas as pd
@@ -14,6 +15,7 @@ from PIL import Image
 from carddash.loader import write_facts
 from carddash.render import (
     BENCHMARK_LABEL,
+    _connect,
     PANELS,
     _benchmark,
     _new_periods,
@@ -29,7 +31,7 @@ RUN1 = "2026-09-06T00:00:00Z"
 RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
 POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service"}
-ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly", "bea", "census")
+ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly", "bea", "census", "ncua")
 
 
 def _health(generated_at: str, sources=("fred",), status="ok") -> dict:
@@ -63,13 +65,13 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Spend", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 48
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 51
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
     assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
-    assert "9 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
+    assert "10 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
 
@@ -286,7 +288,7 @@ def test_card_badge_and_last_attempt_when_a_source_is_not_ok(tmp_paths, fixture_
     assert by_id["nco_by_issuer"]["status"] == "failed" and by_id["nco_by_issuer"]["attempted"] == "2026-09-08"
     assert "data as of 2026-09-07" in by_id["nco_by_issuer"]["footer"]  # the data on the chart is still the last good load
     assert '<span class="badge st-failed"' in html and "last fetch attempt 2026-09-08" in html
-    assert "2 of 9 sources need attention (Failed)" in html
+    assert "2 of 10 sources need attention (Failed)" in html
 
 
 def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_facts):
@@ -539,3 +541,40 @@ def test_spend_panel(page):
     cross = ids["card_volume_vs_retail"]
     assert {s["source"] for s in cross["series"]} == {"phillyfed", "census"} and cross["footer_lines"]
     assert '<section class="panel" id="panel-spend">' in html
+
+
+def test_credit_union_charts(page):
+    _, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    loans = ids["credit_union_card_loans"]
+    assert loans["series"][0]["last_period"] == "2026 Q1" and abs(loans["data"][1][-1] - 86.039) < 0.001
+    rates = ids["credit_union_card_rates"]
+    navy = [v for v in rates["data"][2] if v is not None]
+    assert abs(navy[-1] - 18.0) < 0.001  # Navy Federal on the 18 percent cap (the grid runs to the bank series' 2026 Q2)
+    assert {s["source"] for s in rates["series"]} == {"fred", "ncua"}
+    losses = ids["credit_union_card_losses"]
+    assert len(losses["series"]) == 4 and losses["series"][3]["dash"]
+    assert [v for v in losses["data"][4] if v is not None]  # the bank rate draws; the credit union rates need
+    # consecutive quarters, which the fixture extracts (2016, 2021, 2023, 2026) do not give: see test_ncua_rates_view
+
+
+def test_ncua_rates_view(tmp_paths, meta):
+    """De-cumulated year-to-date charge-offs, annualized over average loans, and the 60+ day share."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent))
+    from test_ncua import _cus, _zip
+    from carddash.fetchers import ncua
+    from carddash.series import series_for_source
+    q1 = ncua.extract(_zip("3/31/2026 0:00:00", _cus()), 2026, 1)
+    cus = _cus()
+    for cu in cus:
+        cus[cu].update({"396": 100, "680": 10, "681": 2, "045B": 3})
+    q2 = ncua.extract(_zip("6/30/2026 0:00:00", cus), 2026, 2)
+    facts = coerce_facts(ncua.to_facts([q1, q2], series_for_source(meta, ncua.SOURCE), RUN2))
+    con = _connect(facts, tmp_paths.views_sql, tmp_paths.tccp_products_csv, tmp_paths.issuers_csv)
+    rows = con.execute("SELECT period_end, nco_q, nco_rate_annualized, dq_share FROM v_ncua_rates WHERE entity = 'NCUA:BECU' ORDER BY period_end").fetchall()
+    con.close()
+    assert rows[0][1] == pytest.approx(3e-9) and rows[0][2] is None  # Q1: YTD net 4 - 1 = 3, no prior quarter for the average
+    assert rows[1][1] == pytest.approx(5e-9)  # Q2: (10 - 4) - (2 - 1) = 5 dollars, in billions
+    assert rows[1][2] == pytest.approx(100 * 4 * 5 / 100)  # 20 percent annualized on average loans of 100
+    assert rows[1][3] == pytest.approx(3.0)

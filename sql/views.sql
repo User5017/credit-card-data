@@ -284,3 +284,38 @@ SELECT f.metric, f.entity, f.entity_type, f.tier, f.period_type, f.source, CAST(
 FROM facts f
 JOIN t ON t.metric = f.metric AND t.period_end = CAST(f.period_end AS DATE)
 WHERE f.source = 'census' AND f.entity <> 'NAICS:44X72' AND t.total > 0;
+
+-- NCUA card rates: the quarterly net charge-off flow de-cumulated from the year-to-date accounts (Q1 is the YTD
+-- figure, later quarters are YTD minus the previous quarter's YTD in the same year), annualized over the average of
+-- the beginning and end-of-quarter card loans, and the 60+ day delinquency share. Keyed on the charge-off series so
+-- render.py can select the rate fields.
+CREATE OR REPLACE VIEW v_ncua_rates AS
+WITH f AS (
+  SELECT entity, entity_type, tier, period_type, source, CAST(period_end AS DATE) AS period_end, metric, value
+  FROM facts WHERE source = 'ncua'
+),
+w AS (
+  SELECT entity, entity_type, tier, period_type, source, period_end,
+         max(CASE WHEN metric = 'ncua_card_loans' THEN value END) AS loans,
+         max(CASE WHEN metric = 'ncua_card_charge_offs_ytd' THEN value END) AS co_ytd,
+         max(CASE WHEN metric = 'ncua_card_recoveries_ytd' THEN value END) AS rec_ytd,
+         max(CASE WHEN metric = 'ncua_card_delinquent_60plus' THEN value END) AS dq
+  FROM f GROUP BY entity, entity_type, tier, period_type, source, period_end
+),
+q AS (
+  SELECT *,
+         lag(period_end) OVER (PARTITION BY entity ORDER BY period_end) AS prev_end,
+         lag(loans) OVER (PARTITION BY entity ORDER BY period_end) AS prev_loans,
+         lag(co_ytd) OVER (PARTITION BY entity ORDER BY period_end) AS prev_co,
+         lag(rec_ytd) OVER (PARTITION BY entity ORDER BY period_end) AS prev_rec
+  FROM w
+)
+SELECT 'ncua_card_charge_offs_ytd' AS metric, entity, entity_type, tier, period_type, source, period_end,
+       loans, dq, 100.0 * dq / loans AS dq_share,
+       CASE WHEN month(period_end) = 3 THEN co_ytd - rec_ytd
+            WHEN prev_end = last_day(period_end - INTERVAL 3 MONTH) THEN (co_ytd - prev_co) - (rec_ytd - prev_rec) END AS nco_q,
+       CASE WHEN prev_end = last_day(period_end - INTERVAL 3 MONTH) AND (prev_loans + loans) > 0 THEN
+            100.0 * 4 * (CASE WHEN month(period_end) = 3 THEN co_ytd - rec_ytd
+                              ELSE (co_ytd - prev_co) - (rec_ytd - prev_rec) END) / ((prev_loans + loans) / 2.0) END AS nco_rate_annualized
+FROM q
+WHERE loans > 0;

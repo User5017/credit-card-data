@@ -52,6 +52,7 @@ RELEASE_RHYTHM = {
     "nyfed_sce_monthly": ("sce_miss_payment_prob", "SCE_ALL", "M", 10),  # August 2026 landed 2026-09-08
     "bea": ("pce_total_saar", "US_HOUSEHOLDS", "M", 27),  # July 2026 on 2026-08-26
     "census": ("retail_sales_sa", "NAICS:44X72", "M", 45),  # June 2026 in the workbook with the 2026-08-14 release
+    "ncua": ("ncua_card_loans", "NCUA_FICU", "Q", 65),  # a quarter's zip lands about two months after quarter end
 }
 
 SOURCE_LABELS = {
@@ -64,6 +65,7 @@ SOURCE_LABELS = {
     "nyfed_sce_monthly": "Federal Reserve Bank of New York, Survey of Consumer Expectations (monthly)",
     "bea": "Bureau of Economic Analysis, personal consumption expenditures by type of product (NIPA monthly)",
     "census": "Census Bureau, Monthly Retail Trade Survey",
+    "ncua": "NCUA, 5300 Call Report quarterly data (credit unions)",
 }
 STATUS_LABELS = {
     "ok": "OK",
@@ -201,6 +203,12 @@ FLOWS_NOTE = (
     "charge-offs); charge-offs are left inside payments because the Y-14 publishes a charge-off rate rather than a "
     "dollar amount, which overstates the payment rate by a few tenths of a point. A rising payment rate with a falling "
     "revolving share means the growth is transactors, not borrowers. " + Y14_NOTE
+)
+NCUA_NOTE = (
+    "NCUA 5300 Call Report, quarterly, from 2016 Q1: unsecured credit card loans on the credit union's own books, "
+    "dollars as reported. The industry line sums federally insured credit unions (federal charters and federally "
+    "insured state charters), the population the NCUA's quarterly data summary reports. Credit unions are outside "
+    "the FDIC data on this page, and four of them are top-25 card issuers in the CFPB survey."
 )
 PCE_NOTE = (
     "BEA personal consumption expenditures by type of product, monthly, seasonally adjusted at annual rates, in "
@@ -365,6 +373,20 @@ PANELS = [
                 "notes": [FDIC_ROLLUP_NOTE],
                 "series": issuer_series("fdic_card_loans", "v_fdic_issuer", "value"),
             },
+            {
+                "id": "credit_union_card_loans",
+                "title": "Card loans at credit unions",
+                "unit": "usd_bn",
+                "step": True,
+                "notes": [NCUA_NOTE],
+                "series": [
+                    S("ncua_card_loans", "NCUA_FICU", "All federally insured credit unions", period_type="Q", source="ncua"),
+                    S("ncua_card_loans", "NCUA:NAVY_FEDERAL", "Navy Federal", period_type="Q", source="ncua"),
+                    S("ncua_card_loans", "NCUA:PENFED", "PenFed", period_type="Q", source="ncua"),
+                    S("ncua_card_loans", "NCUA:BECU", "BECU", period_type="Q", source="ncua"),
+                    S("ncua_card_loans", "NCUA:AMERICA_FIRST", "America First", period_type="Q", source="ncua"),
+                ],
+            },
         ],
     },
     {
@@ -396,6 +418,26 @@ PANELS = [
                       view="v_apr_spread", field="prime"),
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Spread over prime, percentage points", period_type="Q",
                       view="v_apr_spread", field="spread_over_prime", unit="pp", dash=True),
+                ],
+            },
+            {
+                "id": "credit_union_card_rates",
+                "title": "Card interest rates at credit unions against the bank APR",
+                "unit": "pct",
+                "step": True,
+                "since": "2016-01-01",
+                "notes": [
+                    "The interest rate each credit union reports on its credit card loans (NCUA call report, account "
+                    "521, the rate on the largest share of the portfolio) against the average APR on bank card accounts "
+                    "assessed interest (G.19). Federal credit unions are capped at 18 percent by the NCUA board, which "
+                    "is why the lines sit below the bank rate and why Navy Federal's rests on the cap. " + NCUA_NOTE
+                ],
+                "series": [
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Banks: APR on accounts assessed interest (G.19)", period_type="Q"),
+                    S("ncua_card_rate", "NCUA:NAVY_FEDERAL", "Navy Federal", period_type="Q", source="ncua"),
+                    S("ncua_card_rate", "NCUA:PENFED", "PenFed", period_type="Q", source="ncua"),
+                    S("ncua_card_rate", "NCUA:BECU", "BECU", period_type="Q", source="ncua"),
+                    S("ncua_card_rate", "NCUA:AMERICA_FIRST", "America First", period_type="Q", source="ncua"),
                 ],
             },
             {
@@ -617,6 +659,30 @@ PANELS = [
                 + [
                     S("fdic_card_nco_q", "FDIC_ALL_INSURED", "All FDIC-insured institutions", period_type="Q", source="fdic",
                       view="v_fdic_rates", field="nco_rate_annualized", dash=True),
+                ],
+            },
+            {
+                "id": "credit_union_card_losses",
+                "title": "Credit union card net charge-off rate, annualized, against banks",
+                "unit": "pct",
+                "step": True,
+                "since": "2016-01-01",
+                "notes": [
+                    "Net charge-offs on credit union card loans, de-cumulated from the year-to-date call report "
+                    "figures to the quarter, times four, over the average of the beginning and end-of-quarter card "
+                    "loans (sql/views.sql v_ncua_rates), the way the FDIC rate on this page is built. Against the "
+                    "Fed's charge-off rate for commercial banks. Credit unions lend to members on rates capped at 18 "
+                    "percent, so their loss rate is the read on a different underwriting model, not a different "
+                    "economy. " + NCUA_NOTE
+                ],
+                "series": [
+                    S("ncua_card_charge_offs_ytd", "NCUA_FICU", "All federally insured credit unions", period_type="Q", source="ncua",
+                      view="v_ncua_rates", field="nco_rate_annualized"),
+                    S("ncua_card_charge_offs_ytd", "NCUA:NAVY_FEDERAL", "Navy Federal", period_type="Q", source="ncua",
+                      view="v_ncua_rates", field="nco_rate_annualized"),
+                    S("ncua_card_charge_offs_ytd", "NCUA:PENFED", "PenFed", period_type="Q", source="ncua",
+                      view="v_ncua_rates", field="nco_rate_annualized"),
+                    S("card_nco_rate_sa", "COMBANKS_ALL", "Commercial banks (Fed, SA)", period_type="Q", dash=True),
                 ],
             },
             {

@@ -645,3 +645,32 @@
   check_live: false
   origin: "Same table, 454 Nonstore retailers, Jun. 2026 (p): 138,020. Preliminary, fixture-only."
   origin_url: https://www.census.gov/retail/marts/www/marts_current.pdf
+
+# NCUA Quarterly Credit Union Data Summary, 2026 Q1 (PDF): 'Credit card balances expanded by $2.2 billion, or 2.6
+# percent, to $86.0 billion' (page 3) and the table on page 15 prints year-end 2023 at 82.0. Federally insured credit
+# unions only (the fetcher sums FOICU types 1 and 2). The newest quarter is fixture-only; 2023 Q4 is live.
+- id: ncua_card_loans_2026_q1
+  metric: ncua_card_loans
+  entity: NCUA_FICU
+  tier: all
+  period_type: Q
+  period_end: 2026-03-31
+  source: ncua
+  expected: 86.0
+  tolerance: 0.06
+  check_live: false
+  origin: "NCUA Quarterly Credit Union Data Summary, 2026 Q1, page 3: 'Credit card balances expanded by $2.2 billion, or 2.6 percent, to $86.0 billion' (file sum over insured credit unions: 86.039)"
+  origin_url: https://ncua.gov/files/publications/analysis/quarterly-data-summary-2026-Q1.pdf
+
+- id: ncua_card_loans_2023_q4
+  metric: ncua_card_loans
+  entity: NCUA_FICU
+  tier: all
+  period_type: Q
+  period_end: 2023-12-31
+  source: ncua
+  expected: 82.0
+  tolerance: 0.06
+  check_live: true
+  origin: "Same report, page 15 table, 'Credit cards, $ Billions', December 2023 column: 82.0 (file sum: 82.010)"
+  origin_url: https://ncua.gov/files/publications/analysis/quarterly-data-summary-2026-Q1.pdf

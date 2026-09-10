@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from carddash.fetchers import bea, census, fdic, fred, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
+from carddash.fetchers import bea, census, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
 from carddash.series import load_series, series_for_source
@@ -111,9 +111,21 @@ def census_facts() -> pd.DataFrame:
     return coerce_facts(census.parse_release(CENSUS_FIXTURE, PULLED_AT))
 
 
+NCUA_FIXTURE_DIR = FIXTURES / "ncua"  # four quarterly extracts: 2016 Q1, 2021 Q4, 2023 Q4, 2026 Q1
+
+
+@pytest.fixture(scope="session")
+def ncua_facts(meta) -> pd.DataFrame:
+    """Facts from the checked-in NCUA extracts. The quarters are not consecutive, so each is loaded on its own and
+    concatenated: continuity is tested separately on synthetic extracts."""
+    frames = [ncua.to_facts([ncua.read_extract(p)], series_for_source(meta, ncua.SOURCE), PULLED_AT)
+              for p in sorted(NCUA_FIXTURE_DIR.glob("*.csv"))]
+    return coerce_facts(pd.concat(frames, ignore_index=True))
+
+
 @pytest.fixture(scope="session")
 def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, sce_facts, sce_monthly_facts,
-                  bea_facts, census_facts) -> pd.DataFrame:
+                  bea_facts, census_facts, ncua_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
@@ -127,6 +139,7 @@ def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, 
                 sce_monthly_facts,
                 bea_facts,
                 census_facts,
+                ncua_facts,
             ],
             ignore_index=True,
         )
