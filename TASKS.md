@@ -3,6 +3,48 @@
 One bounded task per session. Each has a pass condition written before work starts.
 Status: `todo` | `doing` | `done YYYY-MM-DD` | `blocked (why)`.
 
+## Handoff 2026-09-11 (late, after the cursor work)
+
+Task 40 is done and is the whole session: the 75 panel charts now share one cursor, so hovering any
+chart marks the same date on every other chart and each legend reads its own series at that date.
+The evidence is in the task row. Two things in it are worth knowing beyond the feature itself. First,
+the guard: a chart only answers for dates it actually holds and is currently showing, so hovering
+weekly jobless claims at its newest point leaves 9 of 75 charts reading out and CLEARS the other 66
+instead of letting uPlot clamp them to their endpoints and quote a value for a date they do not have.
+Second, a correctness fix that sync forced into the open: on step charts the cursor now lands on the
+period that CONTAINS the hovered date rather than the nearest period end, which was already wrong on
+a single chart (the stepped line is drawn with align -1) and is glaring across cadences, where the
+nearest annual period end to 2025-06-14 is 2024-12-31 and the containing one is 2025-12-31.
+
+Task 8 is still at 1 of 2. The 2026-09-10 scheduled run was green; the second is due about 22:00 UTC
+on 2026-09-11, which had not happened when this session ran (it was 15:16 UTC). Run
+`uv run python checks/verify_releases.py` first next session and close v1 if it passes. This session's
+push is a push-triggered run and does not count toward the scheduled pair.
+
+The thesis rewrite is STILL the next substantive task and has still not been started; nothing about it
+changed this session. See the previous handoff below for why three v1.8 findings force it.
+
+Also corrected this session: the PNG note in the open items claimed the runner/Windows byte difference
+settles once. It does not, it ping-pongs on every machine alternation, so all 75 images show as
+modified after any local render and that is noise. Check against the last local render, not HEAD.
+
+Suggested, NOT on the board (scope rule):
+- The single best remaining data source is task 31, the monthly issuer 8-K credit metrics, and it is
+  marked blocked for a reason that is about this machine rather than about the source. Scouted
+  2026-09-11 (through a proxy, NOT from the dev machine, whose ISP is still 403 on every SEC host, so
+  the blocker itself is unchanged): Capital One CIK 0000927628 files these as Item 7.01 on a monthly
+  rhythm (2026-08-17, 2026-07-21, 2026-06-15, 2026-05-15), self-filed, and the exhibit in the
+  2026-08-17 filing is `ex991july2026creditmetrics.htm`, a 24 KB HTML table, so it parses by header
+  text like every other fetcher here. The point of it: every issuer-level number on the page today is
+  quarterly and can be four and a half months old (Y-14 lands about 3.5 months after quarter end, FDIC
+  55 to 58 days), and this lands about two weeks after month end. Scope one session to Capital One
+  only and capture the fixture from a runner job; check whether Synchrony and Bread still file the same
+  way before promising four issuers.
+- The state data (106 series, 53 areas) is drawn as two range bands and a few named lines, which is the
+  worst form-to-data match on the page. A tile-grid cartogram with a year slider shows all 53 at once
+  and needs no new dependency (SVG rects, no geometry file). The cost is that it is a new mark type and
+  so sits outside the PANELS -> uPlot -> png.py pipeline.
+
 ## Handoff 2026-09-11 (evening)
 
 v1.8 (tasks 36, 37 and 38) is done on top of v1.7: the NY Fed workbook we already download is now read in full breadth
@@ -122,6 +164,12 @@ files were checked column by column and are fully loaded, all 47 series, nothing
 | 38 | NY Fed state-level card statistics (leg 1: was the loss cycle broad or concentrated?) | New `fetchers/nyfed_state.py` for area_report_by_year.xlsx: card debt per capita and card 90+ delinquency for the 50 states, DC, Puerto Rico and the nation, annual at Q4 from 2003 (106 series); the transposed layout parsed by header, the area list asserted, Puerto Rico's post-2016 trailing gap allowed and only at the end; no golden is possible, so the fetcher checks the national row sits inside the range across areas and a fixture test requires it to track the Quarterly Report to 0.6 points; `v_state_card`; three Distribution charts | done 2026-09-11 |
 | 39 | The test suite had become the bottleneck | The `page` fixture renders once per session instead of once per test (a `session_paths` fixture beside `tmp_paths`), since every render draws a PNG per chart through matplotlib and twenty-odd tests took the page; runtime falls from over ten minutes to under three and stops growing with the chart count | done 2026-09-11 |
 
+## v1.9: the charts talk to each other (2026-09-11, the user's "cursor?")
+
+| # | Task | Pass condition | Status |
+|---|------|----------------|--------|
+| 40 | Cursor sync across the page | Hovering any chart puts the crosshair on the same date on every other chart and each legend reads its own series at that date. The x scale only: `scales: ['x', null]`, `setSeries: false`, so no chart ever shares a y scale or a series focus with a chart in another unit. A chart whose data or whose current window does not cover the hovered date clears its cursor instead of letting uPlot clamp to an endpoint and read out a value for a date it does not have. On step (period) charts the cursor lands on the period that CONTAINS the hovered date rather than the nearest period end, which is the rule the stepped line is already drawn by (`align: -1`) and which matters across cadences: a date in March 2024 is in the annual period ending 2024-12-31, not the nearer 2023-12-31. The series browser at the foot of the page is deliberately left out: it is a separate tool with its own axis and it is never on screen at the same time as a panel chart. Tests: the panel charts carry the sync key, no chart syncs a y scale, the containing-period rule picks the later index, and the browser carries no sync key. Verified in headless Chrome with no console errors, by publishing a cursor from one chart and reading another chart's `cursor.idx` back. PNGs byte-identical, since this is client-side only | done 2026-09-11 (75 charts in the sync group, 0 sharing a y scale, 0 sharing a series focus. Headless Chrome, driving real mousemove events and reading the legends back: with no cursor 0 of 75 charts read out a period; hovering `card_nco` mid-window put 75 of 75 on 2023 Q4, reading it as '2023 Q4' on the quarterly charts, '2023-12-30' on weekly jobless claims and '2023' on the annual state chart; hovering weekly claims at its newest point left 9 of 75 reading out and cleared the other 66 rather than clamping them to their endpoints; a mouseleave cleared all 75; one mousemove cost 2.65 ms, so no throttling or viewport gating was needed. The containing-period rule was checked directly on the annual state chart: for 2025-06-14 the NEAREST period end is 2024-12-31 and the rule picks 2025-12-31. No console errors. PNGs: all 72 images the last local render produced are byte-identical to this render, so the feature changed no image bytes) |
+
 ## v1.5 (after two green releases)
 - Order (from the 2026-09-07 scouting): NY Fed SCE Credit Access first (direct xlsx, no gate, about half a session), then CFPB complaints via the trends endpoint (one session), then BEA PCE detail via the keyless NipaDataM.txt flat file (the API needs a key; half to one session), then Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx (the API needs a key even at low volume; one session). Details, URLs and risks in design/handoff-2026-09-07.html §3.
 - Spend panel.
@@ -190,5 +238,5 @@ files were checked column by column and are fully loaded, all 47 series, nothing
 - Page (v1.1): the NBER recession list lives in render.py RECESSIONS (peak month to trough month) and is the one place to add a new one. The 2015-2019 benchmark is the mean of the first series over that window. The default five-year window is a client-side setScale; the PNGs draw the same window. The headline block's 'highest/lowest since' needs a gap of at least three years to say anything, so most readings carry only the change on the year. Roll-up series (ISSUER:<id>) have no facts row, so their data-as-of is the source's newest load. The FDIC rate view needs consecutive quarters for the average-loans denominator; a charter with a gap shows no rate that quarter.
 - Credit One securitizes most of its receivables, so its on-book card loans ($2.0bn) understate the program; Stride Bank books $2.9bn of sponsor-program card loans with zero charge-offs (losses sit with the partners). Both are in the roll-up data but not on the issuer charts, which show the six largest books.
 - Task 8 check: `checks/verify_releases.py` lists the recent runs of the refresh workflow (scheduled by default, `--event push` for the others), matches each to the bot commit it pushed by the health.json generated_at inside the run's window, and prints every source's status; it exits 0 with PASS once the newest two scheduled runs are green with every source ok. The cron is 22:00 UTC; GitHub started the 2026-09-07 one at 00:08 UTC the next day, so expect delays of an hour or two. Needs `gh` and a fetched origin/main.
-- PNG export (task 7): the three images are drawn with matplotlib's bundled DejaVu Sans on the Agg backend. Bytes are stable across renders on one machine (tested); a different OS or freetype build (the Ubuntu runner versus this Windows machine) can shift a few pixels once, after which the runner's bytes are the stable ones. If the first runner commit rewrites all three images, that is why. The images carry the chart caption (source, cadence, latest period) but never the pull date.
+- PNG export (task 7): the images are drawn with matplotlib's bundled DejaVu Sans on the Agg backend. Bytes are stable across renders on one machine (tested); a different OS or freetype build (the Ubuntu runner versus this Windows machine) shifts a few pixels. CORRECTED 2026-09-11: this is not a one-off that settles on the runner's bytes, it is a ping-pong. Every render alternation rewrites every image, and the byte counts flip between exactly two values per machine (docs/img/y14_utilization.png is 60022 bytes rendered on this Windows machine and 67036 on the runner, and it has flipped on each of the last three commits that changed machine). So `git status` after any local `carddash render` shows all 75 images modified and that is noise, not a change: check it by comparing against the last LOCAL render, not against HEAD. Do not commit local image bytes unless the data actually moved; restore them with `git checkout -- docs/img` and let the scheduled run on the runner own them. The images carry the chart caption (source, cadence, latest period) but never the pull date.
 - What changed (task 7): revisions.csv does not exist yet, so the block shows revisions only after the first real revision (likely the next G.19 release). New periods are 'beyond the previously loaded frontier' per source and cadence; a value revised in an old period is never a new period, and a first load prints a count and the latest period rather than a list.

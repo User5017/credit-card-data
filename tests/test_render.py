@@ -721,3 +721,30 @@ def test_state_charts(page):
     debt = ids["state_card_debt_range"]
     assert debt["unit"] == "usd" and debt["data"][4][-1] == 4350  # the national row, dollars per adult
     assert "rose in every one of the 51 areas" in html
+
+def test_the_page_shares_one_cursor_across_the_charts_on_x_only(page):
+    """Hovering any chart marks the same date on every other chart.
+
+    The behaviour is a browser matter and was verified in headless Chrome (task 40): hovering one
+    chart at a date inside its window made all 75 read out that date, hovering the weekly chart at
+    its newest point left only the 9 charts whose data runs that far, a mouseleave cleared all 75,
+    and one mousemove cost 2.65 ms. What a test can hold here is the wiring, and the three ways it
+    could go quietly wrong: a shared y scale or series focus would carry one chart's unit onto a
+    chart in another unit; a chart answering for a date it does not hold would let uPlot clamp to
+    an endpoint and read out a value for the wrong period; and on step charts the nearest period
+    end is not the period that contains the date.
+    """
+    html, _ = page
+    cursor = html.split("D.charts.forEach")[1].split("---- browse every series ----")[0]
+    assert "sync: { key: SYNC_KEY" in cursor
+    assert "scales: ['x', null]" in cursor and "setSeries: false" in cursor
+    # a chart outside the hovered date clears its cursor instead of clamping to an endpoint
+    assert "xv < xs[0] || xv > xs[n - 1] || xv < sc.min || xv > sc.max" in cursor
+    assert "u.setCursor({ left: -10, top: -10 })" in cursor
+    # only the cursor is shared: zoom, drag and dblclick stay per chart
+    assert "type !== 'mousemove' && type !== 'mouseleave'" in cursor
+    # period data reads the period that CONTAINS the date; continuous data keeps uPlot's nearest
+    assert "dataIdx: c.step ? containingIdx : null" in cursor
+    assert "return closestIdx + 1 < xs.length ? closestIdx + 1 : closestIdx;" in html
+    # the series browser keeps its own cursor: it is never on screen with a panel chart
+    assert "SYNC_KEY" not in html.split("---- browse every series ----")[1]

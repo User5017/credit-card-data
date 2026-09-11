@@ -452,9 +452,42 @@ read the scope note before comparing it with anything.</p>
     ctx.restore();
   }
 
+  // ---- one cursor for the whole page ----
+  // Hovering any chart marks the same date on every other chart. The x scale only: the charts are
+  // in different units, so sharing a y scale or a series focus would be meaningless. The series
+  // browser at the foot of the page is deliberately left out: it is a separate tool with its own
+  // axis and it is never on screen at the same time as a panel chart.
+  var SYNC_KEY = 'carddash';
+
+  // Period data is drawn as a step aligned to the period end, so the segment under the pointer
+  // belongs to the period that CONTAINS the date, not to the nearest period end. Across cadences
+  // that is the whole point: a date in March 2024 sits in the annual period ending 2024-12-31,
+  // while the NEAREST period end is 2023-12-31.
+  function containingIdx(u, seriesIdx, closestIdx, xVal) {
+    if (closestIdx == null) return closestIdx;
+    var xs = u.data[0];
+    if (xVal <= xs[closestIdx]) return closestIdx;
+    return closestIdx + 1 < xs.length ? closestIdx + 1 : closestIdx;
+  }
+
   D.charts.forEach(function (c) {
     var el = document.querySelector('[data-chart="' + c.id + '"]');
     if (!el) return;
+    var u, xs = c.data[0], n = xs.length;
+
+    // This chart answers the page cursor only for dates it actually holds and is currently showing.
+    // Otherwise uPlot clamps to an endpoint and the legend reads out a value for a date that is not
+    // on this chart at all. Zoom and dblclick stay per-chart: only the cursor is shared.
+    function covers(type, src, sx) {
+      if (!u || !src || src === u) return false;
+      if (type !== 'mousemove' && type !== 'mouseleave') return false;
+      var sc = u.scales.x, xv = sx < 0 ? null : src.posToVal(sx, 'x');
+      if (xv == null || xv < xs[0] || xv > xs[n - 1] || xv < sc.min || xv > sc.max) {
+        u.setCursor({ left: -10, top: -10 });
+        return false;
+      }
+      return true;
+    }
     var series = [{ label: 'Period', value: function (u, ts) { return fmtPeriod(ts, c.period_type); } }];
     c.series.forEach(function (s, i) {
       var cfg = {
@@ -490,18 +523,21 @@ read the scope note before comparing it with anything.</p>
         { stroke: v('--muted'), grid: { stroke: v('--grid'), width: 1 }, ticks: { show: false }, size: 64,
           values: function (u, vals) { return vals.map(function (x) { return fmtAxis(x, c.unit); }); } }
       ],
-      cursor: { drag: { x: true, y: false } },
+      cursor: {
+        drag: { x: true, y: false },
+        dataIdx: c.step ? containingIdx : null,
+        sync: { key: SYNC_KEY, setSeries: false, scales: ['x', null], filters: { sub: covers } }
+      },
       legend: { show: true },
       padding: [null, LABEL_PAD, null, null],
       hooks: { drawClear: [shadeRecessions], draw: [labelEnds] }
     };
     // a band fills between two series: the range of terms offered across credit tiers
     if (c.band) opts.bands = [{ series: c.band, fill: v('--band') }];
-    var u = new uPlot(opts, c.data, el);
+    u = new uPlot(opts, c.data, el);
     window.addEventListener('resize', function () { u.setSize({ width: el.clientWidth, height: HEIGHT }); });
 
     // the page opens on the last N years; the button shows the full history
-    var xs = c.data[0], n = xs.length;
     var btn = document.querySelector('[data-range="' + c.id + '"]');
     if (btn && n > 1 && (xs[n - 1] - xs[0]) > (D.default_years + 0.5) * YEAR) {
       var full = false;
