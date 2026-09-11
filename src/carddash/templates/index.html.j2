@@ -29,6 +29,10 @@
   --series-5: #6b6a66; --series-6: #b5176a; --series-7: #8d5524; --series-8: #0e7c8a;
   --band: rgba(42,120,214,.12); --recession: rgba(11,11,11,.06);
   --good: #0ca30c; --warning: #d99a0b; --critical: #d03b3b;
+  /* Sequential ramp for the state map: ONE hue, light to dark, six steps. Magnitude, not identity,
+     so it never borrows the series colors. Each step ships the ink that clears 4.5:1 on it. */
+  --seq-0:#fdf0e6; --seq-1:#f9d6bb; --seq-2:#f2b58c; --seq-3:#e68a58; --seq-4:#d1602c; --seq-5:#a3400f;
+  --seq-ink-0:#0b0b0b; --seq-ink-1:#0b0b0b; --seq-ink-2:#0b0b0b; --seq-ink-3:#0b0b0b; --seq-ink-4:#0b0b0b; --seq-ink-5:#ffffff;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -39,6 +43,9 @@
     --series-5: #a3a29b; --series-6: #ef5aa0; --series-7: #d3945a; --series-8: #3cb7c8;
     --band: rgba(77,143,224,.18); --recession: rgba(255,255,255,.06);
     --warning: #fab219;
+    /* Dark is chosen, not flipped: the ramp's anchor moves so the high end carries weight on a dark surface. */
+    --seq-0:#3a2317; --seq-1:#5c3319; --seq-2:#85451c; --seq-3:#b05a22; --seq-4:#db7a34; --seq-5:#f7a35f;
+    --seq-ink-0:#ffffff; --seq-ink-1:#ffffff; --seq-ink-2:#ffffff; --seq-ink-3:#ffffff; --seq-ink-4:#0b0b0b; --seq-ink-5:#0b0b0b;
   }
 }
 :root[data-theme="dark"] {
@@ -49,7 +56,40 @@
   --series-5: #a3a29b; --series-6: #ef5aa0; --series-7: #d3945a; --series-8: #3cb7c8;
   --band: rgba(77,143,224,.18); --recession: rgba(255,255,255,.06);
   --warning: #fab219;
+  --seq-0:#3a2317; --seq-1:#5c3319; --seq-2:#85451c; --seq-3:#b05a22; --seq-4:#db7a34; --seq-5:#f7a35f;
+  --seq-ink-0:#ffffff; --seq-ink-1:#ffffff; --seq-ink-2:#ffffff; --seq-ink-3:#ffffff; --seq-ink-4:#0b0b0b; --seq-ink-5:#0b0b0b;
 }
+.statemap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px 16px; }
+.statemap .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 12px; }
+.statemap .controls label { font-size: 12px; color: var(--ink2); }
+.statemap input[type=range] { vertical-align: middle; }
+.tilegrid { display: grid; gap: 3px; grid-template-columns: repeat(12, minmax(0, 1fr)); max-width: 720px; }
+.tile { position: relative; aspect-ratio: 1/1; border-radius: 3px; display: flex; align-items: center;
+        justify-content: center; font-size: 11px; font-weight: 600; letter-spacing: .02em;
+        background: var(--grid); color: var(--muted); cursor: default; }
+.tile[data-has="1"] { cursor: pointer; }
+.tile.b0, .sw.b0 { background: var(--seq-0); }
+.tile.b0 { color: var(--seq-ink-0); }
+.tile.b1, .sw.b1 { background: var(--seq-1); }
+.tile.b1 { color: var(--seq-ink-1); }
+.tile.b2, .sw.b2 { background: var(--seq-2); }
+.tile.b2 { color: var(--seq-ink-2); }
+.tile.b3, .sw.b3 { background: var(--seq-3); }
+.tile.b3 { color: var(--seq-ink-3); }
+.tile.b4, .sw.b4 { background: var(--seq-4); }
+.tile.b4 { color: var(--seq-ink-4); }
+.tile.b5, .sw.b5 { background: var(--seq-5); }
+.tile.b5 { color: var(--seq-ink-5); }
+.tile:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.tile.hi { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.seqlegend { display: flex; align-items: center; gap: 0; margin: 12px 0 4px; max-width: 720px; }
+.seqlegend .sw { flex: 1; height: 12px; }
+.seqlegend .sw:first-child { border-radius: 3px 0 0 3px; } .seqlegend .sw:last-child { border-radius: 0 3px 3px 0; }
+.seqticks { display: flex; max-width: 720px; font-size: 11px; color: var(--muted); }
+.seqticks span { flex: 1; text-align: right; }
+.maptip { min-height: 2.6em; margin: 10px 0 0; font-size: 13px; color: var(--ink2); }
+.maptip b { color: var(--ink); }
+@media (max-width: 620px) { .tilegrid, .seqlegend, .seqticks { max-width: 100%; } .tile { font-size: 9px; } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
 main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
@@ -235,6 +275,27 @@ They are checked here on every refresh.</p>
   </div>
 </section>
 {% endfor %}
+
+<h2 id="statemap">Card distress by state</h2>
+<p class="lede">Every area the New York Fed publishes, one square each, in a rough map of the country. Squares are
+all the same size on purpose: this is not a map, and land area is not population. Drag the year to see the whole
+history, and hover a square for its reading.</p>
+<div class="statemap">
+  <div class="controls">
+    <label for="map-metric">Measure</label>
+    <select id="map-metric"></select>
+    <label for="map-year">Year</label>
+    <input type="range" id="map-year" min="0" step="1">
+    <output id="map-year-out" for="map-year"></output>
+    <button type="button" class="link" data-link="statemap" title="Copy a link to this map">Link</button>
+  </div>
+  <div class="tilegrid" id="tilegrid" role="img" aria-label="Card distress by state"></div>
+  <div class="seqlegend" id="map-legend" aria-hidden="true"></div>
+  <div class="seqticks" id="map-ticks"></div>
+  <p class="maptip" id="map-tip"></p>
+  <details><summary>Table (every area, the year shown)</summary><div id="map-table"></div></details>
+  <details><summary>About this map</summary><ul id="map-about"></ul></details>
+</div>
 
 <h2 id="browse">Browse every series</h2>
 <p class="lede">The panels above answer particular questions. This is everything the pipeline loads:
@@ -565,6 +626,133 @@ read the scope note before comparing it with anything.</p>
       t.innerHTML = html + '</tbody></table>';
     }
   });
+
+  // ---- card distress by state: a tile-grid cartogram ----
+  // Magnitude, so the color job is sequential: one hue over six steps, never the series palette (that channel
+  // means identity). Six bins because past about seven, adjacent classes stop being tellable apart. Bin edges are
+  // quantiles of the whole history of the chosen measure, not of the year on screen, so dragging the year moves
+  // the colors rather than re-cutting the scale under the reader.
+  (function () {
+    var M = D.state_map;
+    if (!M || !M.metrics.length) return;
+    var STEPS = 6;
+    var grid = document.getElementById('tilegrid');
+    var sel = document.getElementById('map-metric');
+    var slider = document.getElementById('map-year');
+    var yearOut = document.getElementById('map-year-out');
+    var legend = document.getElementById('map-legend');
+    var ticks = document.getElementById('map-ticks');
+    var tip = document.getElementById('map-tip');
+    var tableEl = document.getElementById('map-table');
+    var aboutEl = document.getElementById('map-about');
+    var cur = 0, yearIdx = M.years.length - 1, pinned = null;
+
+    M.metrics.forEach(function (m, i) {
+      var o = document.createElement('option');
+      o.value = String(i); o.textContent = m.label; sel.appendChild(o);
+    });
+    slider.max = String(M.years.length - 1);
+    slider.value = String(yearIdx);
+
+    function fmt(v, unit) { return v == null ? '–' : fmtVal(v, unit); }
+
+    // quantile edges over every area-year of this measure
+    function edges(m) {
+      if (m._edges) return m._edges;
+      var all = [];
+      Object.keys(m.values).forEach(function (code) {
+        var byYear = m.values[code];
+        Object.keys(byYear).forEach(function (y) { if (byYear[y] != null) all.push(byYear[y]); });
+      });
+      all.sort(function (a, b) { return a - b; });
+      var e = [];
+      for (var k = 1; k < STEPS; k++) e.push(all[Math.floor(all.length * k / STEPS)]);
+      m._edges = { cuts: e, lo: all[0], hi: all[all.length - 1] };
+      return m._edges;
+    }
+    function bin(v, e) {
+      if (v == null) return null;
+      for (var k = 0; k < e.cuts.length; k++) if (v < e.cuts[k]) return k;
+      return STEPS - 1;
+    }
+
+    function say(code, m, year) {
+      var val = (m.values[code] || {})[year];
+      var nat = m.national[year];
+      if (val == null) {
+        tip.innerHTML = '<b>' + code + '</b>, ' + year + ': no reading. Puerto Rico’s series stops in 2016.';
+        return;
+      }
+      var rel = nat == null ? '' : (val === nat ? ', the same as the nation'
+        : ', ' + fmtVal(Math.abs(val - nat), m.unit) + (val > nat ? ' above' : ' below') + ' the national '
+          + fmtVal(nat, m.unit));
+      tip.innerHTML = '<b>' + code + '</b>, ' + year + ': <b>' + fmtVal(val, m.unit) + '</b>' + rel + '.';
+    }
+
+    function draw() {
+      var m = M.metrics[cur], year = M.years[yearIdx], e = edges(m);
+      yearOut.textContent = String(year);
+      grid.innerHTML = '';
+      grid.style.gridTemplateRows = 'repeat(' + M.rows + ', minmax(0, 1fr))';
+      M.tiles.forEach(function (t) {
+        // NB: `v` is the CSS-variable helper from the top of this script; the reading is `val`
+        var val = (m.values[t.code] || {})[year], b = bin(val, e);
+        var el = document.createElement('div');
+        el.className = 'tile' + (pinned === t.code ? ' hi' : '');
+        el.style.gridRow = String(t.row + 1);
+        el.style.gridColumn = String(t.col + 1);
+        el.textContent = t.code;
+        el.setAttribute('data-code', t.code);
+        el.setAttribute('data-has', val == null ? '0' : '1');
+        if (b != null) el.classList.add('b' + b);   // a class, not an inline colour, so the theme stays live
+        el.title = t.code + ' ' + year + ': ' + fmt(val, m.unit);
+        grid.appendChild(el);
+      });
+      legend.innerHTML = '';
+      for (var k = 0; k < STEPS; k++) {
+        var sw = document.createElement('div');
+        sw.className = 'sw b' + k;
+        legend.appendChild(sw);
+      }
+      ticks.innerHTML = '';
+      e.cuts.concat([e.hi]).forEach(function (c) {
+        var sp = document.createElement('span');
+        sp.textContent = fmtVal(c, m.unit);
+        ticks.appendChild(sp);
+      });
+      var nat = m.national[year];
+      tip.innerHTML = pinned ? tip.innerHTML
+        : 'Nation, ' + year + ': <b>' + fmt(nat, m.unit) + '</b>. Hover a square for its reading.';
+
+      var order = M.tiles.map(function (t) { return [t.code, (m.values[t.code] || {})[year]]; })
+        .filter(function (r) { return r[1] != null; })
+        .sort(function (a, b2) { return b2[1] - a[1]; });
+      var html = '<table><thead><tr><th>Area</th><th>' + m.label + '</th></tr></thead><tbody>';
+      order.forEach(function (r) { html += '<tr><td>' + r[0] + '</td><td>' + fmtVal(r[1], m.unit) + '</td></tr>'; });
+      tableEl.innerHTML = html + '</tbody></table>';
+      aboutEl.innerHTML = '<li>' + m.note + '</li>'
+        + '<li>Squares are equal size, so this shows every area alike and never lets land area stand in for '
+        + 'population. Six bins, cut at quantiles of the whole history, so the scale does not move as you drag '
+        + 'the year.</li>'
+        + '<li>Puerto Rico is in the source and is not a state; its series stops in 2016.</li>';
+    }
+
+    sel.addEventListener('change', function () { cur = +sel.value; pinned = null; draw(); });
+    slider.addEventListener('input', function () { yearIdx = +slider.value; draw(); });
+    grid.addEventListener('mouseover', function (ev) {
+      var t = ev.target.closest('.tile');
+      if (t && !pinned) say(t.getAttribute('data-code'), M.metrics[cur], M.years[yearIdx]);
+    });
+    grid.addEventListener('click', function (ev) {
+      var t = ev.target.closest('.tile');
+      if (!t) return;
+      var code = t.getAttribute('data-code');
+      pinned = pinned === code ? null : code;
+      draw();
+      if (pinned) say(code, M.metrics[cur], M.years[yearIdx]);
+    });
+    draw();
+  })();
 
   // ---- browse every series ----
   (function () {

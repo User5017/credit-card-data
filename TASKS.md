@@ -224,6 +224,37 @@ What the exhibits actually look like, so nobody rediscovers it:
 - Not done: Synchrony, Bread and American Express. Check whether they still file monthly before promising them;
   each would need its own parser because the exhibit layout is per issuer.
 
+## v1.12: the state data gets a shape (2026-09-11, the user's "better viz?")
+
+| # | Task | Pass condition | Status |
+|---|------|----------------|--------|
+| 43 | A tile-grid cartogram for the state data | The 53 areas drawn as one equal square each in a rough map of the country, with a year slider over the full history, a measure switch, a per-square hover reading, a legend, and a table twin; a sequential ramp defined separately for light and dark; tests | done 2026-09-11 (52 squares plus the national row kept out of the grid and shown as the reference. Two measures, 90+ delinquency and card debt per person, 2003 to 2025. Replaces nothing: the three range charts stay, since they show the spread over time and the map shows one year across areas) |
+
+Why a tile grid rather than a real map: every area gets the same square, so Rhode Island is as visible as Texas and
+land area never stands in for population. It is not a map and the page says so.
+
+Colour decisions, because this is the first thing on the page that is not a line chart:
+- Magnitude, so the ramp is SEQUENTIAL: one hue over six steps. It deliberately does not touch --series-1..8,
+  which are the identity channel. Six bins because past about seven, adjacent classes stop being tellable apart.
+- Bin edges are quantiles of the WHOLE history of the chosen measure, not of the year on screen, so dragging the
+  year moves the colours instead of re-cutting the scale under the reader. That is what makes the finding legible:
+  drag from 2003 to 2025 and the map darkens almost everywhere, which is the recorded result that card delinquency
+  rose in every one of the 51 areas with a full history. The cost is that 2025 is mostly the top bin, and that is
+  the point rather than a defect.
+- Dark mode is a chosen ramp, not an inverted light one: the anchor flips so the high end is bright against the
+  dark surface. Both ramps were checked for monotonic lightness, and every step ships the ink colour that clears
+  4.5:1 on it (--seq-ink-N), so a two-letter label is legible on every square in both themes.
+- Bins are CSS classes, not inline colours, so the browser resolves the ramp live. The uPlot charts still read
+  their colours once at draw time, which is why the theme toggle reloads the page; the map would not need that.
+
+Two bugs caught by rendering it and looking at it, which is the only way they would have been caught:
+- The draw loop shadowed `v`, the CSS-variable helper, with a local named `v` holding the reading, so every square
+  called a number as a function and no tile rendered at all. The page threw before the probe attached its error
+  listener, so the console was empty; the screenshot is what showed it.
+- With inline colours the first screenshot came out with the DARK ramp under data-theme="light", because the
+  colour was frozen at draw time and the attribute was set afterwards. Real users never hit this (the toggle
+  reloads), but it is why the bins are classes now.
+
 ## v1.5 (after two green releases)
 - Order (from the 2026-09-07 scouting): NY Fed SCE Credit Access first (direct xlsx, no gate, about half a session), then CFPB complaints via the trends endpoint (one session), then BEA PCE detail via the keyless NipaDataM.txt flat file (the API needs a key; half to one session), then Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx (the API needs a key even at low volume; one session). Details, URLs and risks in design/handoff-2026-09-07.html §3.
 - Spend panel.

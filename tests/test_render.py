@@ -15,6 +15,7 @@ from PIL import Image
 from carddash.loader import write_facts
 from carddash.render import (
     BENCHMARK_LABEL,
+    STATE_TILES,
     VIEW_BOUNDS,
     VIEW_BOUNDS_UNCHECKED,
     _check_bounds,
@@ -818,3 +819,66 @@ def test_the_issuer_chart_draws_its_hole_instead_of_bridging_it(page):
     assert ids["nco_by_issuer"]["span_gaps"] is False
     assert ids["card_nco"]["span_gaps"] is True  # the default is unchanged
     assert any("FIA Card Services" in n for n in ids["nco_by_issuer"]["notes"])
+
+def test_the_state_map_covers_every_area_on_a_grid_with_no_collisions(page):
+    """A tile-grid cartogram: one equal square per area, so land area never stands in for population."""
+    _, payload = page
+    m = payload["state_map"]
+    codes = [t["code"] for t in m["tiles"]]
+    assert len(codes) == len(set(codes)) == len(STATE_TILES) == 52   # 50 states, DC, Puerto Rico
+    positions = [(t["row"], t["col"]) for t in m["tiles"]]
+    assert len(positions) == len(set(positions)), "two areas share a square"
+    assert all(0 <= r < m["rows"] and 0 <= c < m["cols"] for r, c in positions)
+    assert [x["key"] for x in m["metrics"]] == ["dq", "debt"]
+    assert m["years"] == sorted(m["years"]) and len(m["years"]) >= 20
+
+    dq = m["metrics"][0]
+    # every square carries a series, and the national row is kept out of the grid
+    assert set(dq["values"]) == set(codes)
+    assert "US" not in dq["values"] and "CCP_ALL" not in dq["values"]
+    assert dq["national"], "the national reference is missing"
+
+
+def test_the_state_map_ramp_is_one_hue_defined_in_both_themes(page):
+    """Magnitude takes a sequential ramp, and dark is a chosen ramp rather than a flipped light one."""
+    html, _ = page
+    head = html.split("* { box-sizing: border-box; }")[0]
+    # the light ramp sits on bare :root so a viewer with no preference still gets a complete palette
+    assert head.count("--seq-0:") == 3       # :root, the media query, and [data-theme="dark"]
+    assert head.count("--seq-ink-0:") == 3
+    light = head.split("--seq-0:")[1].split(";")[0].strip()
+    dark = head.split("--seq-0:")[2].split(";")[0].strip()
+    assert light != dark, "dark mode must define its own steps, not reuse the light ramp"
+    # the ramp never borrows the identity channel
+    for i in range(6):
+        assert f"--seq-{i}:" in head and f"--seq-ink-{i}:" in head
+    assert "--seq-0:#fdf0e6" in head and "--seq-5:#a3400f" in head          # light: light -> dark
+    assert "--seq-0:#3a2317" in head and "--seq-5:#f7a35f" in head          # dark: the anchor flips
+
+    # bins are classes, so the browser resolves the ramp live instead of a colour frozen at draw time
+    assert ".tile.b0, .sw.b0 { background: var(--seq-0); }" in html
+    assert "el.classList.add('b' + b)" in html
+
+
+def test_the_state_map_numbers_are_the_ones_the_source_published(page, fixture_facts):
+    """Spot values straight from the fixtures, so a broken join shows up as a wrong square."""
+    _, payload = page
+    dq = payload["state_map"]["metrics"][0]
+    rows = fixture_facts[
+        (fixture_facts["source"] == "nyfed_state")
+        & (fixture_facts["metric"] == "state_card_dq90_rate_balances")
+    ]
+    latest = max(payload["state_map"]["years"])
+    for code in ("NV", "WI", "CA"):
+        want = rows[(rows["entity"] == f"STATE:{code}") & (rows["period_end"].astype(str).str.startswith(str(latest)))]
+        assert dq["values"][code][str(latest)] == pytest.approx(float(want["value"].iloc[0]))
+    # Nevada has been the worst area for the whole history, which is why its square never lightens
+    assert dq["values"]["NV"][str(latest)] > dq["values"]["WI"][str(latest)]
+
+
+def test_puerto_rico_is_shown_but_its_series_stops(page):
+    """It is in the source and is not a state; the map draws the gap rather than carrying 2016 forward."""
+    _, payload = page
+    dq = payload["state_map"]["metrics"][0]
+    pr_years = sorted(int(y) for y in dq["values"]["PR"])
+    assert max(pr_years) < max(payload["state_map"]["years"]), "Puerto Rico should stop before the newest year"

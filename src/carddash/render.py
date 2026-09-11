@@ -1673,6 +1673,74 @@ VIEW_BOUNDS_UNCHECKED = frozenset({
 })
 
 
+# A tile-grid cartogram of the states: each area is one square in a rough map of the country. It is not a map and
+# does not pretend to be one -- every state gets the same square, so Rhode Island is as visible as Texas and the
+# reader is not misled by land area standing in for population. The layout is the widely used 8-row grid.
+# Puerto Rico sits apart on the bottom right because it is in the source but is not a state, and its series stops
+# in 2016 (the fetcher allows that trailing gap and only at the end).
+STATE_TILES = {
+    "AK": (0, 0),  "ME": (0, 11),
+    "VT": (1, 10), "NH": (1, 11),
+    "WA": (2, 1), "ID": (2, 2), "MT": (2, 3), "ND": (2, 4), "MN": (2, 5), "IL": (2, 6), "WI": (2, 7),
+    "MI": (2, 8), "NY": (2, 9), "RI": (2, 10), "MA": (2, 11),
+    "OR": (3, 1), "NV": (3, 2), "WY": (3, 3), "SD": (3, 4), "IA": (3, 5), "IN": (3, 6), "OH": (3, 7),
+    "PA": (3, 8), "NJ": (3, 9), "CT": (3, 10),
+    "CA": (4, 1), "UT": (4, 2), "CO": (4, 3), "NE": (4, 4), "MO": (4, 5), "KY": (4, 6), "WV": (4, 7),
+    "VA": (4, 8), "MD": (4, 9), "DE": (4, 10),
+    "AZ": (5, 2), "NM": (5, 3), "KS": (5, 4), "AR": (5, 5), "TN": (5, 6), "NC": (5, 7), "SC": (5, 8),
+    "DC": (5, 9),
+    "OK": (6, 4), "LA": (6, 5), "MS": (6, 6), "AL": (6, 7), "GA": (6, 8),
+    "HI": (7, 0), "TX": (7, 4), "FL": (7, 9), "PR": (7, 11),
+}
+
+STATE_MAP_METRICS = [
+    {
+        "key": "dq",
+        "metric": "state_card_dq90_rate_balances",
+        "label": "90+ days delinquent",
+        "unit": "pct",
+        "note": "Share of credit card balances 90 or more days delinquent, at the fourth quarter of each year.",
+    },
+    {
+        "key": "debt",
+        "metric": "state_card_debt_per_capita",
+        "label": "Card debt per person",
+        "unit": "usd",
+        "note": "Credit card debt per person with a credit report, dollars, at the fourth quarter of each year.",
+    },
+]
+
+
+def _state_map(con) -> dict:
+    """Every area's value per year for the tile map, plus the national line for comparison.
+
+    Drawn from facts, not from a view: the map wants one value per area per year, which is what the source
+    already stores. The national row (CCP_ALL) is kept out of the grid and shown as the reference in the legend.
+    """
+    out: dict = {"tiles": [{"code": c, "row": r, "col": col} for c, (r, col) in sorted(STATE_TILES.items())],
+                 "metrics": [], "rows": 8, "cols": 12}
+    years: set[int] = set()
+    for spec in STATE_MAP_METRICS:
+        rows = con.execute(
+            "SELECT entity, CAST(period_end AS DATE) AS d, value FROM facts "
+            "WHERE source = 'nyfed_state' AND metric = ? AND period_type = 'A' ORDER BY d",
+            [spec["metric"]],
+        ).fetchall()
+        values: dict[str, dict[int, float]] = {}
+        national: dict[int, float] = {}
+        for entity, d, value in rows:
+            year = d.year
+            years.add(year)
+            if entity == "CCP_ALL":
+                national[year] = value
+            elif entity.startswith("STATE:"):
+                values.setdefault(entity.split(":", 1)[1], {})[year] = value
+        out["metrics"].append({**{k: spec[k] for k in ("key", "label", "unit", "note")},
+                               "values": values, "national": national})
+    out["years"] = sorted(years)
+    return out
+
+
 def _series_rows(con, s: dict, since: str | None = None) -> list[tuple]:
     sql = (
         f"SELECT CAST(period_end AS DATE) AS d, {s['field']} AS v FROM {s['view']} "
@@ -2256,6 +2324,7 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
         charts = [_chart_payload(con, spec, meta_idx, health, golden, today) for spec in panel["charts"]]
         panels.append({"name": panel["name"], "blurb": panel["blurb"], "charts": charts})
     thesis = thesis_status(con, today)
+    state_map = _state_map(con)
     con.close()
 
     run = health_doc.get("generated_at")  # the stamp every row and revision of the latest refresh carries
@@ -2269,6 +2338,7 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
         "recessions": _recessions(),
         "charts": [c for p in panels for c in p["charts"]],
         "browse": browse,
+        "state_map": state_map,
     }
     payload_json = json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
     health_rows = _health_rows(health, _latest_by_source(facts, meta_idx, today), facts, today)
