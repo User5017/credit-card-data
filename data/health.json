@@ -1,14 +1,12 @@
 {
-  "generated_at": "2026-09-11T03:00:23Z",
+  "generated_at": "2026-09-11T03:09:13Z",
   "sources": {
     "bea": {
       "source": "bea",
       "status": "ok",
-      "messages": [
-        "1622 new row(s)"
-      ],
+      "messages": [],
       "last_period_end": "2026-07-31",
-      "pulled_at": "2026-09-11T02:52:47Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 8110,
       "n_series": 10,
       "n_revisions": 0
@@ -18,7 +16,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 4968,
       "n_series": 12,
       "n_revisions": 0
@@ -28,7 +26,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-05-31",
-      "pulled_at": "2026-09-11T03:00:23Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 6206,
       "n_series": 26,
       "n_revisions": 0
@@ -38,7 +36,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-11T03:00:23Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 11760,
       "n_series": 80,
       "n_revisions": 0
@@ -50,7 +48,7 @@
         "issuer crosswalk: all 35 charter names match the FDIC institution records"
       ],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 28942,
       "n_series": 216,
       "n_revisions": 0
@@ -58,11 +56,9 @@
     "fred": {
       "source": "fred",
       "status": "ok",
-      "messages": [
-        "6227 new row(s)"
-      ],
+      "messages": [],
       "last_period_end": "2026-09-09",
-      "pulled_at": "2026-09-11T02:52:47Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 21184,
       "n_series": 34,
       "n_revisions": 0
@@ -72,7 +68,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 984,
       "n_series": 24,
       "n_revisions": 0
@@ -82,7 +78,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 2422,
       "n_series": 25,
       "n_revisions": 0
@@ -92,7 +88,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 2006,
       "n_series": 52,
       "n_revisions": 0
@@ -102,7 +98,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-08-31",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 5724,
       "n_series": 36,
       "n_revisions": 0
@@ -112,7 +108,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 2804,
       "n_series": 51,
       "n_revisions": 0
@@ -124,7 +120,7 @@
         "issuer crosswalk: 4 of 28 top-25 institution names in the 2025-12-31 TCCP file are not in issuers.csv: America First Federal Credit Union, Boeing Employees' Credit Union, Navy Federal Credit Union, Pentagon Federal Credit Union"
       ],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-09-11T00:02:59Z",
+      "pulled_at": "2026-09-11T03:09:13Z",
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
