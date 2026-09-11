@@ -27,6 +27,10 @@
 #               sum of the five wealth groups to the tenth of a billion: consumer credit 4,988.2 (2023), 4,948.1 (2024),
 #               5,099.4 (2025); deposits 14,131.9 (2025, lines 6 plus 7); net worth 174,003.5 (2025). The 2026 Q1 sum
 #               (5,073.0) is 0.9bn above the September G.19's NSA total for March 2026 (vintage), so G.19 is not a golden.
+#   2026-09-11  nyfed_hhdc: the 2026-08-11 press release's transition-into-serious-delinquency table reproduces for
+#               every loan type read from the workbook: auto 3.00, mortgage 1.52, credit card 6.97 and student 7.83
+#               percent at 2026 Q2. Also checked, not golden: 90+ share of balances 12.92 (card), 5.49 (auto), 0.99
+#               (mortgage), 10.60 (student), 3.31 (all debt).
 #   2026-09-10  cfpb_cct: NO golden. No release page states the Consumer Credit Trends numbers; the biennial Consumer
 #               Credit Card Market Report counts from issuer data (89 million new accounts in 2024 against 83 million in
 #               the panel files). The fetcher checks the score and age files sum to within 6 percent of the total file
@@ -734,3 +738,42 @@
   check_live: false
   origin: "Z.1 Financial Accounts release of 2026-06-11, table S14.b, line 6 'Checkable deposits and currency' 5,351.7 plus line 7 'Time deposits and short-term investments' 8,780.2, 2025 column, billions; the DFA 'Deposits' sum over the five wealth groups at 2025 Q4"
   origin_url: https://www.federalreserve.gov/releases/z1/20260611/z1.pdf
+
+- id: hhdc_auto_transition_dq90_2026_q2
+  metric: hhdc_auto_transition_dq90
+  entity: CCP_ALL
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: nyfed_hhdc
+  expected: 3.00
+  tolerance: 0.006
+  check_live: true
+  origin: "NY Fed press release of 2026-08-11 (Household Debt and Credit, 2026 Q2), transition into serious delinquency by loan type: auto loan debt 3.00 percent"
+  origin_url: https://www.newyorkfed.org/newsevents/news/research/2026/20260811
+
+- id: hhdc_mortgage_transition_dq90_2026_q2
+  metric: hhdc_mortgage_transition_dq90
+  entity: CCP_ALL
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: nyfed_hhdc
+  expected: 1.52
+  tolerance: 0.006
+  check_live: true
+  origin: "Same release, transition into serious delinquency by loan type: mortgage debt 1.52 percent"
+  origin_url: https://www.newyorkfed.org/newsevents/news/research/2026/20260811
+
+- id: hhdc_student_transition_dq90_2026_q2
+  metric: hhdc_student_transition_dq90
+  entity: CCP_ALL
+  tier: all
+  period_type: Q
+  period_end: 2026-06-30
+  source: nyfed_hhdc
+  expected: 7.83
+  tolerance: 0.006
+  check_live: false
+  origin: "Same release, transition into serious delinquency by loan type: student loan debt 7.83 percent. Fixture-only: the series is still settling after the federal payment pause and the 2024 reporting restart, so a restatement is likelier here than on the other loan types"
+  origin_url: https://www.newyorkfed.org/newsevents/news/research/2026/20260811

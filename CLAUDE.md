@@ -82,6 +82,10 @@ live golden shows as fred `golden_mismatch` (amber, the job still passes) until 
 The one exception to the golden rule is cfpb_cct: no release page states its numbers (the CFPB's biennial report counts
 from issuer data and does not reconcile), so the fetcher checks that the score and age files sum to within 6 percent of
 the total file every month and the fixture test pins the dashboard's January 2026 readings instead.
+nyfed_hhdc reads the other five loan types (mortgage, home equity revolving, auto, student, other) beside the card
+columns, so card distress can be read against the other debts of the same households. Its sheets have four different
+first quarters and the student flows start a year late; `leading_gaps` in the sheet spec is the only concession, and it
+allows an empty cell before a column's first reading, never after.
 
 ## Rendering
 - docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON. That now

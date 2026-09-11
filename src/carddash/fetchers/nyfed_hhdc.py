@@ -30,9 +30,22 @@ Publication facts, verified 2026-09-07:
   10 billion; the flows did not move, and nothing changed between the 2025Q2 and 2026Q2 files. Revisions are rare
   and large, so the newest-quarter balance golden entry is fixture-only and the flow entries are checked live.
 - The limit sheet repeats the card balance to fewer decimals (up to $5 billion apart from 2009Q4 to 2012Q1, exact
-  from 2012Q2 on); it is loaded once, from the balance sheet. The age sheet's 'all' column is computed over borrowers with a known birth year and
-  differs from the loan-type sheet (6.9995 vs 6.97 for 2026Q2), so it is not loaded; the headline flow comes from
-  the loan-type sheet. Card balances by age or state are not in the workbook (only total debt is split that way).
+  from 2012Q2 on); it is loaded once, from the balance sheet. The by-age sheets' 'all' columns are computed over
+  borrowers with a known birth year and differ from the loan-type sheets (6.9995 vs 6.97 for 2026Q2), so they are
+  not loaded; every all-ages figure comes from the by-loan-type sheet, which also keeps one series from being
+  written twice. Card balances by age or state are not in the workbook (only total debt is split that way).
+- Loaded scope: the card columns, and since 2026-09-11 the other five loan types beside them (mortgage, home
+  equity revolving, auto, student, other) on the three sheets that publish all of them, the debt-by-age balance
+  sheet, and the by-age transition sheets for all debt, auto and student loans. The point is comparison: the same
+  panel measures every debt of the same households the same way, so card delinquency against auto and mortgage is
+  a like-for-like reading in a way that figures from different regulators are not.
+- Four different first quarters, all deliberate: the loan-type sheets start 2003 Q1, student loans start 2004 Q1 on
+  the two flow sheets only (the `leading_gaps` rule in parse_sheet), the by-age transition sheets start 2000 Q1,
+  and the debt-by-age sheet starts 1999 Q1, which is why two-digit years pivot at 90 rather than always meaning
+  the 2000s.
+- The student loan lines are flat from 2020 to 2023 because the federal payment pause stopped paused loans from
+  going delinquent, and jump from 2024 as reporting restarts. That is an administrative break, not distress, and
+  the chart note on the page says so.
 - Press releases: https://www.newyorkfed.org/newsevents/news/research/<year>/<yyyymmdd>. Report PDF:
   .../householdcredit/data/pdf/HHDC_<year>Q<n>.pdf. Suggested citation: Federal Reserve Bank of New York,
   Quarterly Report on Household Debt and Credit, Consumer Credit Panel/Equifax.
@@ -63,9 +76,17 @@ MAX_WALK_BACK = 8  # quarters; the report lands five to seven weeks after quarte
 XLSX_MAGIC = b"PK\x03\x04"
 TRILLIONS_TO_BILLIONS = 1000.0
 AGE_GROUPS = ("18-29", "30-39", "40-49", "50-59", "60-69", "70+")
+STUDENT_AGE_GROUPS = ("18-29", "30-39", "40-49", "50+")  # the student loan sheet stops splitting at 50
+
+# Column header -> the metric stem used for that loan type. The workbook spells the same six categories three ways
+# ('CC' on the delinquency sheets, 'Credit Card' on the account sheet), so each sheet lists its own headers; the
+# stems are shared so a chart can put one loan type's three measures side by side. 'other' is retail cards,
+# consumer finance and the rest; 'debt' is every loan type together, which the workbook calls ALL or Total.
+LOAN_STEMS = {"mortgage": "mortgage", "heloc": "heloc", "auto": "auto", "student": "student", "other": "other"}
 
 _DATA_SHEET_RE = re.compile(r"^Page \d+ Data$")
 _LABEL_RE = re.compile(r"^(\d{2}):Q([1-4])$")
+YEAR_PIVOT = 90  # '99:Q1' is 1999 (the debt-by-age sheet's first quarter), '00:Q1' is 2000
 _QUARTER_END_MONTH = {1: 3, 2: 6, 3: 9, 4: 12}
 _HEADER_SEARCH_ROWS = 10
 
@@ -83,7 +104,12 @@ SHEET_SPEC = [
         "title": "Number of Accounts by Loan Type",
         "unit": "Millions",
         "factor": 1.0,
-        "columns": [("Credit Card", "hhdc_card_accounts", ENTITY, "aggregate")],
+        "columns": [
+            ("Credit Card", "hhdc_card_accounts", ENTITY, "aggregate"),
+            ("Auto Loan", "hhdc_auto_accounts", ENTITY, "aggregate"),
+            ("Mortgage", "hhdc_mortgage_accounts", ENTITY, "aggregate"),
+            ("HE Revolving", "hhdc_heloc_accounts", ENTITY, "aggregate"),
+        ],
     },
     {
         # 'Credit Card Balance' here repeats the balance sheet's column to fewer decimals (checked in the tests, not
@@ -97,25 +123,79 @@ SHEET_SPEC = [
         "title": "Percent of Balance 90+ Days Delinquent by Loan Type",
         "unit": "Percent",
         "factor": 1.0,
-        "columns": [("CC", "hhdc_card_dq90_rate_balances", ENTITY, "aggregate")],
+        "columns": [
+            ("CC", "hhdc_card_dq90_rate_balances", ENTITY, "aggregate"),
+            ("MORTGAGE", "hhdc_mortgage_dq90_rate_balances", ENTITY, "aggregate"),
+            ("HELOC", "hhdc_heloc_dq90_rate_balances", ENTITY, "aggregate"),
+            ("AUTO", "hhdc_auto_dq90_rate_balances", ENTITY, "aggregate"),
+            ("STUDENT LOAN", "hhdc_student_dq90_rate_balances", ENTITY, "aggregate"),
+            ("OTHER", "hhdc_other_dq90_rate_balances", ENTITY, "aggregate"),
+            ("ALL", "hhdc_debt_dq90_rate_balances", ENTITY, "aggregate"),
+        ],
     },
     {
         "title": "New Delinquent* Balances by Loan Type",
         "unit": "Percent",
         "factor": 1.0,
-        "columns": [("CC", "hhdc_card_transition_dq30", ENTITY, "aggregate")],
+        "leading_gaps": ("STUDENT LOAN",),  # student loans start 2004 Q1, a year after the other types
+        "columns": [
+            ("CC", "hhdc_card_transition_dq30", ENTITY, "aggregate"),
+            ("AUTO", "hhdc_auto_transition_dq30", ENTITY, "aggregate"),
+            ("MORTGAGE", "hhdc_mortgage_transition_dq30", ENTITY, "aggregate"),
+            ("HELOC", "hhdc_heloc_transition_dq30", ENTITY, "aggregate"),
+            ("STUDENT LOAN", "hhdc_student_transition_dq30", ENTITY, "aggregate"),
+            ("OTHER", "hhdc_other_transition_dq30", ENTITY, "aggregate"),
+            ("Total", "hhdc_debt_transition_dq30", ENTITY, "aggregate"),
+        ],
     },
     {
+        # The 'ALL' column here, not page 24's 'all', is where hhdc_debt_transition_dq90/CCP_ALL comes from, and the
+        # per-loan-type 'all ages' rows come from here rather than from the by-age sheets, which repeat them.
         "title": "New Seriously Delinquent* Balances by Loan Type",
         "unit": "Percent",
         "factor": 1.0,
-        "columns": [("CC", "hhdc_card_transition_dq90", ENTITY, "aggregate")],
+        "leading_gaps": ("STUDENT LOAN",),  # same, 2004 Q1
+        "columns": [
+            ("CC", "hhdc_card_transition_dq90", ENTITY, "aggregate"),
+            ("AUTO", "hhdc_auto_transition_dq90", ENTITY, "aggregate"),
+            ("MORTGAGE", "hhdc_mortgage_transition_dq90", ENTITY, "aggregate"),
+            ("HELOC", "hhdc_heloc_transition_dq90", ENTITY, "aggregate"),
+            ("STUDENT LOAN", "hhdc_student_transition_dq90", ENTITY, "aggregate"),
+            ("OTHER", "hhdc_other_transition_dq90", ENTITY, "aggregate"),
+            ("ALL", "hhdc_debt_transition_dq90", ENTITY, "aggregate"),
+        ],
     },
+    {
+        "title": "Total Debt Balance by Age",
+        "unit": "Trillions of Dollars",
+        "factor": TRILLIONS_TO_BILLIONS,
+        "columns": [(g, "hhdc_debt_balances", f"AGE:{g}", "age") for g in AGE_GROUPS],
+    },
+    # The four by-age transition sheets. Each also carries an 'all' column repeating the by-loan-type sheet above,
+    # which is not read twice: the all-ages rows come from 'New Seriously Delinquent* Balances by Loan Type'.
     {
         "title": "Transition into Serious Delinquency (90+) for Credit Cards by Age",
         "unit": "Percent",
         "factor": 1.0,
         "columns": [(g, "hhdc_card_transition_dq90", f"AGE:{g}", "age") for g in AGE_GROUPS],
+    },
+    {
+        "title": "Transition into Serious Delinquency (90+) by Age",
+        "unit": "Percent",
+        "factor": 1.0,
+        "columns": [(g, "hhdc_debt_transition_dq90", f"AGE:{g}", "age") for g in AGE_GROUPS],
+    },
+    {
+        "title": "Transition into Serious Delinquency (90+) for Auto Loans by Age",
+        "unit": "Percent",
+        "factor": 1.0,
+        "columns": [(g, "hhdc_auto_transition_dq90", f"AGE:{g}", "age") for g in AGE_GROUPS],
+    },
+    {
+        "title": "Transition into Serious Delinquency (90+) for Student Loans by Age",
+        "unit": "Percent",
+        "factor": 1.0,
+        "columns": [(g, "hhdc_student_transition_dq90", f"AGE:{g}", "age") for g in STUDENT_AGE_GROUPS],
     },
     # The four sheets below cover all consumer debt on the credit report, not cards alone (the workbook does not
     # split them by loan type). Their metric names say debt, accounts or consumers rather than card, and their scope
@@ -188,7 +268,9 @@ def next_quarter(year: int, q: int) -> tuple[int, int]:
 def parse_quarter(label) -> tuple[int, int]:
     """'03:Q1' -> (2003, 1). A date cell (2003-03-01, how the account sheet labels 2003-2011) -> its quarter.
 
-    Two-digit years are read as 2000 + YY; the consecutive-quarter check in parse_sheet catches a 1999 row.
+    Two-digit years pivot at 90: '90:Q1' to '99:Q4' are the 1990s, '00:Q1' on are the 2000s. The panel starts in
+    1999 Q1 (the debt-by-age sheet) and the report has published no year before that, so the pivot cannot be
+    reached from the other side; the consecutive-quarter check in parse_sheet would catch it if it ever were.
     """
     if isinstance(label, dt.datetime):  # openpyxl hands date cells over as datetime
         return quarter_of(label.date())
@@ -197,7 +279,8 @@ def parse_quarter(label) -> tuple[int, int]:
     if isinstance(label, str):
         m = _LABEL_RE.match(label.strip())
         if m:
-            return 2000 + int(m.group(1)), int(m.group(2))
+            yy = int(m.group(1))
+            return (1900 if yy >= YEAR_PIVOT else 2000) + yy, int(m.group(2))
     raise ValueError(f"not a quarter label: {label!r}")
 
 
@@ -315,6 +398,11 @@ def parse_sheet(rows: list[tuple], spec: dict, name: str) -> pd.DataFrame:
 
     Rows after the header are either a quarter row (label in column A, consecutive with the previous one), or a row
     with nothing in the columns we read (blank lines, footnotes, the HE Revolving rows of the limit sheet).
+
+    A header named in the spec's `leading_gaps` may be empty in the sheet's first quarters and nowhere else: the
+    two delinquency-flow sheets start student loans in 2004 Q1, a year after the other loan types. The gap becomes
+    a shorter series (no facts rows for those quarters), never an interpolated value, and a hole that opens after
+    the series has begun still fails, so a column the NY Fed stops publishing is not silently thinned.
     """
     unit = _cell(rows[1], 0) if len(rows) > 1 else None
     if _norm(unit) != _norm(spec["unit"]):
@@ -323,6 +411,11 @@ def parse_sheet(rows: list[tuple], spec: dict, name: str) -> pd.DataFrame:
     h = _header_row(rows, headers, name)
     pos = _column_positions(rows[h], headers, name)
     factor = float(spec["factor"])
+    may_start_late = set(spec.get("leading_gaps", ()))
+    unknown = may_start_late - set(headers)
+    if unknown:
+        raise ValueError(f"{name}: leading_gaps names {sorted(unknown)}, which are not columns of this sheet")
+    started: set[str] = set()
     quarters: list[tuple[int, int]] = []
     values: list[dict[str, float]] = []
     for i, row in enumerate(rows[h + 1 :], start=h + 2):  # i is the 1-based row number in the sheet
@@ -342,7 +435,15 @@ def parse_sheet(rows: list[tuple], spec: dict, name: str) -> pd.DataFrame:
                 f"{name} row {i}: {quarter[0]}Q{quarter[1]} follows {prev[0]}Q{prev[1]}, quarters must be consecutive"
             )
         quarters.append(quarter)
-        values.append({hd: _num(_cell(row, j), hd, name, i) * factor for hd, j in pos.items()})
+        read: dict[str, float] = {}
+        for hd, j in pos.items():
+            cell = _cell(row, j)
+            if hd in may_start_late and hd not in started and not _norm(cell):
+                read[hd] = float("nan")  # still before this column's first reading
+                continue
+            read[hd] = _num(cell, hd, name, i) * factor
+            started.add(hd)
+        values.append(read)
     if not quarters:
         raise ValueError(f"{name}: no quarter rows after the header")
     index = pd.Index([pd.Timestamp(quarter_end(*q)) for q in quarters], name="period_end")
@@ -369,7 +470,11 @@ def parse_workbook(path: Path, expected_quarter: tuple[int, int] | None = None) 
 
 
 def to_facts(tables: dict[str, pd.DataFrame], pulled_at: str) -> pd.DataFrame:
-    """Wide tables -> facts rows for every column in SHEET_SPEC, one per quarter (parse_sheet allows no gaps)."""
+    """Wide tables -> facts rows for every column in SHEET_SPEC, one per quarter.
+
+    The only empty cells parse_sheet lets through are a `leading_gaps` column's quarters before it starts (student
+    loans on the two flow sheets). Those become no row at all, so the series simply begins later.
+    """
     frames = []
     for spec in SHEET_SPEC:
         wide = tables[spec["title"]]
@@ -387,7 +492,7 @@ def to_facts(tables: dict[str, pd.DataFrame], pulled_at: str) -> pd.DataFrame:
                     "pulled_at": pulled_at,
                 }
             )
-            frames.append(df[FACT_COLUMNS])
+            frames.append(df[FACT_COLUMNS].dropna(subset=["value"]))
     return pd.concat(frames, ignore_index=True)
 
 

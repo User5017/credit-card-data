@@ -66,7 +66,7 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Distribution", "Spend", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 65
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 72
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
@@ -661,3 +661,41 @@ def test_dfa_and_cct_views(page, fixture_facts, tmp_paths):
     ).fetchone()
     assert ages[0] == pytest.approx(100.0)
     con.close()
+
+
+def test_loan_type_charts_compare_cards_with_the_other_debts(page):
+    """The by-loan-type sheets of the same workbook: card distress against auto, mortgage and student."""
+    html, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    stock = ids["dq_by_loan_type"]
+    assert len(stock["series"]) == 7 and stock["series"][6]["dash"]
+    last = {s["label"]: stock["data"][i + 1][-1] for i, s in enumerate(stock["series"])}
+    assert last["Credit card"] > last["Auto loan"] > last["Mortgage"]  # 12.9, 5.5, 1.0 at 2026 Q2
+    assert last["Credit card"] > last["All household debt"]
+    flow = ids["dq_flow_by_loan_type"]
+    assert len(flow["series"]) == 7 and flow["series"][0]["last_period"] == "2026 Q2"
+    student = [v for v in flow["data"][2] if v is not None]
+    assert len(student) < flow["n_points"]  # student loans start a year late and are not back-filled
+    old = ids["age70_by_loan_type"]
+    vals = {s["label"]: old["data"][i + 1][-1] for i, s in enumerate(old["series"])}
+    assert vals["Credit card"] > vals["Auto loan"] > vals["All debt"]  # the over-70s' problem is card-specific
+    banks = ids["bank_losses_by_category"]
+    assert len(banks["series"]) == 4 and {s["source"] for s in banks["series"]} == {"fred"}
+    card, mortgage = banks["data"][1][-1], banks["data"][4][-1]
+    assert card > 10 * mortgage  # card charge-offs are an order of magnitude above mortgage
+    by_age = ids["debt_by_age"]
+    assert by_age["unit"] == "usd_bn" and len(by_age["series"]) == 6
+    assert by_age["n_points"] == 110  # the debt-by-age sheet starts in 1999, a year before the others
+    assert ids["student_dq_by_age"]["n_points"] > 80
+
+
+def test_consumer_loan_rates_chart(page):
+    """The G.19 rate survey's three loan types, the test of whether the card margin is a card decision."""
+    _, payload = page
+    rates = {c["id"]: c for c in payload["charts"]}["consumer_loan_rates"]
+    assert len(rates["series"]) == 4 and rates["period_type"] is None  # quarterly plus the monthly prime rate
+    card = [v for v in rates["data"][1] if v is not None][-1]
+    personal = [v for v in rates["data"][2] if v is not None][-1]
+    auto = [v for v in rates["data"][3] if v is not None][-1]
+    assert card > personal > auto  # 22.15, 11.86, 7.47
+    assert len(rates["footer_lines"]) == 4

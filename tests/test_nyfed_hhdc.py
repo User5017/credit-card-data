@@ -26,6 +26,9 @@ HTML_404 = (
 Q2_2026 = pd.Timestamp("2026-06-30")
 N_LOAN_TYPE_QUARTERS = 94  # 2003Q1 .. 2026Q2
 N_AGE_QUARTERS = 106  # 2000Q1 .. 2026Q2
+N_DEBT_AGE_QUARTERS = 110  # 1999Q1 .. 2026Q2, the debt-by-age sheet alone
+N_STUDENT_FLOW_QUARTERS = 90  # 2004Q1 .. 2026Q2: student loans start a year after the other loan types
+N_SERIES = 68
 
 
 def value(facts: pd.DataFrame, metric: str, period_end: str, entity: str = "CCP_ALL") -> float:
@@ -138,7 +141,8 @@ def test_fetch_end_to_end_with_a_fake_site(tmp_path, meta):
     facts = hhdc.fetch(meta, raw, session, "2026-09-07T12:00:00Z")
     assert (raw / "latest" / "HHD_C_Report.xlsx").read_bytes() == HHDC_FIXTURE.read_bytes()
     assert facts["period_end"].max() == Q2_2026
-    assert len(facts) == 19 * N_LOAN_TYPE_QUARTERS + 6 * N_AGE_QUARTERS
+    assert facts.groupby(SERIES_KEY).ngroups == N_SERIES
+    assert len(facts) == 6744  # the four start dates, checked series by series in the coverage test below
 
 
 # ---------- parsing the real release ----------
@@ -195,7 +199,7 @@ def test_facts_cover_every_series_in_series_csv_and_nothing_else(meta, hhdc_fact
     expected = set(mine[SERIES_KEY].itertuples(index=False, name=None))
     got = set(hhdc_facts[SERIES_KEY].drop_duplicates().itertuples(index=False, name=None))
     assert got == expected, f"missing {expected - got}, extra {got - expected}"
-    assert len(expected) == 25  # six card series, thirteen all-debt series, six age groups of the 90+ flow
+    assert len(expected) == N_SERIES
     errors, warnings = validate(hhdc_facts, mine)
     assert errors == []
     assert warnings == []
@@ -203,11 +207,23 @@ def test_facts_cover_every_series_in_series_csv_and_nothing_else(meta, hhdc_fact
     assert (hhdc_facts["tier"] == "all").all()
     assert set(hhdc_facts.loc[hhdc_facts["entity"] == "CCP_ALL", "entity_type"]) == {"aggregate"}
     assert set(hhdc_facts.loc[hhdc_facts["entity"].str.startswith("AGE:"), "entity_type"]) == {"age"}
+    # Every series runs from its sheet's first quarter to 2026 Q2 with no gaps. Four start dates, on purpose:
+    # the loan-type sheets begin 2003 Q1, student loans a year later on the two flow sheets, the by-age transition
+    # sheets 2000 Q1, and the debt-by-age sheet 1999 Q1.
+    first = hhdc_facts.groupby(["metric", "entity"])["period_end"].min()
     counts = hhdc_facts.groupby(["metric", "entity"])["period_end"].count()
-    is_age = counts.index.get_level_values("entity").str.startswith("AGE:")
-    assert (counts[~is_age] == N_LOAN_TYPE_QUARTERS).all()
-    assert (counts[is_age] == N_AGE_QUARTERS).all()
-    assert len(hhdc_facts) == 19 * N_LOAN_TYPE_QUARTERS + 6 * N_AGE_QUARTERS
+    for (metric, entity), start in first.items():
+        if metric == "hhdc_debt_balances":
+            expected_start, n = "1999-03-31", N_DEBT_AGE_QUARTERS
+        elif entity.startswith("AGE:"):
+            expected_start, n = "2000-03-31", N_AGE_QUARTERS
+        elif metric.startswith("hhdc_student_") and "transition" in metric:
+            expected_start, n = "2004-03-31", N_STUDENT_FLOW_QUARTERS
+        else:
+            expected_start, n = "2003-03-31", N_LOAN_TYPE_QUARTERS
+        assert start == pd.Timestamp(expected_start), (metric, entity, start)
+        assert counts[(metric, entity)] == n, (metric, entity)
+    assert len(hhdc_facts) == int(counts.sum())
 
 
 def test_limit_sheet_balance_column_tracks_the_balance_sheet():
@@ -241,11 +257,14 @@ def test_file_must_end_on_the_quarter_the_url_names():
 # ---------- format changes fail, on a small workbook in the report's layout ----------
 
 QUARTERS = ["25:Q4", "26:Q1", "26:Q2"]
+DECOY = "Unread Decoy Column"  # a header the spec never lists, to prove unlisted columns are ignored
 
 
 def write_workbook(path: Path, edit=None) -> Path:
-    """Every sheet in SHEET_SPEC with three quarters, an unread 'Mortgage' column, a footnote, and the limit sheet's
-    interleaved HE Revolving rows. `edit(title, rows)` may change a sheet before it is written."""
+    """Every sheet in SHEET_SPEC with three quarters, an unread decoy column, a footnote, and the limit sheet's
+    interleaved HE Revolving rows. `edit(title, rows)` may change a sheet before it is written.
+
+    The decoy is named so it collides with no real header: 'Mortgage', 'AUTO' and the rest are read columns now."""
     wb = Workbook()
     wb.active.title = "TABLE OF CONTENTS"
     for n, spec in enumerate(hhdc.SHEET_SPEC, start=3):
@@ -254,7 +273,7 @@ def write_workbook(path: Path, edit=None) -> Path:
             [spec["title"]],
             [spec["unit"], "Source: New York Fed Consumer Credit Panel/Equifax"],
             ["Return to Table of Contents"],
-            [None, "Mortgage"] + headers,
+            [None, DECOY] + headers,
         ]
         for k, q in enumerate(QUARTERS):
             rows.append([q, 100.0 + k] + [1.0 + k + 0.1 * c for c in range(len(headers))])
@@ -273,7 +292,7 @@ def write_workbook(path: Path, edit=None) -> Path:
 
 def test_synthetic_workbook_parses(tmp_path):
     facts = hhdc.parse_release(write_workbook(tmp_path / "ok.xlsx"), PULLED_AT, expected_quarter=(2026, 2))
-    assert len(facts) == 25 * len(QUARTERS)
+    assert len(facts) == N_SERIES * len(QUARTERS)
     assert value(facts, "hhdc_card_balances", "2026-06-30") == pytest.approx(3000.0)  # 3.0 trillion
     assert value(facts, "hhdc_card_limit", "2025-12-31") == pytest.approx(1000.0)
     assert value(facts, "hhdc_card_transition_dq90", "2025-12-31", "AGE:70+") == pytest.approx(1.5)
@@ -290,8 +309,8 @@ def _edit(fragment, fn):
 @pytest.mark.parametrize(
     "fragment, fn, match",
     [
-        ("Total Debt Balance", lambda rows: rows[0].__setitem__(0, "Total Debt by Loan Type"), "no data sheet titled"),
-        ("Total Debt Balance", lambda rows: rows[1].__setitem__(0, "Billions of $"), "unit cell A2 should be"),
+        ("Total Debt Balance and Its", lambda rows: rows[0].__setitem__(0, "Total Debt by Loan Type"), "no data sheet titled"),
+        ("Total Debt Balance and Its", lambda rows: rows[1].__setitem__(0, "Billions of $"), "unit cell A2 should be"),
         ("Number of Accounts", lambda rows: rows[3].__setitem__(2, "Cards"), "headers missing"),
         ("Number of Accounts", lambda rows: rows[3].__setitem__(1, "Credit Card"), "appears 2 times"),
         ("Percent of Balance 90", lambda rows: rows[5].__setitem__(2, "n/a"), "expected a number, got 'n/a'"),
@@ -299,7 +318,7 @@ def _edit(fragment, fn):
         ("Percent of Balance 90", lambda rows: rows[5].__setitem__(2, "nan"), "expected a number, got 'nan'"),
         ("Percent of Balance 90", lambda rows: rows[5].__setitem__(2, True), "expected a number, got True"),
         ("New Delinquent", lambda rows: rows[6].__setitem__(0, "26:Q3"), "2026Q3 follows 2026Q1, quarters must be consecutive"),
-        ("by Age", lambda rows: rows[4].__setitem__(0, "26:Q1"), "quarters must be consecutive"),
+        ("for Credit Cards by Age", lambda rows: rows[4].__setitem__(0, "26:Q1"), "quarters must be consecutive"),
         ("New Seriously", lambda rows: rows.insert(7, ["2026Q3", 1.0, 2.0]), "column A is '2026Q3', not a quarter"),
         ("New Seriously", lambda rows: rows.insert(7, ["Note", None, 2.0]), "values under \\['CC'\\]"),
     ],
@@ -333,3 +352,57 @@ def test_all_debt_sheets_reproduce_the_report_summary(hhdc_facts):
     for m in stages + ["hhdc_new_bankruptcies", "hhdc_collections_share", "hhdc_inquiries_6mo"]:
         s = hhdc_facts[hhdc_facts["metric"] == m]
         assert s["period_end"].min() == pd.Timestamp("2003-03-31") and len(s) == 94, m
+
+
+# ---------- the leading gap the two flow sheets need for student loans ----------
+
+
+def test_student_loan_flows_start_a_year_late_and_nothing_else_does(hhdc_facts):
+    """The workbook leaves STUDENT LOAN empty for 2003 on both flow sheets. That becomes a shorter series."""
+    for metric in ("hhdc_student_transition_dq30", "hhdc_student_transition_dq90"):
+        s = hhdc_facts[(hhdc_facts["metric"] == metric) & (hhdc_facts["entity"] == "CCP_ALL")]
+        assert s["period_end"].min() == pd.Timestamp("2004-03-31") and len(s) == N_STUDENT_FLOW_QUARTERS
+    # the same sheets' other columns are untouched
+    for metric in ("hhdc_card_transition_dq90", "hhdc_auto_transition_dq90", "hhdc_debt_transition_dq30"):
+        s = hhdc_facts[(hhdc_facts["metric"] == metric) & (hhdc_facts["entity"] == "CCP_ALL")]
+        assert s["period_end"].min() == pd.Timestamp("2003-03-31") and len(s) == N_LOAN_TYPE_QUARTERS
+    # the 90+ stock sheet has no gap: student loans are there from 2003 Q1
+    s = hhdc_facts[hhdc_facts["metric"] == "hhdc_student_dq90_rate_balances"]
+    assert s["period_end"].min() == pd.Timestamp("2003-03-31") and len(s) == N_LOAN_TYPE_QUARTERS
+
+
+def _flow_sheet_spec(leading_gaps=("STUDENT LOAN",)) -> dict:
+    return {
+        "title": "flow", "unit": "Percent", "factor": 1.0, "leading_gaps": leading_gaps,
+        "columns": [("CC", "m_cc", "CCP_ALL", "aggregate"), ("STUDENT LOAN", "m_sl", "CCP_ALL", "aggregate")],
+    }
+
+
+def _flow_rows(student: list) -> list[tuple]:
+    rows = [("flow",), ("Percent",), (None, "CC", "STUDENT LOAN")]
+    for q, sl in zip(QUARTERS, student):
+        rows.append((q, 1.0, sl))
+    return rows
+
+
+def test_a_leading_gap_shortens_the_series_but_a_hole_still_fails():
+    wide = hhdc.parse_sheet(_flow_rows([None, 2.0, 3.0]), _flow_sheet_spec(), "flow")
+    assert pd.isna(wide["STUDENT LOAN"].iloc[0]) and wide["STUDENT LOAN"].tolist()[1:] == [2.0, 3.0]
+    assert wide["CC"].tolist() == [1.0, 1.0, 1.0]  # a gap in one column does not touch the others
+    # a hole that opens after the column has started is a format change, not a late start
+    with pytest.raises(ValueError, match="expected a number, got None"):
+        hhdc.parse_sheet(_flow_rows([1.0, None, 3.0]), _flow_sheet_spec(), "flow")
+    # and a column not named in leading_gaps may not be empty at all
+    with pytest.raises(ValueError, match="expected a number, got None"):
+        hhdc.parse_sheet(_flow_rows([None, 2.0, 3.0]), _flow_sheet_spec(leading_gaps=()), "flow")
+
+
+def test_leading_gaps_must_name_a_real_column():
+    with pytest.raises(ValueError, match="leading_gaps names"):
+        hhdc.parse_sheet(_flow_rows([1.0, 2.0, 3.0]), _flow_sheet_spec(leading_gaps=("AUTO",)), "flow")
+
+
+def test_two_digit_years_pivot_at_1990():
+    assert hhdc.parse_quarter("99:Q1") == (1999, 1)  # the debt-by-age sheet's first quarter
+    assert hhdc.parse_quarter("90:Q4") == (1990, 4)
+    assert hhdc.parse_quarter("89:Q1") == (2089, 1)  # the other side of the pivot, never seen in a release

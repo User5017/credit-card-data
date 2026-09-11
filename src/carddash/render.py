@@ -146,6 +146,15 @@ def issuer_series(metric: str, view: str, field: str) -> list[dict]:
 
 
 AGE_GROUPS = ("18-29", "30-39", "40-49", "50-59", "60-69", "70+")
+STUDENT_AGE_GROUPS = ("18-29", "30-39", "40-49", "50+")  # the student loan sheet stops splitting at 50
+
+LOAN_TYPE_NOTE = (
+    "Every loan type on the same households' credit reports, measured the same way by the same panel, so the lines "
+    "are comparable in a way that figures from different regulators are not. 'Credit card' is bankcards; retail "
+    "cards and consumer finance loans sit in 'Other'. Mortgages and home equity lines are secured and belong on the "
+    "chart as the floor, not as a comparison. New York Fed Consumer Credit Panel/Equifax, quarterly, not "
+    "seasonally adjusted."
+)
 
 FDIC_ROLLUP_NOTE = (
     "FDIC Call Report data per bank charter, rolled up to the issuer (crosswalks/issuers.csv): Capital One is the sum "
@@ -448,6 +457,24 @@ PANELS = [
                       view="v_apr_spread", field="prime"),
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Spread over prime, percentage points", period_type="Q",
                       view="v_apr_spread", field="spread_over_prime", unit="pp", dash=True),
+                ],
+            },
+            {
+                "id": "consumer_loan_rates",
+                "title": "What banks charge by loan type: card, personal loan, new car",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "All three rates come from the same quarterly survey of the same banks, so the gap between them "
+                    "is a pricing decision and not a difference in measurement. A card margin that widened while "
+                    "personal and car loan rates tracked the policy rate is the issuer's choice; all three widening "
+                    "together would have been the cost of funds."
+                ],
+                "series": [
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Credit card, accounts assessed interest", period_type="Q"),
+                    S("personal_loan_rate_24m", "COMBANKS_ALL", "Personal loan, 24 month", period_type="Q"),
+                    S("auto_loan_rate_48m", "COMBANKS_ALL", "New car loan, 48 month", period_type="Q"),
+                    S("prime_rate", "COMBANKS_ALL", "Prime rate", period_type="M"),
                 ],
             },
             {
@@ -783,6 +810,77 @@ PANELS = [
                       period_type="Q", source="phillyfed"),
                     S("fdic_card_nco_q", "FDIC_ALL_INSURED", "Noncurrent (90+ or nonaccrual), share of card loans, all FDIC-insured banks",
                       period_type="Q", source="fdic", view="v_fdic_rates", field="noncurrent_share"),  # v_fdic_rates is keyed on the nco_q series
+                ],
+            },
+            {
+                "id": "dq_by_loan_type",
+                "title": "Balances 90+ days delinquent, by loan type",
+                "unit": "pct",
+                "step": True,
+                "notes": [LOAN_TYPE_NOTE],
+                "series": [
+                    S("hhdc_card_dq90_rate_balances", "CCP_ALL", "Credit card", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_student_dq90_rate_balances", "CCP_ALL", "Student loan", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_other_dq90_rate_balances", "CCP_ALL", "Other (retail cards, consumer finance)", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_auto_dq90_rate_balances", "CCP_ALL", "Auto loan", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_mortgage_dq90_rate_balances", "CCP_ALL", "Mortgage", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_heloc_dq90_rate_balances", "CCP_ALL", "Home equity revolving", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_debt_dq90_rate_balances", "CCP_ALL", "All household debt", period_type="Q", source="nyfed_hhdc", dash=True),
+                ],
+            },
+            {
+                "id": "dq_flow_by_loan_type",
+                "title": "Flow into 90+ day delinquency, by loan type",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "The same comparison in flow terms: balances going newly 90 or more days late each quarter, "
+                    "rather than the stock of balances already there. The card line is the thesis watch's own "
+                    "threshold series. " + LOAN_TYPE_NOTE
+                ],
+                "series": [
+                    S("hhdc_card_transition_dq90", "CCP_ALL", "Credit card", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_student_transition_dq90", "CCP_ALL", "Student loan", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_other_transition_dq90", "CCP_ALL", "Other (retail cards, consumer finance)", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_auto_transition_dq90", "CCP_ALL", "Auto loan", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_mortgage_transition_dq90", "CCP_ALL", "Mortgage", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_heloc_transition_dq90", "CCP_ALL", "Home equity revolving", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_debt_transition_dq90", "CCP_ALL", "All household debt", period_type="Q", source="nyfed_hhdc", dash=True),
+                ],
+            },
+            {
+                "id": "age70_by_loan_type",
+                "title": "Borrowers 70 and over: flow into 90+ day delinquency, by loan type",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "The oldest borrowers are the only age band whose card delinquency has kept rising, which the "
+                    "thesis note lists as something it cannot explain. Their auto loans and their debt as a whole "
+                    "are drawn beside it: the card line pulling away from the other two says the deterioration is "
+                    "about the card, not about the household's whole balance sheet. " + LOAN_TYPE_NOTE
+                ],
+                "series": [
+                    S("hhdc_card_transition_dq90", "AGE:70+", "Credit card", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_auto_transition_dq90", "AGE:70+", "Auto loan", period_type="Q", source="nyfed_hhdc"),
+                    S("hhdc_debt_transition_dq90", "AGE:70+", "All debt", period_type="Q", source="nyfed_hhdc"),
+                ],
+            },
+            {
+                "id": "bank_losses_by_category",
+                "title": "Net charge-off rate at commercial banks, by loan category",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "What banks actually wrote off, by what they lent it against, annualized and seasonally "
+                    "adjusted. Card losses run several times the all-loan rate in every cycle: the card is the "
+                    "riskiest asset a bank holds at scale, which is the other half of why it is priced the way it "
+                    "is. Compare with the same categories' delinquency rates in the chart above."
+                ],
+                "series": [
+                    S("card_nco_rate_sa", "COMBANKS_ALL", "Credit card", period_type="Q"),
+                    S("consumer_nco_rate_sa", "COMBANKS_ALL", "All consumer loans", period_type="Q"),
+                    S("all_loans_nco_rate_sa", "COMBANKS_ALL", "All loans and leases", period_type="Q"),
+                    S("mortgage_nco_rate_sa", "COMBANKS_ALL", "Single-family mortgages", period_type="Q"),
                 ],
             },
             {
@@ -1269,6 +1367,39 @@ PANELS = [
                 "series": [
                     S("hh_interest_payments_saar", "US_HOUSEHOLDS", "Interest paid, share of disposable income", source="bea",
                       view="v_interest_burden", field="share_of_income_pct"),
+                ],
+            },
+            {
+                "id": "debt_by_age",
+                "title": "Household debt balances by age of borrower",
+                "unit": "usd_bn",
+                "step": True,
+                "notes": [
+                    "All debt on the credit report, not cards alone: the workbook splits total debt by age and card "
+                    "debt only by delinquency flow. Read beside the consumer credit per household by age in the "
+                    "Distribution panel, which is the Fed's other household dataset and does divide by a "
+                    "population. " + HHDC_ALL_DEBT_NOTE
+                ],
+                "series": [
+                    S("hhdc_debt_balances", f"AGE:{g}", f"Ages {g}", period_type="Q", source="nyfed_hhdc")
+                    for g in AGE_GROUPS
+                ],
+            },
+            {
+                "id": "student_dq_by_age",
+                "title": "Student loan flow into 90+ day delinquency, by age",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "Student debt is the other claim on the same wallet, and the one that changed most: the flat "
+                    "stretch from 2020 to 2023 is the federal payment pause, during which paused loans could not go "
+                    "delinquent, and the jump from 2024 is reporting restarting rather than new distress. The "
+                    "borrowers whose student loans resumed are the same ones whose cards are on the page. This "
+                    "sheet splits at 50 rather than by decade. " + HHDC_ALL_DEBT_NOTE
+                ],
+                "series": [
+                    S("hhdc_student_transition_dq90", f"AGE:{g}", f"Ages {g}", period_type="Q", source="nyfed_hhdc")
+                    for g in STUDENT_AGE_GROUPS
                 ],
             },
             {
