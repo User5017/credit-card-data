@@ -170,6 +170,14 @@ LOAN_TYPE_NOTE = (
     "seasonally adjusted."
 )
 
+BOFA_CHARTER_NOTE = (
+    "Bank of America's line stops between 2001 and 2013 because its card business was not on this charter: "
+    "the card book at Bank of America, N.A. falls from $1.8bn in 2000 to between $2mn and $50mn for those "
+    "years, sitting instead at FIA Card Services (the former MBNA charter, not in the roll-up), and returns "
+    "at $102bn in 2014. A rate needs a book worth dividing by, so quarters under $100mn of card loans carry "
+    "no rate at all rather than a number like the 182.9% this chart used to draw for 2001 Q4."
+)
+
 FDIC_ROLLUP_NOTE = (
     "FDIC Call Report data per bank charter, rolled up to the issuer (crosswalks/issuers.csv): Capital One is the sum "
     "of Capital One, N.A., Discover Bank and Capital One Bank (USA) for their whole history, so its line does not jump "
@@ -903,7 +911,8 @@ PANELS = [
                 "unit": "pct",
                 "step": True,
                 "since": "2000-01-01",
-                "notes": [FDIC_RATE_NOTE, FDIC_ROLLUP_NOTE],
+                "span_gaps": False,  # Bank of America has no meaningful rate for 2001 to 2013: draw the hole
+                "notes": [FDIC_RATE_NOTE, FDIC_ROLLUP_NOTE, BOFA_CHARTER_NOTE],
                 "series": issuer_series("fdic_card_nco_q", "v_fdic_rates", "nco_rate_annualized")
                 + [
                     S("fdic_card_nco_q", "FDIC_ALL_INSURED", "All FDIC-insured institutions", period_type="Q", source="fdic",
@@ -1574,6 +1583,63 @@ def _key(s: dict) -> tuple:
     return (s["metric"], s["entity"], s["tier"], s["period_type"], s["source"])
 
 
+# Derived view fields never pass the loader's per-series vmin/vmax: that validates facts as they load, and
+# these are computed in SQL afterwards, so nothing checked them at all. The failure mode is always a
+# denominator that collapses. v_fdic_rates divided a real quarter of Bank of America charge-offs by the
+# $23mn residual card book it held in 2001 and the issuer chart drew a 182.9% annualised loss rate; the
+# same view reached -5,969% on charters that are not drawn. The floors in views.sql fix that at source and
+# these bounds are the backstop, so a view that starts producing impossible numbers fails the render rather
+# than publishing them. Bounds are deliberately loose: they are there to catch nonsense, not to trim data.
+VIEW_BOUNDS: dict[tuple[str, str], tuple[float, float]] = {
+    ("v_fdic_rates", "nco_rate_annualized"): (-25.0, 40.0),   # seen: -4.01 to 15.65
+    ("v_fdic_rates", "dq30_89_share"): (0.0, 25.0),           # seen: 0.25 to 6.26
+    ("v_fdic_rates", "noncurrent_share"): (0.0, 25.0),        # seen: 0.33 to 5.03
+    ("v_ncua_rates", "nco_rate_annualized"): (-25.0, 40.0),
+    ("v_y14_flows", "payment_rate"): (0.0, 150.0),            # charge-offs sit inside payments, so >100 is possible
+    ("v_y14_flows", "revolver_share"): (0.0, 100.0),
+    ("v_cct_shares", "share_pct"): (0.0, 100.0),
+    ("v_cct_shares", "below_prime_share_pct"): (0.0, 100.0),
+    ("v_dfa_shares", "share_pct"): (0.0, 100.0),
+    ("v_holder_share", "share_pct"): (0.0, 100.0),
+    ("v_retail_share", "share_pct"): (0.0, 100.0),
+    ("v_interest_burden", "effective_rate_pct"): (0.0, 40.0),
+    ("v_interest_burden", "share_of_income_pct"): (0.0, 25.0),
+    ("v_card_burden", "pct_of_disposable_income"): (0.0, 25.0),
+    ("v_tccp_offered_range", "hi"): (0.0, 100.0),
+    ("v_tccp_offered_range", "lo"): (0.0, 100.0),
+}
+
+# Left unbounded on purpose, so the omissions are decisions rather than oversights:
+#   v_growth.yoy_pct              a 12-month growth rate against the 2020 collapse is legitimately over
+#                                 100% (restaurants +117%) and legitimately very negative (-50%).
+#   v_dfa_shares.credit_to_net_worth_pct, .deposits_to_credit_pct
+#                                 ratios of one stock to another, not shares: the bottom half's consumer
+#                                 credit reached 599.9% of its net worth, which is the finding, not a bug.
+#   v_apr_spread.*, v_offered_vs_paid.spread_pct_pts
+#                                 spreads in percentage points, negative by construction when they invert.
+#   v_state_card.state_min/median/max
+#                                 the same field names carry percent on one chart and dollars on another,
+#                                 so one bound cannot fit both.
+#   v_hhdc_per_account.*, v_card_burden.revolving*, v_dfa_shares.credit_per_household, v_fdic_issuer.value
+#                                 dollar levels, not ratios: no denominator to collapse.
+#   v_sce_sums.combined           a sum of survey shares whose scale is set by the sheet, not derived.
+VIEW_BOUNDS_UNCHECKED = frozenset({
+    ("v_growth", "yoy_pct"),
+    ("v_dfa_shares", "credit_to_net_worth_pct"),
+    ("v_dfa_shares", "deposits_to_credit_pct"),
+    ("v_dfa_shares", "credit_per_household"),
+    ("v_apr_spread", "apr"), ("v_apr_spread", "prime"), ("v_apr_spread", "spread_over_prime"),
+    ("v_offered_vs_paid", "spread_pct_pts"),
+    ("v_state_card", "state_min"), ("v_state_card", "state_median"), ("v_state_card", "state_max"),
+    ("v_hhdc_per_account", "balance_per_account"), ("v_hhdc_per_account", "limit_per_account"),
+    ("v_hhdc_per_account", "available_per_account"),
+    ("v_card_burden", "revolving"), ("v_card_burden", "revolving_real"),
+    ("v_sce_sums", "combined"),
+    ("v_fdic_issuer", "value"),
+    ("facts", "value"),
+})
+
+
 def _series_rows(con, s: dict, since: str | None = None) -> list[tuple]:
     sql = (
         f"SELECT CAST(period_end AS DATE) AS d, {s['field']} AS v FROM {s['view']} "
@@ -1584,7 +1650,26 @@ def _series_rows(con, s: dict, since: str | None = None) -> list[tuple]:
     if since:
         sql += " AND period_end >= ?"
         params.append(since)
-    return con.execute(sql + " ORDER BY d", params).fetchall()
+    rows = con.execute(sql + " ORDER BY d", params).fetchall()
+    _check_bounds(s, rows)
+    return rows
+
+
+def _check_bounds(s: dict, rows: list[tuple]) -> None:
+    """Refuse to draw a derived value that cannot be true. See VIEW_BOUNDS."""
+    bounds = VIEW_BOUNDS.get((s["view"], s["field"]))
+    if bounds is None:
+        return
+    lo, hi = bounds
+    bad = [(d, v) for d, v in rows if v is not None and not lo <= v <= hi]
+    if bad:
+        worst = max(bad, key=lambda r: abs(r[1]))
+        raise ValueError(
+            f"{s['view']}.{s['field']} is outside its plausible range [{lo}, {hi}] for "
+            f"{s['entity']} ({s['label']}): {len(bad)} of {len(rows)} values, worst {worst[1]:.4g} at "
+            f"{worst[0]}. A derived ratio this far out is a collapsed denominator, not a finding: check the "
+            f"materiality floor in the view before widening the bound in VIEW_BOUNDS."
+        )
 
 
 def _series_pulled_at(con, s: dict) -> str | None:
@@ -1759,6 +1844,9 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict, golden: dict, 
         "post": bool(spec.get("post")),
         "band": spec.get("band"),
         "y_zero": bool(spec.get("y_zero", True)),
+        # A short hole in a series is worth bridging; a long one is a lie. Charts where a series can go
+        # missing for years opt out, so the gap is drawn as a gap. See nco_by_issuer.
+        "span_gaps": bool(spec.get("span_gaps", True)),
         "period_type": period_types.pop() if len(period_types) == 1 else None,
         "series": per_series,
         "data": data,

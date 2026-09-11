@@ -494,7 +494,7 @@ read the scope note before comparing it with anything.</p>
         label: s.label,
         stroke: s.benchmark ? v('--muted') : (v('--series-' + (i + 1)) || v('--series-1')),
         width: s.benchmark ? 1 : 2,
-        spanGaps: true,
+        spanGaps: c.span_gaps !== false,
         points: { show: false },
         value: function (u, val) { return fmtVal(val, s.unit || c.unit); },
         _benchmark: !!s.benchmark,

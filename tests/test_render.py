@@ -15,6 +15,9 @@ from PIL import Image
 from carddash.loader import write_facts
 from carddash.render import (
     BENCHMARK_LABEL,
+    VIEW_BOUNDS,
+    VIEW_BOUNDS_UNCHECKED,
+    _check_bounds,
     _connect,
     PANELS,
     _benchmark,
@@ -748,3 +751,70 @@ def test_the_page_shares_one_cursor_across_the_charts_on_x_only(page):
     assert "return closestIdx + 1 < xs.length ? closestIdx + 1 : closestIdx;" in html
     # the series browser keeps its own cursor: it is never on screen with a panel chart
     assert "SYNC_KEY" not in html.split("---- browse every series ----")[1]
+
+
+def test_every_view_field_a_chart_draws_is_bounded_or_explicitly_exempt():
+    """A derived field must not reach a chart without someone having decided what it may contain.
+
+    The loader's per-series vmin/vmax validates facts as they load; view fields are computed in SQL
+    afterwards and so were never checked by anything. That gap put a 182.9% annualised charge-off rate
+    for Bank of America on the issuer chart for months. This test makes the omissions deliberate: a new
+    view field is either given bounds or added to the exempt list with its reason.
+    """
+    used = {(sr["view"], sr["field"]) for panel in PANELS for c in panel["charts"] for sr in c["series"]}
+    unaccounted = used - set(VIEW_BOUNDS) - VIEW_BOUNDS_UNCHECKED
+    assert not unaccounted, f"view fields with no bound and no stated exemption: {sorted(unaccounted)}"
+    assert not (set(VIEW_BOUNDS) & VIEW_BOUNDS_UNCHECKED)  # a field is bounded or exempt, never both
+
+
+def test_a_view_field_outside_its_bounds_fails_the_render():
+    """The backstop fires, and says what to do about it."""
+    s = {"view": "v_fdic_rates", "field": "nco_rate_annualized", "entity": "ISSUER:BOFA", "label": "Bank of America"}
+    lo, hi = VIEW_BOUNDS[("v_fdic_rates", "nco_rate_annualized")]
+    _check_bounds(s, [(dt.date(2020, 3, 31), 5.0), (dt.date(2020, 6, 30), hi - 0.1)])  # inside: fine
+    with pytest.raises(ValueError, match="outside its plausible range"):
+        _check_bounds(s, [(dt.date(2001, 12, 31), 182.857)])
+    with pytest.raises(ValueError, match="collapsed denominator"):
+        _check_bounds(s, [(dt.date(2006, 12, 31), lo - 1.0)])
+
+
+def test_fdic_ratios_need_a_card_book_worth_dividing_by(tmp_paths):
+    """A residual book of a few million produces no rate at all, rather than a rate of a few hundred percent.
+
+    Bank of America's own history is the case: its card book on the Bank of America, N.A. charter sat between
+    $2mn and $50mn from 2001 to 2013, because the business was at FIA Card Services, and dividing a real
+    quarter of charge-offs by it drew 182.9% for 2001 Q4. Negative rates are kept: a quarter whose recoveries
+    beat its charge-offs is real (Citi, 2006 Q4, -4.0% on a $37bn book).
+    """
+    def row(metric, period_end, value, entity="FDIC_ALL_INSURED"):
+        return {"metric": metric, "entity": entity, "entity_type": "industry", "tier": "all",
+                "period_end": period_end, "period_type": "Q", "value": value, "source": "fdic",
+                "pulled_at": PULLED_AT}
+
+    rows = []
+    for i, (end, loans, nco) in enumerate([
+        ("2020-03-31", 0.020, 0.006),   # $20mn book: no rate, this is the 182.9% case
+        ("2020-06-30", 0.020, 0.006),
+        ("2020-09-30", 40.000, 0.400),  # $40bn book: a rate, and a small one
+        ("2020-12-31", 40.000, -0.400),  # a genuine net recovery quarter stays negative
+    ]):
+        rows += [row("fdic_card_loans", end, loans), row("fdic_card_nco_q", end, nco)]
+    facts = coerce_facts(pd.DataFrame(rows))
+    con = _connect(facts, tmp_paths.views_sql, tmp_paths.tccp_products_csv, tmp_paths.issuers_csv)
+    got = con.execute(
+        "SELECT period_end, nco_rate_annualized FROM v_fdic_rates "
+        "WHERE entity = 'FDIC_ALL_INSURED' ORDER BY period_end"
+    ).fetchall()
+    rates = {str(d): v for d, v in got}
+    assert rates["2020-06-30"] is None, "a $20mn book must carry no rate"
+    assert rates["2020-09-30"] is not None and 0 < rates["2020-09-30"] < 10
+    assert rates["2020-12-31"] is not None and rates["2020-12-31"] < 0, "a real net recovery quarter is kept"
+
+
+def test_the_issuer_chart_draws_its_hole_instead_of_bridging_it(page):
+    """Bank of America has no rate for 2001 to 2013, and a line drawn across that would be a lie."""
+    _, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    assert ids["nco_by_issuer"]["span_gaps"] is False
+    assert ids["card_nco"]["span_gaps"] is True  # the default is unchanged
+    assert any("FIA Card Services" in n for n in ids["nco_by_issuer"]["notes"])

@@ -133,12 +133,24 @@ l AS (
          lag(period_end) OVER (PARTITION BY entity, tier, period_type, source ORDER BY period_end) AS period_prev
   FROM w
 )
+-- Every ratio below needs a denominator worth dividing by, so each one requires a card book of at least
+-- $100mn (loans are in billions). A charter keeps residual card balances of a few million for years after
+-- the business has moved elsewhere: Bank of America's book sat between $1.7mn and $40mn until it bought
+-- MBNA in 2006, because its card business was in another entity. Dividing a real quarter of charge-offs by
+-- a book that size drew a 182.9% annualised loss rate for Bank of America on the issuer chart and a 69.6%
+-- 30-89 day share, and on charters that are not drawn it reached -5,969% (Regions, 2006 Q4, a $97k net
+-- recovery over a book that rounds to zero). The floor is not a tuned number: anything from $50mn to $250mn
+-- removes exactly the same quarters and leaves the same maximum on the chart (15.65%, JPMorgan in 2009 Q4),
+-- and only above $500mn does it start cutting real Synchrony history.
+-- Negative rates are NOT filtered. A quarter whose recoveries beat its charge-offs is real: Citi's 2006 Q4
+-- is -4.0% on a $37bn book, and Synchrony's 2007 Q4 is -1.4% on $7.4bn. Suppressing those would be the same
+-- mistake in the other direction.
 SELECT 'fdic_card_nco_q' AS metric, entity, entity_type, tier, period_type, source, period_end, issuer_name,
        loans, nco_q, dq30_89, noncurrent,
-       CASE WHEN loans > 0 THEN 100.0 * dq30_89 / loans END AS dq30_89_share,
-       CASE WHEN loans > 0 THEN 100.0 * noncurrent / loans END AS noncurrent_share,
+       CASE WHEN loans >= 0.1 THEN 100.0 * dq30_89 / loans END AS dq30_89_share,
+       CASE WHEN loans >= 0.1 THEN 100.0 * noncurrent / loans END AS noncurrent_share,
        CASE WHEN loans_prev IS NOT NULL AND period_end = last_day(period_prev + INTERVAL 3 MONTH)
-                 AND (loans + loans_prev) > 0
+                 AND (loans + loans_prev) / 2.0 >= 0.1
             THEN 400.0 * nco_q / ((loans + loans_prev) / 2.0) END AS nco_rate_annualized
 FROM l;
 
