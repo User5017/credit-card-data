@@ -15,6 +15,7 @@ from PIL import Image
 from carddash.loader import write_facts
 from carddash.render import (
     BENCHMARK_LABEL,
+    THESIS_NOTE,
     STATE_TILES,
     VIEW_BOUNDS,
     VIEW_BOUNDS_UNCHECKED,
@@ -380,7 +381,7 @@ def test_thesis_watch_evaluates_every_falsification_test(page, session_paths, fi
     assert all(t["why"] for t in status)
     # the page and the text file both carry it
     assert "Thesis watch" in html and "st-ok" in html.split("Thesis watch")[1][:400]
-    assert "design/thesis-2026-09-08.html" in html
+    assert THESIS_NOTE in html
     text = (session_paths.docs / "latest.txt").read_text(encoding="utf-8")  # written by the page fixture
     assert "Thesis of 2026-09-08 (holds)" in text and text.count("- [ok ]") == 3
 
@@ -500,8 +501,11 @@ def test_page_carries_link_previews_nav_and_next_release(page, session_paths, fi
         for c in panel["charts"]:
             assert f'<button type="button" class="link" data-link="{c["id"]}"' in html
     # the thesis note is served next to the page, not linked to the repository blob view
-    assert (session_paths.docs / "design" / "thesis-2026-09-08.html").exists()
-    assert 'href="design/thesis-2026-09-08.html"' in html and "blob/main/design" not in html
+    assert (session_paths.docs / THESIS_NOTE).exists()
+    assert f'href="{THESIS_NOTE}"' in html and "blob/main/design" not in html
+    # the note it revises is kept and linked, so the change of mind stays legible
+    assert (REPO / "design" / "thesis-2026-09-08.html").exists()
+    assert "thesis-2026-09-08.html" in (REPO / THESIS_NOTE).read_text(encoding="utf-8")
     # the thesis tests link to their charts
     assert '<a class="chartlink" href="#card_nco"' in html
     # next expected release per source, from the newest loaded period plus the typical lag

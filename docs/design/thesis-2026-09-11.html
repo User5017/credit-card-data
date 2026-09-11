@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thesis 2026-09-11: cards turned down while every other debt turned up</title>
+<style>
+:root { color-scheme: light dark; --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#43423f; --muted:#6f6d67;
+  --border:rgba(11,11,11,.12); --grid:#e1e0d9; --accent:#2a78d6; --warn:#c9541c; --good:#0f8a5e; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7;
+  --muted:#9b9a94; --border:rgba(255,255,255,.12); --grid:#2c2c2a; --accent:#4d8fe0; --warn:#f07a3c; --good:#2dbd86; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+main { max-width:860px; margin:0 auto; padding:34px 22px 80px; }
+h1 { font-size:27px; line-height:1.25; margin:0 0 6px; }
+h2 { font-size:20px; margin:38px 0 8px; padding-top:14px; border-top:1px solid var(--border); }
+h3 { font-size:16px; margin:22px 0 4px; }
+p { margin:0 0 12px; }
+.stamp { color:var(--muted); font-size:13px; margin-bottom:22px; }
+.lede { font-size:18px; color:var(--ink2); }
+blockquote { margin:16px 0; padding:12px 18px; background:var(--surface); border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0; font-size:17px; }
+table { border-collapse:collapse; width:100%; font-size:14px; margin:12px 0 18px; font-variant-numeric:tabular-nums; }
+th, td { padding:5px 10px; border-bottom:1px solid var(--grid); text-align:right; }
+th:first-child, td:first-child { text-align:left; }
+thead th { color:var(--muted); font-weight:600; border-bottom:1px solid var(--border); }
+td.num { white-space:nowrap; }
+ul, ol { margin:0 0 12px; padding-left:22px; }
+li { margin-bottom:5px; }
+.contents { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 18px; }
+.contents ol { margin:0; }
+.note { color:var(--muted); font-size:14px; }
+.call { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--warn);
+  border-radius:0 10px 10px 0; padding:14px 18px; margin:18px 0; }
+.call.up { border-left-color:var(--good); }
+code { font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--surface);
+  border:1px solid var(--border); border-radius:4px; padding:1px 5px; }
+a { color:var(--accent); }
+.down { color:var(--good); } .up { color:var(--warn); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Cards turned down while every other debt turned up</h1>
+<p class="stamp">Analysis note, 2026-09-11. The second note, revising
+<a href="thesis-2026-09-08.html">the note of 2026-09-08</a>, which stands as written and is not edited. Every figure
+comes from the dashboard's own loaded data (<code>data/facts.csv</code>) as of the 2026-09-11 refresh. Written after
+adding nine more sources and, in the last day, Capital One's monthly 8-K metrics, the Fed's distributional accounts,
+the state-level panel, the other five loan types in the NY Fed workbook, and the cross-asset lending rates. Those
+were added to test the first note, not to decorate it, and one of them cost it a leg.</p>
+
+<blockquote>Three days ago this dashboard argued that the card loss cycle was a vintage event that had washed out,
+that the repricing was permanent, and that the market was re-segmenting rather than cycling. The data added since
+strengthens the first two claims and puts a real constraint on the third. It also turned up something the first note
+could not see: cards are now the <em>only</em> consumer debt getting better. The flow into serious delinquency has
+fallen on cards since the end of 2024 and risen on mortgages, home equity lines and all debt taken together. The card
+story was never the household story, and the two have now separated.</blockquote>
+
+<div class="contents">
+<ol>
+  <li>The cycle turning is now visible six weeks earlier, and it is real</li>
+  <li>Cards are the worst consumer asset by far, and the only improving one</li>
+  <li>The buffer behind the most exposed half is better than it was in 2019</li>
+  <li>The margin is a card decision, and its own controls prove it</li>
+  <li>What the geography costs the thesis</li>
+  <li>The prediction, unchanged, and what would falsify it</li>
+  <li>What the data still cannot settle</li>
+</ol>
+</div>
+
+<h2>1. The cycle turning is now visible six weeks earlier, and it is real</h2>
+
+<p>The first note rested on quarterly series that arrive late. Everything it said about a single lender came from the
+FDIC call report, 55 to 58 days after quarter end, or the Y-14, about three and a half months after. Capital One
+publishes its own charge-off and delinquency rates in an 8-K about two weeks after each month ends. Those 66 months
+are now loaded, and they are the freshest read on the argument.</p>
+
+<p>The monthly series is not seasonally adjusted and card losses peak in the first quarter, so the fall from 5.17
+percent in February to 4.12 percent in July is partly a seasonal move and must not be read as the whole story. The
+comparison that controls for it is the same month a year apart, and every month of 2026 is below its 2025 twin:</p>
+
+<table>
+<thead><tr><th>Month</th><th>2025</th><th>2026</th><th>Change</th></tr></thead>
+<tbody>
+<tr><td>February</td><td class="num">6.35%</td><td class="num">5.17%</td><td class="num down">&minus;1.18</td></tr>
+<tr><td>March</td><td class="num">6.09%</td><td class="num">5.09%</td><td class="num down">&minus;1.00</td></tr>
+<tr><td>April</td><td class="num">5.66%</td><td class="num">4.94%</td><td class="num down">&minus;0.72</td></tr>
+<tr><td>May</td><td class="num">5.57%</td><td class="num">4.82%</td><td class="num down">&minus;0.75</td></tr>
+<tr><td>June</td><td class="num">4.96%</td><td class="num">4.37%</td><td class="num down">&minus;0.59</td></tr>
+<tr><td>July</td><td class="num">4.83%</td><td class="num">4.12%</td><td class="num down">&minus;0.71</td></tr>
+</tbody>
+</table>
+<p class="note">Capital One Financial Corporation, domestic card, annualised net charge-off rate, from the Exhibit
+99.1 filed with each monthly 8-K. Six months, six improvements, on a like-for-like month comparison.</p>
+
+<p>Six out of six is not a trend read off a chart; it is the same calendar month improving every time. The quarterly
+sources agree and are simply slower: the Fed's all-bank card charge-off rate is 3.82 percent against a 4.69 percent
+peak in 2024 Q3, and the NY Fed's flow into 90+ is 6.97 percent against 7.18 percent at the end of 2024.</p>
+
+<div class="call">
+<p><strong>One number in this table does not improve as fast, and it is the leading one.</strong> Capital One's 30+
+day delinquency rate, which is what turns into charge-offs six months later, went from 3.67 percent in July 2025 to
+3.48 percent in July 2026. That is a fall of 0.19 points against 0.71 points on charge-offs. Charge-offs are working
+off a stock of delinquency that built in 2024; the inflow is improving about a quarter as fast. If the argument has
+to be defended in six months, this is the number that will decide it, not the charge-off rate.</p>
+</div>
+
+<h2>2. Cards are the worst consumer asset by far, and the only improving one</h2>
+
+<p>The first note compared cards only with cards. The NY Fed workbook the pipeline already downloaded carries five
+other loan types, and reading them changes the picture in both directions.</p>
+
+<p>First, the level. Cards are not merely the worst-performing consumer asset; nothing else is close:</p>
+
+<table>
+<thead><tr><th>Loan type</th><th>90+ days delinquent, share of balances</th><th>Flow into 90+, 2024 Q4</th><th>Flow into 90+, 2026 Q2</th></tr></thead>
+<tbody>
+<tr><td>Credit card</td><td class="num">12.92%</td><td class="num">7.18%</td><td class="num down">6.97%</td></tr>
+<tr><td>Student loan</td><td class="num">10.60%</td><td class="num">0.70%</td><td class="num up">7.83%</td></tr>
+<tr><td>Other (retail cards, consumer finance)</td><td class="num">9.61%</td><td class="num">5.63%</td><td class="num down">5.19%</td></tr>
+<tr><td>Auto</td><td class="num">5.49%</td><td class="num">2.96%</td><td class="num up">3.00%</td></tr>
+<tr><td>Mortgage</td><td class="num">0.99%</td><td class="num">1.09%</td><td class="num up">1.52%</td></tr>
+<tr><td>Home equity line</td><td class="num">0.99%</td><td class="num">0.56%</td><td class="num up">1.15%</td></tr>
+<tr><td>All household debt</td><td class="num">3.31%</td><td class="num">1.70%</td><td class="num up">2.57%</td></tr>
+</tbody>
+</table>
+
+<p>A credit card balance is thirteen times more likely to be seriously delinquent than a mortgage balance belonging
+to the same population of households. That is the strongest single piece of evidence that card distress is a card
+phenomenon rather than a household one, which is what the first note claimed and could not then show.</p>
+
+<p>Second, and cutting the other way, the direction. Between the card peak at the end of 2024 and 2026 Q2, cards
+improved and the secured books deteriorated. Mortgage flow went from 1.09 to 1.52, home equity from 0.56 to 1.15,
+auto is flat to slightly worse. The first note's sentence that every loss measure had turned was true of cards and is
+not true of household debt.</p>
+
+<div class="call">
+<p><strong>Two things this table must not be used to say.</strong> The student loan column is an administrative
+artefact, not distress: paused loans could not go delinquent under the federal payment pause, so the series is flat
+from 2020 to 2023 and then steps up as reporting restarted in 2024. The 0.70 to 7.83 move is the reporting switch
+being thrown. And the mortgage and home equity rises are off a floor so low they are almost rounding: a 0.99 percent
+mortgage 90+ share compares with 8.89 percent at the worst of the financial crisis. This is not a housing cycle. It
+is the observation that the direction of travel is no longer the same across the balance sheet.</p>
+</div>
+
+<h2>3. The buffer behind the most exposed half is better than it was in 2019</h2>
+
+<p>The first note argued there was no aggregate debt problem using economy-wide ratios, and conceded that an
+aggregate says nothing about who holds the debt. The Fed's Distributional Financial Accounts answer that directly.</p>
+
+<table>
+<thead><tr><th>Bottom 50% of households by wealth</th><th>2007</th><th>2019</th><th>2026 Q1</th></tr></thead>
+<tbody>
+<tr><td>Share of all consumer credit owed</td><td class="num">52.8%</td><td class="num">57.2%</td><td class="num">51.8%</td></tr>
+<tr><td>Deposits held per dollar of consumer credit</td><td class="num">23c</td><td class="num">22c</td><td class="num">30c</td></tr>
+<tr><td>Consumer credit as a share of net worth</td><td class="num">&mdash;</td><td class="num">129%</td><td class="num">62%</td></tr>
+</tbody>
+</table>
+
+<p>The half of households that owes most of the consumer credit owes a slightly smaller share of it than before the
+pandemic, holds more cash against it, and owes it against roughly twice the net worth. Every one of those moves is in
+the direction of resilience. This is the leg that has strengthened most, and it is the reason to expect the
+delinquency improvement to continue rather than to be a pause.</p>
+
+<h2>4. The margin is a card decision, and its own controls prove it</h2>
+
+<p>The first note showed the card margin over prime at a record 15.40 points and argued it was an issuer decision
+rather than a funding cost. The objection to that argument was obvious: if funding costs or credit risk had risen for
+everyone, every consumer loan rate would have risen together. The G.19 survey prices two other consumer loans, at the
+same banks, in the same survey, in the same quarter:</p>
+
+<table>
+<thead><tr><th>Same survey, same banks, 2026 Q2</th><th>Rate</th><th>Over prime</th></tr></thead>
+<tbody>
+<tr><td>Credit card, accounts assessed interest</td><td class="num">22.15%</td><td class="num">15.40 pts</td></tr>
+<tr><td>Personal loan, 24 month</td><td class="num">11.86%</td><td class="num">5.11 pts</td></tr>
+<tr><td>New car loan, 48 month</td><td class="num">7.47%</td><td class="num">0.72 pts</td></tr>
+<tr><td>Prime rate</td><td class="num">6.75%</td><td class="num">&mdash;</td></tr>
+</tbody>
+</table>
+
+<p>The card rate is nearly twice the personal loan rate and three times the car loan rate at the same institutions.
+Whatever the card margin is compensating for, it is not the cost of money, because the same banks lend the same
+households money at 11.86 percent when it is a personal loan. Some of the gap is real: cards are unsecured, revolving
+and carry a 12.92 percent serious delinquency rate against a car loan's 5.49. But the loss side does not close it.
+The control was the missing piece of this leg and it holds.</p>
+
+<h2>5. What the geography costs the thesis</h2>
+
+<p>"Re-segmenting" invites a reading in which distress concentrated somewhere: in particular places, particular
+lenders, particular vintages. The state panel, added after the first note, tests the first of those and rejects it.</p>
+
+<p>Card delinquency rose in <strong>every one of the 51 areas</strong> with a full history between 2021 and 2025, by a
+median of 3.8 points, and by at least 2.3 points in the area that moved least. There is no state that sat the episode
+out.</p>
+
+<table>
+<thead><tr><th>Card 90+ delinquency across areas</th><th>2019</th><th>2021</th><th>2025</th></tr></thead>
+<tbody>
+<tr><td>Lowest area</td><td class="num">5.47%</td><td class="num">5.34%</td><td class="num">8.03%</td></tr>
+<tr><td>Median area</td><td class="num">7.42%</td><td class="num">7.38%</td><td class="num">11.35%</td></tr>
+<tr><td>Highest area</td><td class="num">11.51%</td><td class="num">12.00%</td><td class="num">16.28%</td></tr>
+<tr><td>Range</td><td class="num">6.04 pts</td><td class="num">6.66 pts</td><td class="num">8.25 pts</td></tr>
+</tbody>
+</table>
+
+<p>The best-performing state in 2025, at 8.03 percent, is worse than the median state was in 2019. The episode was
+national. What did happen is that the spread widened, from 6.04 points in 2019 to 8.25 in 2025, and the ordering
+barely moves from year to year: Nevada has been in the worst sixth of areas in every year since 2003.</p>
+
+<p>So the thesis has to be stated more precisely than the first note stated it. The re-segmentation is
+<strong>across borrowers, not across places</strong>. It shows up as a widening gap between lenders serving different
+borrowers, which the data does support: banks outside the largest 100 have a card delinquency rate of 6.49 percent
+against 2.74 for the top 100, and annualised charge-off rates at 2026 Q2 run from American Express at 2.30 percent
+through JPMorgan at 3.15 and Capital One at 4.83 to Bread Financial at 7.13, Credit One at 11.81 and Merrick at
+13.28. A reader who took "re-segmenting" to mean the map would light up unevenly was reading more than the data
+supports, and the first note did not guard against that reading.</p>
+
+<h2>6. The prediction, unchanged, and what would falsify it</h2>
+
+<p>The three falsification thresholds are carried forward from the first note deliberately and without adjustment.
+Moving a goalpost while the ball is in the air is how a thesis becomes unfalsifiable, and the dashboard evaluates
+these on every render, so a change would be visible in the git history.</p>
+
+<table>
+<thead><tr><th>Test</th><th>Threshold</th><th>2026 Q2</th><th>State</th></tr></thead>
+<tbody>
+<tr><td>NY Fed flow into 90+ day delinquency</td><td class="num">below 7.5%</td><td class="num">6.97%</td><td>holds</td></tr>
+<tr><td>Fed card charge-off rate, all banks</td><td class="num">below 4.2%</td><td class="num">3.82%</td><td>holds</td></tr>
+<tr><td>Card APR margin over prime</td><td class="num">above 14 pts</td><td class="num">15.40 pts</td><td>holds</td></tr>
+</tbody>
+</table>
+
+<p>The prediction is also unchanged: delinquency <em>rates</em> rise modestly through 2027 while dollar losses stay
+near current levels, because the new subprime exposure is being written at a $500 median line.</p>
+
+<p>What this second note adds is a faster tripwire. The quarterly thresholds above are confirmed months after the
+fact. Capital One's monthly series will break first, and the honest statement of what would worry me is: <strong>three
+consecutive months in which Capital One's charge-off rate is above its year-earlier month</strong>. That has not
+happened once in 2026. It would say the improvement had stopped roughly two quarters before the NY Fed flow could
+say it.</p>
+
+<p>One more thing would falsify a claim this note makes rather than the first one: if the mortgage and home equity
+flows keep rising and the card flow keeps falling for another year, "cards are the only debt improving" becomes a
+statement about a turning household cycle rather than a divergence, and the thesis would need to explain why the
+unsecured book leads on the way down as well as on the way up.</p>
+
+<h2>7. What the data still cannot settle</h2>
+
+<h3>Answered since the first note: why older borrowers keep deteriorating</h3>
+<p>The first note listed this as unexplained. The by-age sheets for the other loan types settle it. For households
+headed by someone 70 or over, the flow into serious delinquency is 6.34 percent on cards, 2.45 percent on auto loans
+and 1.80 percent across all their debt. The deterioration is card-specific, not a balance-sheet-wide problem for
+older households. Combined with the distributional accounts showing their consumer credit per household flat since
+2023, the composition reading is the stronger one: this is about which older households hold cards, not about older
+households falling apart.</p>
+
+<h3>Answered since the first note: the timing gap</h3>
+<p>The first note called monthly issuer data "the single highest-value addition left". It is now loaded, for one
+issuer. Capital One carries the largest card book in the FDIC data, $250.5bn at 2026 Q2 against JPMorgan's $216.2bn
+and an industry $1,189.6bn, so it is about a fifth of card loans at insured institutions. It is still one lender with
+a distinctive book, and a single issuer improving is weaker evidence than an industry improving. Synchrony, Bread
+Financial and American Express publish comparable monthly figures and are not loaded; nothing here measures any
+issuer's share of the <em>subprime</em> card market, so no claim about that is made.</p>
+
+<h3>Still open: whether the sentiment gap means anything</h3>
+<p>Unchanged from the first note. Consumer sentiment is far below its 2015-19 average and the saving rate is half
+it, while cardholders pay off record shares of their balances. Both are true of different people and nothing loaded
+here measures how many are in each group.</p>
+
+<h3>Still open: the scope mismatch between the two best issuer sources</h3>
+<p>Capital One's own July 2026 charge-off rate is 4.12 percent and the FDIC's rate for the same issuer at 2026 Q2 is
+4.83 percent. Both are correct: the 8-K covers the managed domestic card book and the call report covers what sits on
+the bank charter. The two cannot be compared level for level, which means the monthly series is a good read on
+<em>direction</em> and a bad one on level. Nothing loaded reconciles them.</p>
+
+<h3>Still open: what the 2025 loosening actually bought</h3>
+<p>The first note's fifth leg, that the front door is open while the back door closes, has not been retested here.
+The credit access survey is four-monthly and the next wave is the test.</p>
+
+<p class="note" style="margin-top:34px">Every figure above is reproducible from <code>data/facts.csv</code> at the
+2026-09-11 refresh. Where this note and the note of 2026-09-08 disagree, this one is later and the earlier one is
+left unedited so the change of mind is legible.</p>
+
+</main>
+</body>
+</html>

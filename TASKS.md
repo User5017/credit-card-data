@@ -255,6 +255,53 @@ Two bugs caught by rendering it and looking at it, which is the only way they wo
   colour was frozen at draw time and the attribute was set afterwards. Real users never hit this (the toggle
   reloads), but it is why the bins are classes now.
 
+## v1.13: the second thesis note (2026-09-11)
+
+| # | Task | Pass condition | Status |
+|---|------|----------------|--------|
+| 44 | Rewrite the thesis as a dated second note | A second note in design/ that revises the first without editing it, cites only loaded data, keeps the three falsification thresholds unchanged, and says plainly what the new data cost the argument | done 2026-09-11 (design/thesis-2026-09-11.html, "Cards turned down while every other debt turned up". THESIS_NOTE points at it; the first note is untouched, linked from the second, and render now copies EVERY design/thesis-*.html into docs/ so the back-links survive a clean build. The tests follow the constant instead of a hard-coded filename, so the next rewrite does not break them, and they assert the old note still exists and is still linked) |
+
+What the second note actually changed, so the next rewrite knows what moved:
+- Leg 1 (the loss cycle is over) is STRONGER and now six weeks fresher. Capital One's monthly series is below its
+  year-earlier month in all six months of 2026 that have a 2025 twin: February -1.18, March -1.00, April -0.72,
+  May -0.75, June -0.59, July -0.71. The note states explicitly that the series is NOT seasonally adjusted, so the
+  5.17 to 4.12 fall within 2026 is partly seasonal and the like-for-like month comparison is the honest one.
+- A caveat added inside leg 1: Capital One's 30+ delinquency, the leading number, improved only 0.19 points year
+  over year against 0.71 on charge-offs. Charge-offs are working off a 2024 stock; the inflow is improving about a
+  quarter as fast. That is the number that decides the argument next, and the note says so.
+- Leg 2 (no aggregate debt problem) is STRONGER, and now about people rather than ratios: the bottom half by wealth
+  owes 51.8 percent of consumer credit against 57.2 in 2019, holds 30 cents of deposits per dollar against 22, and
+  owes it against 62 percent of net worth against 129.
+- Leg 4 (the repricing was permanent) got its control: the same G.19 survey at the same banks prices a 24-month
+  personal loan at 11.86 percent and a 48-month car loan at 7.47 against the card's 22.15. The margin is a card
+  decision, which the first note asserted and could not show.
+- THE THIRD LEG WAS CONSTRAINED, which is the point of writing a second note at all. "Re-segmenting" invited a
+  reading where distress concentrated somewhere, and the state panel rejects it: card delinquency rose in every one
+  of the 51 areas with a full history between 2021 and 2025, smallest rise 2.26 points, median 3.84, and the best
+  state in 2025 (8.03) is worse than the median state in 2019 (7.42). The note now says the re-segmentation is
+  across BORROWERS, not places, and names the first note's failure to guard that reading.
+- NEW and not in the first note: cards are the only consumer debt improving. Between 2024 Q4 and 2026 Q2 the card
+  flow fell 7.18 to 6.97 while mortgages went 1.09 to 1.52, home equity 0.56 to 1.15 and all household debt 1.70 to
+  2.57. The note is explicit that the secured rises are off a floor (a 0.99 percent mortgage 90+ share against 8.89
+  at the financial crisis) and that the student loan move is the payment-pause reporting restart, not distress.
+- Section 7's over-70 puzzle is ANSWERED: their flow is 6.34 on cards, 2.45 on auto and 1.80 across all their debt,
+  so it is card-specific, not a balance-sheet problem for older households.
+- Section 7's timing gap is ANSWERED by task 42, and the note says what that is still worth: one issuer, about a
+  fifth of card loans at insured institutions ($250.5bn of $1,189.6bn at 2026 Q2), not an industry.
+- A new open item the second note raises: Capital One's own July rate (4.12) and the FDIC's rate for the same
+  issuer (4.83) are both correct and not comparable, because the 8-K covers the managed domestic card book and the
+  call report covers the bank charter. The monthly series is a good read on DIRECTION and a bad one on level.
+- A faster tripwire, added alongside the three unchanged thresholds: three consecutive months of Capital One above
+  its year-earlier month. It has not happened once in 2026 and it would fire about two quarters before the NY Fed
+  flow could.
+- The three falsification thresholds (7.5, 4.2, 14.0) are UNCHANGED and must stay that way unless the note is
+  rewritten again; THESIS_TESTS asserts them, so a quiet move fails a test.
+
+Every figure in the note was cross-checked against data/facts.csv before it shipped: 83 distinct numbers, all
+traceable. One claim was cut in that check rather than softened, because nothing loaded measured it: a sentence
+putting Capital One at "about a third of the large-bank subprime card market". Nothing on this dashboard measures
+any issuer's subprime share, and the note now says so where the claim used to be.
+
 ## v1.5 (after two green releases)
 - Order (from the 2026-09-07 scouting): NY Fed SCE Credit Access first (direct xlsx, no gate, about half a session), then CFPB complaints via the trends endpoint (one session), then BEA PCE detail via the keyless NipaDataM.txt flat file (the API needs a key; half to one session), then Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx (the API needs a key even at low volume; one session). Details, URLs and risks in design/handoff-2026-09-07.html §3.
 - Spend panel.

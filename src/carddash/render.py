@@ -1532,11 +1532,15 @@ PANELS = [
 ]
 
 
-# The thesis watch. design/thesis-2026-09-08.html argues that the 2022-24 loss surge was a vintage event rather than
+# The thesis watch. The current note is design/thesis-2026-09-11.html, which revises (and links to, and does not
+# edit) design/thesis-2026-09-08.html. The thresholds below are carried forward from the first note UNCHANGED on
+# purpose: moving one while the ball is in the air is how a thesis stops being falsifiable, and these tests assert
+# the values, so a change shows up as a failing test rather than a quietly moved goalpost.
+# The argument is that the 2022-24 loss surge was a vintage event rather than
 # a credit cycle, and that the repricing that came with it is structural. It names the readings that would prove that
 # wrong. They are evaluated here on every refresh so the claim cannot quietly rot: each test carries the series it
 # reads, the direction that keeps the thesis alive, and the threshold. Changing a threshold means rewriting the note.
-THESIS_NOTE = "design/thesis-2026-09-08.html"
+THESIS_NOTE = "design/thesis-2026-09-11.html"
 THESIS_DATE = "2026-09-08"
 THESIS_CLAIM = "US card credit is re-segmenting, not cycling: the 2022-24 loss surge was a vintage event, and the repricing that came with it is structural."
 THESIS_TESTS = [
@@ -2343,13 +2347,15 @@ def render(paths: Paths, today: dt.date | None = None) -> Path:
     payload_json = json.dumps(payload, separators=(",", ":")).replace("</", "<\\/")
     health_rows = _health_rows(health, _latest_by_source(facts, meta_idx, today), facts, today)
     summary = _health_summary(health)
-    # the thesis note is served next to the page so the link renders on Pages (the repository blob view shows source)
+    # The thesis notes are served next to the page so the links render on Pages (the repository blob view shows
+    # source). EVERY note is copied, not just the current one: each note links to the one it revises, and those
+    # back-links are the record of what changed, so a superseded note must stay reachable.
     thesis_src = paths.root / THESIS_NOTE
     thesis_href = f"{REPO_URL}/blob/main/{THESIS_NOTE}"
     if thesis_src.exists():
-        dest = paths.docs / THESIS_NOTE
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(thesis_src, dest)
+        (paths.docs / "design").mkdir(parents=True, exist_ok=True)
+        for note in sorted((paths.root / "design").glob("thesis-*.html")):
+            shutil.copyfile(note, paths.docs / "design" / note.name)
         thesis_href = THESIS_NOTE
 
     env = Environment(loader=PackageLoader("carddash", "templates"), autoescape=select_autoescape(["html"]))
