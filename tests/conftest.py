@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from carddash.fetchers import bea, census, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
+from carddash.fetchers import bea, census, cfpb_cct, dfa, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
 from carddash.series import load_series, series_for_source
@@ -123,9 +123,28 @@ def ncua_facts(meta) -> pd.DataFrame:
     return coerce_facts(pd.concat(frames, ignore_index=True))
 
 
+DFA_FIXTURE = FIXTURES / "dfa" / dfa.RAW_NAME  # the June 2026 zip trimmed to the three detail files loaded
+
+
+@pytest.fixture(scope="session")
+def dfa_facts(meta) -> pd.DataFrame:
+    """Facts from the checked-in DFA zip (quarters to 2026 Q1), parsed once per session."""
+    return coerce_facts(dfa.parse_zip(DFA_FIXTURE.read_bytes(), series_for_source(meta, dfa.SOURCE), PULLED_AT))
+
+
+CCT_FIXTURE_DIR = FIXTURES / "cfpb_cct"  # the six CSVs as published on 2026-08-18 (originations to January 2026)
+
+
+@pytest.fixture(scope="session")
+def cct_facts(meta) -> pd.DataFrame:
+    """Facts from the checked-in CFPB Consumer Credit Trends files, parsed once per session."""
+    texts = {name: (CCT_FIXTURE_DIR / name).read_text(encoding="utf-8") for name in cfpb_cct.FILES}
+    return coerce_facts(cfpb_cct.parse_files(texts, series_for_source(meta, cfpb_cct.SOURCE), PULLED_AT))
+
+
 @pytest.fixture(scope="session")
 def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, sce_facts, sce_monthly_facts,
-                  bea_facts, census_facts, ncua_facts) -> pd.DataFrame:
+                  bea_facts, census_facts, ncua_facts, dfa_facts, cct_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
@@ -140,6 +159,8 @@ def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, 
                 bea_facts,
                 census_facts,
                 ncua_facts,
+                dfa_facts,
+                cct_facts,
             ],
             ignore_index=True,
         )

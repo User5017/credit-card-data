@@ -8,7 +8,7 @@ Rules: idempotent; pulls full history; writes the raw download under raw_dir/lat
 never touches facts.csv or DuckDB (the loader does); parses by header text, never by column position.
 """
 
-from . import bea, census, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
+from . import bea, census, cfpb_cct, dfa, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
 
 FETCHERS = {
     fred.SOURCE: fred,
@@ -21,4 +21,6 @@ FETCHERS = {
     bea.SOURCE: bea,
     census.SOURCE: census,
     ncua.SOURCE: ncua,
+    dfa.SOURCE: dfa,
+    cfpb_cct.SOURCE: cfpb_cct,
 }

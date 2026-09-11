@@ -30,8 +30,9 @@ from conftest import FIXTURES, PULLED_AT, REPO
 RUN1 = "2026-09-06T00:00:00Z"
 RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
-POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service"}
-ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly", "bea", "census", "ncua")
+POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service", "dfa_credit_by_wealth"}
+ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly", "bea", "census", "ncua",
+               "dfa", "cfpb_cct")
 
 
 def _health(generated_at: str, sources=("fred",), status="ok") -> dict:
@@ -64,14 +65,14 @@ def test_page_is_self_contained_and_carries_every_chart(page):
     for panel in PANELS:
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
-    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Spend", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 51
+    assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Distribution", "Spend", "Context"]
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 65
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
     assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
-    assert "10 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
+    assert "12 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
 
@@ -253,7 +254,7 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     html, payload = page
     items = headlines(fixture_facts, TODAY)
     labels = [h["label"] for h in items]
-    assert labels[0].startswith("Revolving consumer credit") and len(items) == 12  # no 30+ delinquency fixture
+    assert labels[0].startswith("Revolving consumer credit") and len(items) == 15  # no 30+ delinquency fixture
     rev = items[0]["text"]
     # the 2026-09-08 G.19 vintage added July 2026 at $1,357bn, above the October 2024 peak, so the record flag fires
     assert rev == "$1,357bn in Jul 2026, +3.6% on the year, highest on record (since Jan 1968)"
@@ -289,7 +290,7 @@ def test_card_badge_and_last_attempt_when_a_source_is_not_ok(tmp_paths, fixture_
     assert by_id["nco_by_issuer"]["status"] == "failed" and by_id["nco_by_issuer"]["attempted"] == "2026-09-08"
     assert "data as of 2026-09-07" in by_id["nco_by_issuer"]["footer"]  # the data on the chart is still the last good load
     assert '<span class="badge st-failed"' in html and "last fetch attempt 2026-09-08" in html
-    assert "2 of 10 sources need attention (Failed)" in html
+    assert "2 of 12 sources need attention (Failed)" in html
 
 
 def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_facts):
@@ -579,3 +580,84 @@ def test_ncua_rates_view(tmp_paths, meta):
     assert rows[1][1] == pytest.approx(5e-9)  # Q2: (10 - 4) - (2 - 1) = 5 dollars, in billions
     assert rows[1][2] == pytest.approx(100 * 4 * 5 / 100)  # 20 percent annualized on average loans of 100
     assert rows[1][3] == pytest.approx(3.0)
+
+
+def test_distribution_panel_draws_the_dfa(page):
+    html, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    wealth = ids["dfa_credit_by_wealth"]
+    assert wealth["post"] and wealth["series"][0]["last_period"] == "2026 Q1"
+    shares = [s[-1] for s in wealth["data"][1:]]
+    assert abs(sum(shares) - 100) < 0.01 and 50 < shares[0] < 54  # the bottom half owes about half of all consumer credit
+    buffer = ids["dfa_buffer_by_wealth"]
+    assert 25 < buffer["data"][1][-1] < 35  # bottom 50%: deposits of about 30 cents per dollar of consumer credit
+    ratio = ids["dfa_credit_to_net_worth"]
+    assert 55 < ratio["data"][1][-1] < 70  # bottom 50%: consumer credit about 60 percent of net worth
+    per_hh = ids["dfa_credit_per_household_age"]
+    assert per_hh["unit"] == "usd" and 14000 < per_hh["data"][4][-1] < 18000  # 70 and over: about $16k per household
+    income = ids["dfa_credit_by_income"]
+    assert abs(sum(s[-1] for s in income["data"][1:]) - 100) < 0.01
+    assert '<section class="panel" id="panel-distribution">' in html
+    assert "Consumer credit owed by the bottom half of households by wealth" in html
+
+
+def test_cct_charts(page):
+    html, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    orig = ids["cct_originations"]
+    assert orig["series"][0]["last_period"] == "Jan 2026" and 7 < orig["data"][1][-1] < 10
+    by_score = ids["cct_lines_by_score"]
+    assert abs(sum(s[-1] for s in by_score["data"][1:]) - 100) < 0.01 and 78 < by_score["data"][5][-1] < 86
+    below = ids["cct_below_prime_share"]
+    assert {s["source"] for s in below["series"]} == {"cfpb_cct", "phillyfed"} and below["footer_lines"]
+    vals = [v for v in below["data"][1] if v is not None]
+    assert 4 < vals[-1] < 8  # sub-660 borrowers get about 6 percent of new credit line dollars
+    ages = ids["cct_lines_by_age"]
+    assert abs(sum(s[-1] for s in ages["data"][1:]) - 100) < 0.01
+    inq = ids["cct_inquiries"]
+    assert inq["series"][0]["last_period"] == "May 2026" and 200 < inq["data"][1][-1] < 250
+    tight = ids["cct_tightness"]
+    assert tight["unit"] == "index" and tight["series"][0]["last_period"] == "Mar 2026" and 70 < tight["data"][1][-1] < 90
+    assert "New credit cards opened in the month, all lenders" in html and " million in Jan 2026" in html
+
+
+def test_interest_and_claims_charts(page):
+    html, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    eff = ids["effective_rate"]
+    assert {s["source"] for s in eff["series"]} == {"bea", "fred"}
+    rate = [v for v in eff["data"][1] if v is not None]
+    assert 9 < rate[-1] < 14  # about $600bn of interest on about $5.2tn of consumer credit
+    share = ids["interest_share_income"]
+    v = [x for x in share["data"][1] if x is not None]
+    assert 2 < v[-1] < 3.5  # 604 over 23,858: about 2.5 percent of disposable income
+    claims = ids["jobless_claims"]
+    assert claims["unit"] == "thousands" and claims["period_type"] == "W"
+    assert abs(claims["data"][1][-1] - 206.0) < 1e-9 and abs(claims["data"][2][-2] - 1774.0) < 1e-9
+    assert " thousand in " in html  # the claims reading
+
+
+def test_dfa_and_cct_views(page, fixture_facts, tmp_paths):
+    """v_dfa_shares and v_cct_shares reproduce the hand arithmetic on the fixture facts."""
+    con = _connect(fixture_facts, tmp_paths.views_sql, tmp_paths.tccp_products_csv, tmp_paths.issuers_csv)
+    row = con.execute(
+        "SELECT share_pct, deposits_to_credit_pct, credit_per_household, credit_to_net_worth_pct FROM v_dfa_shares "
+        "WHERE entity = 'WEALTH:BOTTOM50' AND period_end = DATE '2026-03-31'"
+    ).fetchone()
+    assert row[0] == pytest.approx(100 * 2626.591 / 5073.031, abs=1e-6)
+    assert row[1] == pytest.approx(100 * 793.232 / 2626.591, abs=1e-6)
+    assert row[2] == pytest.approx(1000 * 2626.591 / 67.573814, abs=1e-3)
+    assert row[3] == pytest.approx(100 * 2626.591 / 4266.359, abs=1e-6)
+    tiers = con.execute(
+        "SELECT tier, share_pct, below_prime_share_pct FROM v_cct_shares WHERE metric = 'cct_card_new_lines_sa' "
+        "AND entity = 'CFPB_CCP_ALL' AND period_end = DATE '2026-01-31' ORDER BY tier"
+    ).fetchall()
+    assert [t[0] for t in tiers] == ["deep_subprime", "near_prime", "prime", "subprime", "superprime"]
+    assert sum(t[1] for t in tiers) == pytest.approx(100.0)
+    assert len({round(t[2], 9) for t in tiers}) == 1 and 5 < tiers[0][2] < 7
+    ages = con.execute(
+        "SELECT sum(share_pct) FROM v_cct_shares WHERE metric = 'cct_card_new_lines_nsa' AND entity_type = 'age' "
+        "AND period_end = DATE '2026-01-31'"
+    ).fetchone()
+    assert ages[0] == pytest.approx(100.0)
+    con.close()

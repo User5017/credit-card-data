@@ -54,7 +54,7 @@ PERIOD_WORDS = {
     "A": "annual",
 }
 
-ENTITY_TYPES = {"aggregate", "issuer", "bank", "credit_union", "score", "state", "age", "education", "income", "numeracy", "region", "pce", "naics"}
+ENTITY_TYPES = {"aggregate", "issuer", "bank", "credit_union", "score", "state", "age", "education", "income", "wealth", "numeracy", "region", "pce", "naics"}
 
 
 def last_day(year: int, month: int) -> dt.date:

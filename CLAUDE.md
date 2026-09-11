@@ -70,12 +70,18 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   come from sql/<source>_facts.sql, which the fetcher runs in memory: aggregation choices stay in SQL.
 - Keep this repo out of OneDrive.
 
-## Sources (ten as of 2026-09-10)
+## Sources (twelve as of 2026-09-11)
 fred, tccp, phillyfed, nyfed_hhdc, fdic, nyfed_sce (credit access, four-monthly), nyfed_sce_monthly (core survey),
-bea (PCE by type of product, keyless flat file), census (Monthly Retail Trade workbook), ncua (5300 call report quarterly
-zips, per-quarter extracts). Each has a typical release lag in `RELEASE_RHYTHM` (render.py) that the health strip turns
+bea (PCE by type of product plus household interest payments and monthly DPI, keyless flat file), census (Monthly Retail
+Trade workbook), ncua (5300 call report quarterly zips, per-quarter extracts), dfa (Fed Distributional Financial Accounts
+zip: consumer credit, deposits, liabilities, net worth and household counts by wealth, income and age group, quarterly),
+cfpb_cct (CFPB Consumer Credit Trends CSVs: card originations, new credit lines by score tier and age, inquiry and
+tightness indexes, monthly). Each has a typical release lag in `RELEASE_RHYTHM` (render.py) that the health strip turns
 into a 'next expected' date. After each G.19 release run `uv run python checks/verify_g19.py`; a revision that moves a
 live golden shows as fred `golden_mismatch` (amber, the job still passes) until the golden is re-based.
+The one exception to the golden rule is cfpb_cct: no release page states its numbers (the CFPB's biennial report counts
+from issuer data and does not reconcile), so the fetcher checks that the score and age files sum to within 6 percent of
+the total file every month and the fixture test pins the dashboard's January 2026 readings instead.
 
 ## Rendering
 - docs/index.html is fully self-contained: vendored uPlot (src/carddash/vendor), data embedded as JSON. That now

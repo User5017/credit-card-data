@@ -53,6 +53,8 @@ RELEASE_RHYTHM = {
     "bea": ("pce_total_saar", "US_HOUSEHOLDS", "M", 27),  # July 2026 on 2026-08-26
     "census": ("retail_sales_sa", "NAICS:44X72", "M", 45),  # June 2026 in the workbook with the 2026-08-14 release
     "ncua": ("ncua_card_loans", "NCUA_FICU", "Q", 65),  # a quarter's zip lands about two months after quarter end
+    "dfa": ("dfa_consumer_credit", "DFA_ALL_HOUSEHOLDS", "Q", 80),  # about a week after the Z.1: 2026 Q1 on 2026-06-18
+    "cfpb_cct": ("cct_card_inquiry_index_sa", "CFPB_CCP_ALL", "M", 105),  # the inquiry index runs about three months behind (originations seven)
 }
 
 SOURCE_LABELS = {
@@ -66,6 +68,8 @@ SOURCE_LABELS = {
     "bea": "Bureau of Economic Analysis, personal consumption expenditures by type of product (NIPA monthly)",
     "census": "Census Bureau, Monthly Retail Trade Survey",
     "ncua": "NCUA, 5300 Call Report quarterly data (credit unions)",
+    "dfa": "Federal Reserve Board, Distributional Financial Accounts",
+    "cfpb_cct": "CFPB Consumer Credit Trends (Consumer Credit Panel)",
 }
 STATUS_LABELS = {
     "ok": "OK",
@@ -288,6 +292,32 @@ DISCOURAGED_NOTE = (
 # Keys: `post` writes docs/img/<id>.png (one per panel); `band` fills between two series (1-based data indices);
 # `benchmark` adds a dashed 2015-2019 average of the first series; `y_zero: False` lets the y axis float (scores);
 # `since` cuts the history; `notes` adds chart-level notes to the series' scope notes.
+DFA_NOTE = (
+    "Federal Reserve Distributional Financial Accounts: the Z.1 household balance sheet split across household "
+    "groups with the Survey of Consumer Finances, quarterly, not seasonally adjusted, the whole history revised each "
+    "release. Consumer credit here is all of it (cards, auto, student and other loans), not cards alone: cards are "
+    "roughly a quarter of the dollars, and no public source splits card debt by wealth or income."
+)
+CCT_NOTE = (
+    "CFPB Consumer Credit Trends, from the Bureau's Consumer Credit Panel (a 1-in-48 sample of credit records at one "
+    "bureau, scaled to the population): every lender that reports to the bureau, not only the large banks of the "
+    "Y-14. The last six months are not final and originations are published about seven months behind. No release "
+    "page states these numbers, so this is the one source on the page checked by cross-file sums rather than a "
+    "golden number."
+)
+INTEREST_NOTE = (
+    "Household interest payments (BEA, nonmortgage interest, at an annual rate) divided by consumer credit "
+    "outstanding (G.19 total, same month) is the rate households actually pay on all consumer credit, cards, auto "
+    "and student loans together. The card APR is what revolvers are charged on cards alone; the gap between the two "
+    "is the cheaper non-card debt and the card balances that pay no interest at all. The APR rising while the "
+    "effective rate stays flat means the repricing is landing on fewer dollars."
+)
+CLAIMS_NOTE = (
+    "Department of Labor unemployment insurance claims, weekly, seasonally adjusted. The thesis watch keys on the "
+    "unemployment rate; claims are the same signal a month earlier. The newest week of initial claims is an advance "
+    "figure revised the following week."
+)
+
 PANELS = [
     {
         "name": "Growth",
@@ -418,6 +448,18 @@ PANELS = [
                       view="v_apr_spread", field="prime"),
                     S("card_apr_assessed_interest", "COMBANKS_ALL", "Spread over prime, percentage points", period_type="Q",
                       view="v_apr_spread", field="spread_over_prime", unit="pp", dash=True),
+                ],
+            },
+            {
+                "id": "effective_rate",
+                "title": "Interest households actually pay on consumer credit, against the card APR",
+                "unit": "pct",
+                "step": False,
+                "notes": [INTEREST_NOTE],
+                "series": [
+                    S("hh_interest_payments_saar", "US_HOUSEHOLDS", "Effective rate on all consumer credit (BEA interest paid over G.19 credit outstanding)",
+                      source="bea", view="v_interest_burden", field="effective_rate_pct"),
+                    S("card_apr_assessed_interest", "COMBANKS_ALL", "Card APR on accounts assessed interest (G.19)", period_type="Q"),
                 ],
             },
             {
@@ -575,6 +617,101 @@ PANELS = [
                     S("sce_discouraged_rate", "SCORE:680-760", "Score 680 to 760", period_type="T", source="nyfed_sce"),
                     S("sce_discouraged_rate", "SCORE:GE760", "Score over 760", period_type="T", source="nyfed_sce"),
                 ],
+            },
+            {
+                "id": "cct_originations",
+                "title": "New credit cards opened per month, all lenders",
+                "unit": "millions",
+                "step": False,
+                "benchmark": True,
+                "notes": [
+                    "Credit card accounts originated in the month as they appear on credit reports, seasonally "
+                    "adjusted, millions. The all-lender count behind the large-bank origination series in the "
+                    "Borrowers panel. " + CCT_NOTE
+                ],
+                "series": [S("cct_card_originations_sa", "CFPB_CCP_ALL", "Cards opened, SA", source="cfpb_cct")],
+            },
+            {
+                "id": "cct_lines_by_score",
+                "title": "New card credit lines by credit score, share of the total",
+                "unit": "pct",
+                "step": False,
+                "notes": [
+                    "Each score group's share of the credit limit dollars on cards opened in the month, seasonally "
+                    "adjusted, against the sum of the five groups. Scores are FICO 8 at origination in the CFPB's own "
+                    "bands. " + CCT_NOTE
+                ],
+                "series": [
+                    S("cct_card_new_lines_sa", "CFPB_CCP_ALL", "Deep subprime (under 580)", tier="deep_subprime", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                    S("cct_card_new_lines_sa", "CFPB_CCP_ALL", "Subprime (580 to 619)", tier="subprime", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                    S("cct_card_new_lines_sa", "CFPB_CCP_ALL", "Near-prime (620 to 659)", tier="near_prime", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                    S("cct_card_new_lines_sa", "CFPB_CCP_ALL", "Prime (660 to 719)", tier="prime", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                    S("cct_card_new_lines_sa", "CFPB_CCP_ALL", "Superprime (720 and up)", tier="superprime", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                ],
+            },
+            {
+                "id": "cct_below_prime_share",
+                "title": "Share of new card credit lines going to borrowers with scores under 660",
+                "unit": "pct",
+                "step": False,
+                "benchmark": True,
+                "notes": [
+                    "The deep subprime, subprime and near-prime groups together (all lenders, monthly, CFPB) against "
+                    "the same measure for the large banks of the Y-14 (quarterly, Philly Fed). The two agreeing says "
+                    "the large-bank picture in the Borrowers panel holds for the whole market; the all-lender line "
+                    "sitting above it says the small lines to subprime borrowers are being written by smaller "
+                    "lenders. " + CCT_NOTE
+                ],
+                "series": [
+                    S("cct_card_new_lines_sa", "CFPB_CCP_ALL", "All lenders, share of new credit line dollars (CFPB, monthly)", tier="near_prime",
+                      source="cfpb_cct", view="v_cct_shares", field="below_prime_share_pct"),
+                    S("y14_card_new_commitments_share", "Y14_CARD_FILERS", "Large banks, share of new credit lines (Y-14, quarterly)",
+                      tier="lt660", period_type="Q", source="phillyfed"),
+                ],
+            },
+            {
+                "id": "cct_lines_by_age",
+                "title": "New card credit lines by borrower age, share of the total",
+                "unit": "pct",
+                "step": False,
+                "notes": [
+                    "Each age group's share of the credit limit dollars on cards opened in the month, seasonally "
+                    "adjusted, against the sum of the four groups. The over-65s' share is the supply-side half of the "
+                    "older-borrower question in the Performance panel. " + CCT_NOTE
+                ],
+                "series": [
+                    S("cct_card_new_lines_sa", "AGE:LT30", "Under 30", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                    S("cct_card_new_lines_sa", "AGE:30-44", "30 to 44", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                    S("cct_card_new_lines_sa", "AGE:45-64", "45 to 64", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                    S("cct_card_new_lines_sa", "AGE:65PLUS", "65 and older", source="cfpb_cct", view="v_cct_shares", field="share_pct"),
+                ],
+            },
+            {
+                "id": "cct_inquiries",
+                "title": "Consumers applying for a card: inquiry index",
+                "unit": "index",
+                "step": False,
+                "benchmark": True,
+                "notes": [
+                    "Consumers with at least one card inquiry (a hard pull from an application) in the month, "
+                    "January 2010 = 100, seasonally adjusted. Demand for card credit as the bureau sees it, and the "
+                    "most timely series from this source. " + CCT_NOTE
+                ],
+                "series": [S("cct_card_inquiry_index_sa", "CFPB_CCP_ALL", "Inquiry index, SA", source="cfpb_cct")],
+            },
+            {
+                "id": "cct_tightness",
+                "title": "Card applications that did not lead to a new account: tightness index",
+                "unit": "index",
+                "step": False,
+                "benchmark": True,
+                "notes": [
+                    "The CFPB's credit tightness index: the rate of consumers with a card inquiry in the month whose "
+                    "inquiry did not become a new account (refused, or approved and declined), January 2010 = 100, "
+                    "seasonally adjusted. Published as an index, not a share, so read it against the household "
+                    "survey's card rejection rate in the first chart of this panel for the level. " + CCT_NOTE
+                ],
+                "series": [S("cct_card_tightness_sa", "CFPB_CCP_ALL", "Tightness index, SA", source="cfpb_cct")],
             },
         ],
     },
@@ -824,6 +961,89 @@ PANELS = [
         ],
     },
     {
+        "name": "Distribution",
+        "blurb": "Who owes the consumer credit and what stands behind it: the Fed's household balance sheet by wealth, income and age.",
+        "charts": [
+            {
+                "id": "dfa_credit_by_wealth",
+                "title": "Consumer credit by wealth group, share of the total",
+                "unit": "pct",
+                "step": True,
+                "post": True,
+                "notes": [DFA_NOTE],
+                "series": [
+                    S("dfa_consumer_credit", "WEALTH:BOTTOM50", "Bottom 50% by wealth", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "WEALTH:NEXT40", "50th to 90th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "WEALTH:NEXT9", "90th to 99th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "WEALTH:NEXT0_9", "99th to 99.9th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "WEALTH:TOP0_1", "Top 0.1%", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                ],
+            },
+            {
+                "id": "dfa_buffer_by_wealth",
+                "title": "Deposits held per dollar of consumer credit owed, by wealth group",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "Deposits (checkable and time deposits plus currency) as a share of the group's consumer credit: the "
+                    "liquid buffer standing behind the debt. The top 10 percent hold deposits worth many times their "
+                    "consumer credit and are left off so the bottom half stays readable. " + DFA_NOTE
+                ],
+                "series": [
+                    S("dfa_consumer_credit", "WEALTH:BOTTOM50", "Bottom 50% by wealth", period_type="Q", source="dfa", view="v_dfa_shares", field="deposits_to_credit_pct"),
+                    S("dfa_consumer_credit", "WEALTH:NEXT40", "50th to 90th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="deposits_to_credit_pct"),
+                ],
+            },
+            {
+                "id": "dfa_credit_to_net_worth",
+                "title": "Consumer credit as a share of net worth, by wealth group",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "The group's consumer credit against everything it owns net of debt. For the bottom half this is "
+                    "the measure of how much of the consumer credit stock rests on households with little behind it; "
+                    "the next 40 percent is drawn for scale. " + DFA_NOTE
+                ],
+                "series": [
+                    S("dfa_consumer_credit", "WEALTH:BOTTOM50", "Bottom 50% by wealth", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_to_net_worth_pct"),
+                    S("dfa_consumer_credit", "WEALTH:NEXT40", "50th to 90th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_to_net_worth_pct"),
+                ],
+            },
+            {
+                "id": "dfa_credit_per_household_age",
+                "title": "Consumer credit per household, by age of head",
+                "unit": "usd",
+                "step": True,
+                "notes": [
+                    "Consumer credit owed divided by the number of households in the age group, in dollars. It answers "
+                    "a question the delinquency-by-age data cannot: whether the over-70s' rising delinquency comes with "
+                    "rising debt per household (distress) or without it (composition). " + DFA_NOTE
+                ],
+                "series": [
+                    S("dfa_consumer_credit", "AGE:LT40", "Head under 40", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_per_household"),
+                    S("dfa_consumer_credit", "AGE:40-54", "40 to 54", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_per_household"),
+                    S("dfa_consumer_credit", "AGE:55-69", "55 to 69", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_per_household"),
+                    S("dfa_consumer_credit", "AGE:70PLUS", "70 and over", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_per_household"),
+                ],
+            },
+            {
+                "id": "dfa_credit_by_income",
+                "title": "Consumer credit by income group, share of the total",
+                "unit": "pct",
+                "step": True,
+                "notes": [DFA_NOTE],
+                "series": [
+                    S("dfa_consumer_credit", "INCOME_PCT:0-20", "Bottom 20% by income", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "INCOME_PCT:20-40", "20th to 40th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "INCOME_PCT:40-60", "40th to 60th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "INCOME_PCT:60-80", "60th to 80th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "INCOME_PCT:80-99", "80th to 99th percentile", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                    S("dfa_consumer_credit", "INCOME_PCT:99-100", "Top 1% by income", period_type="Q", source="dfa", view="v_dfa_shares", field="share_pct"),
+                ],
+            },
+        ],
+    },
+    {
         "name": "Spend",
         "blurb": "What the cards are buying: household spending and retail sales by category, and how card purchase volume tracks them.",
         "charts": [
@@ -1035,6 +1255,33 @@ PANELS = [
                     S("revolving_credit_sa", "ALL_HOLDERS", "Revolving (mostly cards)"),
                 ],
             },
+            {
+                "id": "interest_share_income",
+                "title": "Nonmortgage interest payments as a share of disposable income",
+                "unit": "pct",
+                "step": False,
+                "benchmark": True,
+                "notes": [
+                    "Household interest payments (BEA, every kind of nonmortgage interest) over disposable personal "
+                    "income, both monthly at annual rates. The debt service ratio above counts principal too and "
+                    "arrives five months late; this is the interest half of it, four weeks after the month. " + INTEREST_NOTE
+                ],
+                "series": [
+                    S("hh_interest_payments_saar", "US_HOUSEHOLDS", "Interest paid, share of disposable income", source="bea",
+                      view="v_interest_burden", field="share_of_income_pct"),
+                ],
+            },
+            {
+                "id": "jobless_claims",
+                "title": "Initial and continuing jobless claims, weekly",
+                "unit": "thousands",
+                "step": False,
+                "notes": [CLAIMS_NOTE],
+                "series": [
+                    S("initial_claims_sa", "US_ECONOMY", "Initial claims", period_type="W"),
+                    S("continuing_claims_sa", "US_ECONOMY", "Continuing claims (insured unemployment)", period_type="W"),
+                ],
+            },
         ],
     },
 ]
@@ -1085,6 +1332,9 @@ HEADLINES = [
     (("unemployment_rate_sa", "US_ECONOMY", "all", "M", "fred"), "Unemployment rate (BLS)", "rate", "losses_vs_labor"),
     (("sloos_card_standards_net_tightening", "SLOOS_DOMESTIC", "all", "Q", "fred"), "Banks tightening card standards, net (SLOOS)", "net", "sloos_cards"),
     (("sce_miss_payment_prob", "SCE_ALL", "all", "M", "nyfed_sce_monthly"), "Households' stated chance of missing a debt payment in the next 3 months (NY Fed survey)", "rate", "miss_payment_expectation"),
+    (("dfa_consumer_credit", "WEALTH:BOTTOM50", "all", "Q", "dfa"), "Consumer credit owed by the bottom half of households by wealth (Fed DFA)", "level", "dfa_credit_by_wealth"),
+    (("cct_card_originations_sa", "CFPB_CCP_ALL", "all", "M", "cfpb_cct"), "New credit cards opened in the month, all lenders (CFPB, SA)", "millions", "cct_originations"),
+    (("initial_claims_sa", "US_ECONOMY", "all", "W", "fred"), "Initial jobless claims, week ending (DOL, SA)", "thousands", "jobless_claims"),
 ]
 
 
@@ -1351,9 +1601,16 @@ def thesis_status(con, today: dt.date) -> list[dict]:
     return out
 
 
+COUNT_KINDS = {"level", "millions", "thousands"}  # amounts: the change on the year is a percentage, no benchmark
+
+
 def _fmt_value(v: float, kind: str) -> str:
     if kind == "level":
         return f"${v:,.0f}bn"
+    if kind == "millions":
+        return f"{v:.2f} million"
+    if kind == "thousands":
+        return f"{v:,.0f} thousand"
     return f"{v:.2f}%"
 
 
@@ -1372,7 +1629,7 @@ def _headline(facts: pd.DataFrame, key: tuple, label: str, kind: str, today: dt.
     year_ago = values.get(year_ago_d)
     change = None
     if year_ago is not None:
-        if kind == "level":
+        if kind in COUNT_KINDS:
             change = f"{100 * (latest / year_ago - 1):+.1f}% on the year" if year_ago else None
         else:
             change = f"{latest - year_ago:+.2f} pp on the year"

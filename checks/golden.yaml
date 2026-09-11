@@ -23,6 +23,14 @@
 #               columns (2Q 2026 1,189,601, 1Q 2026 1,161,264, 2Q 2025 1,141,110, millions) and the institution count
 #               (4,238). Also checked, not golden: Table V-A 'Credit card loans' 30-89 days 1.37% and noncurrent 1.44%
 #               reproduce as P3CRCD / LNCRCD (1.370) and NCCRCD / LNCRCD (1.441) at 2026-06-30.
+#   2026-09-10  dfa: the Z.1 release PDF of 2026-06-11, table S14.b (Balance sheet of households), reproduces from the
+#               sum of the five wealth groups to the tenth of a billion: consumer credit 4,988.2 (2023), 4,948.1 (2024),
+#               5,099.4 (2025); deposits 14,131.9 (2025, lines 6 plus 7); net worth 174,003.5 (2025). The 2026 Q1 sum
+#               (5,073.0) is 0.9bn above the September G.19's NSA total for March 2026 (vintage), so G.19 is not a golden.
+#   2026-09-10  cfpb_cct: NO golden. No release page states the Consumer Credit Trends numbers; the biennial Consumer
+#               Credit Card Market Report counts from issuer data (89 million new accounts in 2024 against 83 million in
+#               the panel files). The fetcher checks the score and age files sum to within 6 percent of the total file
+#               instead, and the fixture test pins the January 2026 dashboard readings (8.2 million cards, $54.2bn).
 
 - id: g19_revolving_sa_2024_12
   metric: revolving_credit_sa
@@ -674,3 +682,55 @@
   check_live: true
   origin: "Same report, page 15 table, 'Credit cards, $ Billions', December 2023 column: 82.0 (file sum: 82.010)"
   origin_url: https://ncua.gov/files/publications/analysis/quarterly-data-summary-2026-Q1.pdf
+
+- id: dfa_consumer_credit_2023
+  metric: dfa_consumer_credit
+  entity: DFA_ALL_HOUSEHOLDS
+  tier: all
+  period_type: Q
+  period_end: 2023-12-31
+  source: dfa
+  expected: 4988.2
+  tolerance: 0.06
+  check_live: true
+  origin: "Z.1 Financial Accounts release of 2026-06-11, table S14.b Balance sheet of households (PDF page 151), line 23 'Consumer credit' (FL153166000), 2023 column, billions; the DFA sum over the five wealth groups at 2023 Q4"
+  origin_url: https://www.federalreserve.gov/releases/z1/20260611/z1.pdf
+
+- id: dfa_consumer_credit_2024
+  metric: dfa_consumer_credit
+  entity: DFA_ALL_HOUSEHOLDS
+  tier: all
+  period_type: Q
+  period_end: 2024-12-31
+  source: dfa
+  expected: 4948.1
+  tolerance: 0.06
+  check_live: false
+  origin: "Z.1 Financial Accounts release of 2026-06-11, table S14.b line 23 'Consumer credit', 2024 column (fixture-only: the September Z.1 carries the annual revision, which can move recent year-ends)"
+  origin_url: https://www.federalreserve.gov/releases/z1/20260611/z1.pdf
+
+- id: dfa_consumer_credit_2025
+  metric: dfa_consumer_credit
+  entity: DFA_ALL_HOUSEHOLDS
+  tier: all
+  period_type: Q
+  period_end: 2025-12-31
+  source: dfa
+  expected: 5099.4
+  tolerance: 0.06
+  check_live: false
+  origin: "Z.1 Financial Accounts release of 2026-06-11, table S14.b line 23 'Consumer credit', 2025 column (fixture-only, same reason)"
+  origin_url: https://www.federalreserve.gov/releases/z1/20260611/z1.pdf
+
+- id: dfa_deposits_2025
+  metric: dfa_deposits
+  entity: DFA_ALL_HOUSEHOLDS
+  tier: all
+  period_type: Q
+  period_end: 2025-12-31
+  source: dfa
+  expected: 14131.9
+  tolerance: 0.11
+  check_live: false
+  origin: "Z.1 Financial Accounts release of 2026-06-11, table S14.b, line 6 'Checkable deposits and currency' 5,351.7 plus line 7 'Time deposits and short-term investments' 8,780.2, 2025 column, billions; the DFA 'Deposits' sum over the five wealth groups at 2025 Q4"
+  origin_url: https://www.federalreserve.gov/releases/z1/20260611/z1.pdf

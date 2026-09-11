@@ -319,3 +319,82 @@ SELECT 'ncua_card_charge_offs_ytd' AS metric, entity, entity_type, tier, period_
                               ELSE (co_ytd - prev_co) - (rec_ytd - prev_rec) END) / ((prev_loans + loans) / 2.0) END AS nco_rate_annualized
 FROM q
 WHERE loans > 0;
+
+-- DFA shares: each household group's consumer credit as a share of all households' (entity DFA_ALL_HOUSEHOLDS), its
+-- deposits per dollar of consumer credit, consumer credit per household (billions over millions of households, so
+-- dollars) and consumer credit as a share of net worth. Keyed on the group's dfa_consumer_credit series so render.py
+-- can select a field per entity.
+CREATE OR REPLACE VIEW v_dfa_shares AS
+WITH f AS (
+  SELECT metric, entity, entity_type, tier, period_type, source, CAST(period_end AS DATE) AS period_end, value
+  FROM facts WHERE source = 'dfa'
+),
+w AS (
+  SELECT entity, entity_type, tier, period_type, source, period_end,
+         max(CASE WHEN metric = 'dfa_consumer_credit' THEN value END) AS credit,
+         max(CASE WHEN metric = 'dfa_deposits' THEN value END) AS deposits,
+         max(CASE WHEN metric = 'dfa_liabilities' THEN value END) AS liabilities,
+         max(CASE WHEN metric = 'dfa_net_worth' THEN value END) AS net_worth,
+         max(CASE WHEN metric = 'dfa_households' THEN value END) AS households
+  FROM f GROUP BY entity, entity_type, tier, period_type, source, period_end
+),
+t AS (SELECT period_end, credit AS total_credit, deposits AS total_deposits FROM w WHERE entity = 'DFA_ALL_HOUSEHOLDS')
+SELECT 'dfa_consumer_credit' AS metric, w.entity, w.entity_type, w.tier, w.period_type, w.source, w.period_end,
+       w.credit, w.deposits, w.net_worth, w.households,
+       100.0 * w.credit / t.total_credit AS share_pct,
+       100.0 * w.deposits / t.total_deposits AS deposit_share_pct,
+       100.0 * w.deposits / w.credit AS deposits_to_credit_pct,
+       1000.0 * w.credit / w.households AS credit_per_household,
+       100.0 * w.credit / w.net_worth AS credit_to_net_worth_pct
+FROM w JOIN t ON t.period_end = w.period_end
+WHERE w.credit > 0 AND w.households > 0 AND w.net_worth <> 0;
+
+-- CFPB tier and age shares: each credit score group's share of the credit line on new cards, against the sum of the
+-- five groups (the total file is scaled separately and the groups do not sum to it exactly), and the same for the
+-- four age groups. below_prime_share_pct on every tier row is the three sub-660 groups together. Keyed on the
+-- group's own series (SA and NSA alike).
+CREATE OR REPLACE VIEW v_cct_shares AS
+WITH f AS (
+  SELECT metric, entity, entity_type, tier, period_type, source, CAST(period_end AS DATE) AS period_end, value
+  FROM facts WHERE source = 'cfpb_cct' AND metric IN ('cct_card_new_lines_sa', 'cct_card_new_lines_nsa')
+),
+tiers AS (
+  SELECT *, sum(value) OVER (PARTITION BY metric, period_end) AS total,
+         sum(CASE WHEN tier IN ('deep_subprime', 'subprime', 'near_prime') THEN value END) OVER (PARTITION BY metric, period_end) AS below_prime
+  FROM f WHERE entity = 'CFPB_CCP_ALL' AND tier <> 'all'
+),
+ages AS (
+  SELECT *, sum(value) OVER (PARTITION BY metric, period_end) AS total FROM f WHERE entity_type = 'age'
+)
+SELECT metric, entity, entity_type, tier, period_type, source, period_end, value,
+       100.0 * value / total AS share_pct, 100.0 * below_prime / total AS below_prime_share_pct
+FROM tiers WHERE total > 0
+UNION ALL
+SELECT metric, entity, entity_type, tier, period_type, source, period_end, value,
+       100.0 * value / total AS share_pct, NULL AS below_prime_share_pct
+FROM ages WHERE total > 0;
+
+-- Interest burden: household interest payments (BEA, nonmortgage, annual rate) over consumer credit outstanding
+-- (G.19 total, SA, same month end) is the effective rate households pay on all consumer credit, the dollar
+-- counterpart of the card APR, and over monthly disposable income it is the share of income going to nonmortgage
+-- interest. Keyed on the BEA interest series.
+CREATE OR REPLACE VIEW v_interest_burden AS
+WITH i AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS interest
+  FROM facts WHERE metric = 'hh_interest_payments_saar' AND entity = 'US_HOUSEHOLDS' AND source = 'bea'
+),
+c AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS consumer_credit
+  FROM facts WHERE metric = 'consumer_credit_total_sa' AND entity = 'ALL_HOLDERS' AND source = 'fred'
+),
+d AS (
+  SELECT CAST(period_end AS DATE) AS period_end, value AS dpi
+  FROM facts WHERE metric = 'disposable_income_monthly_saar' AND entity = 'US_HOUSEHOLDS' AND source = 'bea'
+)
+SELECT 'hh_interest_payments_saar' AS metric, 'US_HOUSEHOLDS' AS entity, 'aggregate' AS entity_type, 'all' AS tier,
+       'M' AS period_type, 'bea' AS source, i.period_end, i.interest, c.consumer_credit, d.dpi,
+       100.0 * i.interest / c.consumer_credit AS effective_rate_pct,
+       100.0 * i.interest / d.dpi AS share_of_income_pct
+FROM i
+LEFT JOIN c ON c.period_end = i.period_end
+LEFT JOIN d ON d.period_end = i.period_end;

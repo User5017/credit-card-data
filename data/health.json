@@ -1,14 +1,16 @@
 {
-  "generated_at": "2026-09-11T00:02:59Z",
+  "generated_at": "2026-09-11T03:00:23Z",
   "sources": {
     "bea": {
       "source": "bea",
       "status": "ok",
-      "messages": [],
+      "messages": [
+        "1622 new row(s)"
+      ],
       "last_period_end": "2026-07-31",
-      "pulled_at": "2026-09-11T00:02:59Z",
-      "rows": 6488,
-      "n_series": 8,
+      "pulled_at": "2026-09-11T02:52:47Z",
+      "rows": 8110,
+      "n_series": 10,
       "n_revisions": 0
     },
     "census": {
@@ -19,6 +21,26 @@
       "pulled_at": "2026-09-11T00:02:59Z",
       "rows": 4968,
       "n_series": 12,
+      "n_revisions": 0
+    },
+    "cfpb_cct": {
+      "source": "cfpb_cct",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-05-31",
+      "pulled_at": "2026-09-11T03:00:23Z",
+      "rows": 6206,
+      "n_series": 26,
+      "n_revisions": 0
+    },
+    "dfa": {
+      "source": "dfa",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-03-31",
+      "pulled_at": "2026-09-11T03:00:23Z",
+      "rows": 11760,
+      "n_series": 80,
       "n_revisions": 0
     },
     "fdic": {
@@ -36,11 +58,13 @@
     "fred": {
       "source": "fred",
       "status": "ok",
-      "messages": [],
+      "messages": [
+        "6227 new row(s)"
+      ],
       "last_period_end": "2026-09-09",
-      "pulled_at": "2026-09-11T00:02:59Z",
-      "rows": 14957,
-      "n_series": 32,
+      "pulled_at": "2026-09-11T02:52:47Z",
+      "rows": 21184,
+      "n_series": 34,
       "n_revisions": 0
     },
     "ncua": {

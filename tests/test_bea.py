@@ -25,7 +25,11 @@ def test_series_shape(bea_facts, meta):
     cols = ["metric", "entity", "tier", "period_type"]
     listed = {tuple(r) for r in series_for_source(meta, bea.SOURCE)[cols].itertuples(index=False)}
     loaded = {tuple(r) for r in bea_facts[cols].drop_duplicates().itertuples(index=False)}
-    assert loaded == listed and len(loaded) == 8
+    assert loaded == listed and len(loaded) == 10
+    interest = bea_facts[bea_facts["metric"] == "hh_interest_payments_saar"].set_index("period_end")["value"]
+    assert abs(interest[pd.Timestamp("2026-07-31")] - 604.339) < 0.001  # billions, from '604,339' millions
+    dpi = bea_facts[bea_facts["metric"] == "disposable_income_monthly_saar"].set_index("period_end")["value"]
+    assert abs(dpi[pd.Timestamp("2026-07-31")] - dpi[pd.Timestamp("2026-06-30")] - 125.9) < 0.06  # the release: DPI +$125.9bn
     total = bea_facts[bea_facts["metric"] == "pce_total_saar"]
     assert total["period_end"].min() == pd.Timestamp("1959-01-31") and total["period_end"].max() == pd.Timestamp("2026-07-31")
     assert abs(total["value"].iloc[-1] - 22250.42) < 0.001  # billions, from '22,250,420' millions

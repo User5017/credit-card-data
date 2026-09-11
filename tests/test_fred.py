@@ -115,6 +115,18 @@ def test_weekly_keeps_its_date(meta):
     assert last["period_end"].day_name() == "Wednesday"
 
 
+def test_weekly_claims_are_thousands_on_their_saturday(meta):
+    """DOL weekly claims release of 2026-09-10: initial claims 206,000 in the week ending September 5 (advance)."""
+    obs = fred.parse_fredgraph((FIXTURES / "fred" / "ICSA.csv").read_text())
+    facts = fred.to_facts(obs, _row(meta, "ICSA"), PULLED_AT)
+    assert facts["period_type"].unique().tolist() == ["W"]
+    last = facts.iloc[-1]
+    assert last["period_end"] == pd.Timestamp("2026-09-05") and last["period_end"].day_name() == "Saturday"
+    assert abs(last["value"] - 206.0) < 1e-9
+    cont = fred.to_facts(fred.parse_fredgraph((FIXTURES / "fred" / "CCSA.csv").read_text()), _row(meta, "CCSA"), PULLED_AT)
+    assert cont.iloc[-1]["period_end"] == pd.Timestamp("2026-08-29") and abs(cont.iloc[-1]["value"] - 1774.0) < 1e-9
+
+
 def test_missing_markers_are_dropped():
     text = "observation_date,X\n2020-01-01,1.5\n2020-02-01,.\n2020-03-01,\n2020-04-01,2.5\n"
     obs = fred.parse_fredgraph(text)

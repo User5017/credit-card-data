@@ -13,6 +13,9 @@ US credit card data, latest readings (2026-09-11)
 - Unemployment rate (BLS): 4.10% in Aug 2026, -0.20 pp on the year, 2015-2019 average 4.42%
 - Banks tightening card standards, net (SLOOS): 6.70% in 2026 Q2, -3.70 pp on the year
 - Households' stated chance of missing a debt payment in the next 3 months (NY Fed survey): 13.16% in Aug 2026, +0.07 pp on the year, 2015-2019 average 12.31%
+- Consumer credit owed by the bottom half of households by wealth (Fed DFA): $2,627bn in 2026 Q1, +2.5% on the year, highest on record (since 1989 Q3)
+- New credit cards opened in the month, all lenders (CFPB, SA): 8.63 million in Jan 2026, +18.7% on the year, highest on record (since Jan 2006)
+- Initial jobless claims, week ending (DOL, SA): 206 thousand in 2026-09-05, -20.5% on the year
 
 Thesis of 2026-09-08 (holds): US card credit is re-segmenting, not cycling: the 2022-24 loss surge was a vintage event, and the repricing that came with it is structural.
 - [ok ] Flow into 90+ day delinquency stays below 7.5% -> 6.97% in 2026 Q2
