@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T05:14:25Z",
+  "generated_at": "2026-09-11T05:20:44Z",
   "sources": {
     "bea": {
       "source": "bea",
@@ -101,6 +101,16 @@
       "pulled_at": "2026-09-11T05:14:25Z",
       "rows": 5724,
       "n_series": 36,
+      "n_revisions": 0
+    },
+    "nyfed_state": {
+      "source": "nyfed_state",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2025-12-31",
+      "pulled_at": "2026-09-11T05:20:44Z",
+      "rows": 2420,
+      "n_series": 106,
       "n_revisions": 0
     },
     "phillyfed": {

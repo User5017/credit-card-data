@@ -5,7 +5,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from carddash.fetchers import bea, census, cfpb_cct, dfa, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, phillyfed, tccp
+from carddash.fetchers import (
+    bea, census, cfpb_cct, dfa, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, nyfed_state, phillyfed, tccp,
+)
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
 from carddash.series import load_series, series_for_source
@@ -142,9 +144,18 @@ def cct_facts(meta) -> pd.DataFrame:
     return coerce_facts(cfpb_cct.parse_files(texts, series_for_source(meta, cfpb_cct.SOURCE), PULLED_AT))
 
 
+STATE_FIXTURE = FIXTURES / "nyfed_state" / nyfed_state.RAW_NAME  # the February 2026 file, Q4 2003 to Q4 2025
+
+
+@pytest.fixture(scope="session")
+def state_facts() -> pd.DataFrame:
+    """Facts from the checked-in state-level workbook, parsed once per session."""
+    return coerce_facts(nyfed_state.parse_workbook(STATE_FIXTURE, PULLED_AT))
+
+
 @pytest.fixture(scope="session")
 def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, sce_facts, sce_monthly_facts,
-                  bea_facts, census_facts, ncua_facts, dfa_facts, cct_facts) -> pd.DataFrame:
+                  bea_facts, census_facts, ncua_facts, dfa_facts, cct_facts, state_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
@@ -161,6 +172,7 @@ def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, 
                 ncua_facts,
                 dfa_facts,
                 cct_facts,
+                state_facts,
             ],
             ignore_index=True,
         )
@@ -170,3 +182,15 @@ def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, 
 @pytest.fixture
 def tmp_paths(tmp_path) -> Paths:
     return Paths.from_root(REPO, data=tmp_path / "data", docs=tmp_path / "docs")
+
+
+@pytest.fixture(scope="session")
+def session_paths(tmp_path_factory) -> Paths:
+    """A Paths for fixtures that render the page once and only read the result.
+
+    Every render() writes a PNG per chart through matplotlib, so a function-scoped page fixture re-drew all of them
+    for each of the twenty-odd tests that read the page. Rendering once per session keeps the suite's runtime flat
+    as charts are added. Anything that writes must use `tmp_paths` instead, which is per-test.
+    """
+    root = tmp_path_factory.mktemp("page")
+    return Paths.from_root(REPO, data=root / "data", docs=root / "docs")

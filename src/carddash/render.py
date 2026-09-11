@@ -55,6 +55,7 @@ RELEASE_RHYTHM = {
     "ncua": ("ncua_card_loans", "NCUA_FICU", "Q", 65),  # a quarter's zip lands about two months after quarter end
     "dfa": ("dfa_consumer_credit", "DFA_ALL_HOUSEHOLDS", "Q", 80),  # about a week after the Z.1: 2026 Q1 on 2026-06-18
     "cfpb_cct": ("cct_card_inquiry_index_sa", "CFPB_CCP_ALL", "M", 105),  # the inquiry index runs about three months behind (originations seven)
+    "nyfed_state": ("state_card_dq90_rate_balances", "CCP_ALL", "A", 60),  # the 2025 file was published February 2026
 }
 
 SOURCE_LABELS = {
@@ -70,6 +71,7 @@ SOURCE_LABELS = {
     "ncua": "NCUA, 5300 Call Report quarterly data (credit unions)",
     "dfa": "Federal Reserve Board, Distributional Financial Accounts",
     "cfpb_cct": "CFPB Consumer Credit Trends (Consumer Credit Panel)",
+    "nyfed_state": "Federal Reserve Bank of New York, State Level Household Debt Statistics (Consumer Credit Panel/Equifax)",
 }
 STATUS_LABELS = {
     "ok": "OK",
@@ -147,6 +149,18 @@ def issuer_series(metric: str, view: str, field: str) -> list[dict]:
 
 AGE_GROUPS = ("18-29", "30-39", "40-49", "50-59", "60-69", "70+")
 STUDENT_AGE_GROUPS = ("18-29", "30-39", "40-49", "50+")  # the student loan sheet stops splitting at 50
+
+STATE_NOTE = (
+    "New York Fed State Level Household Debt Statistics, a separate annual draw from the same Consumer Credit Panel, "
+    "read at the fourth quarter of each year. The NY Fed notes these totals need not match the Quarterly Report's; "
+    "over 2003 to 2025 the two national series differ by at most 0.34 points. Puerto Rico is in the file and ends in "
+    "2016, so it leaves the range after that."
+)
+STATE_BREADTH_NOTE = (
+    "The breadth test for the loss cycle. Card delinquency rose in every one of the 51 areas between 2021 and 2025, "
+    "by 2.3 points in the state that moved least, so the deterioration was national rather than concentrated in a "
+    "few places. The range across states also widened, from 6.0 points in 2019 to 8.3 in 2025."
+)
 
 LOAN_TYPE_NOTE = (
     "Every loan type on the same households' credit reports, measured the same way by the same panel, so the lines "
@@ -1122,6 +1136,64 @@ PANELS = [
                     S("dfa_consumer_credit", "AGE:40-54", "40 to 54", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_per_household"),
                     S("dfa_consumer_credit", "AGE:55-69", "55 to 69", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_per_household"),
                     S("dfa_consumer_credit", "AGE:70PLUS", "70 and over", period_type="Q", source="dfa", view="v_dfa_shares", field="credit_per_household"),
+                ],
+            },
+            {
+                "id": "state_card_dq_range",
+                "title": "Card delinquency by state: the national rate and the range across states",
+                "unit": "pct",
+                "step": True,
+                "band": [1, 2],  # fill between the highest and the lowest state
+                "notes": [STATE_NOTE, STATE_BREADTH_NOTE],
+                "series": [
+                    S("state_card_dq90_rate_balances", "CCP_ALL", "Highest state", period_type="A", source="nyfed_state",
+                      view="v_state_card", field="state_max"),
+                    S("state_card_dq90_rate_balances", "CCP_ALL", "Lowest state", period_type="A", source="nyfed_state",
+                      view="v_state_card", field="state_min"),
+                    S("state_card_dq90_rate_balances", "CCP_ALL", "Median state", period_type="A", source="nyfed_state",
+                      view="v_state_card", field="state_median", dash=True),
+                    S("state_card_dq90_rate_balances", "CCP_ALL", "National", period_type="A", source="nyfed_state"),
+                ],
+            },
+            {
+                "id": "state_card_dq_selected",
+                "title": "Card delinquency in the states at the edges of the range",
+                "unit": "pct",
+                "step": True,
+                "notes": [
+                    "The three highest and three lowest states at the latest reading, with the national rate. The "
+                    "ordering barely changes from year to year: the same states sit at each end throughout, which "
+                    "is why the range widening matters more than which state is on top. " + STATE_NOTE
+                ],
+                "series": [
+                    S("state_card_dq90_rate_balances", "CCP_ALL", "National", period_type="A", source="nyfed_state", dash=True),
+                    S("state_card_dq90_rate_balances", "STATE:NV", "Nevada", period_type="A", source="nyfed_state"),
+                    S("state_card_dq90_rate_balances", "STATE:FL", "Florida", period_type="A", source="nyfed_state"),
+                    S("state_card_dq90_rate_balances", "STATE:TX", "Texas", period_type="A", source="nyfed_state"),
+                    S("state_card_dq90_rate_balances", "STATE:VT", "Vermont", period_type="A", source="nyfed_state"),
+                    S("state_card_dq90_rate_balances", "STATE:MN", "Minnesota", period_type="A", source="nyfed_state"),
+                    S("state_card_dq90_rate_balances", "STATE:WI", "Wisconsin", period_type="A", source="nyfed_state"),
+                ],
+            },
+            {
+                "id": "state_card_debt_range",
+                "title": "Card debt per person by state: the national level and the range across states",
+                "unit": "usd",
+                "step": True,
+                "band": [1, 2],
+                "notes": [
+                    "Credit card balances divided by the number of adults with a credit file in the state, so it is "
+                    "a per-person figure across everyone with a credit record, not per cardholder or per household. "
+                    + STATE_NOTE
+                ],
+                "series": [
+                    S("state_card_debt_per_capita", "CCP_ALL", "Highest state", period_type="A", source="nyfed_state",
+                      view="v_state_card", field="state_max"),
+                    S("state_card_debt_per_capita", "CCP_ALL", "Lowest state", period_type="A", source="nyfed_state",
+                      view="v_state_card", field="state_min"),
+                    S("state_card_debt_per_capita", "CCP_ALL", "Median state", period_type="A", source="nyfed_state",
+                      view="v_state_card", field="state_median", dash=True),
+                    S("state_card_debt_per_capita", "CCP_ALL", "National", period_type="A", source="nyfed_state"),
                 ],
             },
             {

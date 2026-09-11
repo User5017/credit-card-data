@@ -32,7 +32,7 @@ RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
 POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service", "dfa_credit_by_wealth"}
 ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly", "bea", "census", "ncua",
-               "dfa", "cfpb_cct")
+               "dfa", "cfpb_cct", "nyfed_state")
 
 
 def _health(generated_at: str, sources=("fred",), status="ok") -> dict:
@@ -51,11 +51,12 @@ def _payload(html: str) -> dict:
     return json.loads(html[start:html.index(";</script>", start)])
 
 
-@pytest.fixture
-def page(tmp_paths, fixture_facts):
-    write_facts(fixture_facts, tmp_paths.facts_csv)
-    tmp_paths.health_json.write_text(json.dumps(_health(RUN2, ALL_SOURCES)), encoding="utf-8")
-    html = render(tmp_paths, today=TODAY).read_text(encoding="utf-8")
+@pytest.fixture(scope="session")
+def page(session_paths, fixture_facts):
+    """The rendered page, built once for the whole session: every test that takes it only reads it."""
+    write_facts(fixture_facts, session_paths.facts_csv)
+    session_paths.health_json.write_text(json.dumps(_health(RUN2, ALL_SOURCES)), encoding="utf-8")
+    html = render(session_paths, today=TODAY).read_text(encoding="utf-8")
     return html, _payload(html)
 
 
@@ -66,13 +67,13 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Distribution", "Spend", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 72
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 75
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
     assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
-    assert "12 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
+    assert "13 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
 
@@ -250,7 +251,7 @@ def test_recessions_are_month_ranges():
     assert epoch + dt.timedelta(seconds=last[1]) == dt.date(2020, 4, 30)
 
 
-def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_facts):
+def test_latest_readings_are_computed_from_the_facts(page, session_paths, fixture_facts):
     html, payload = page
     items = headlines(fixture_facts, TODAY)
     labels = [h["label"] for h in items]
@@ -271,7 +272,7 @@ def test_latest_readings_are_computed_from_the_facts(page, tmp_paths, fixture_fa
     sloos = next(h for h in items if h["label"].startswith("Banks tightening"))["text"]
     assert sloos.startswith("6.70% in 2026 Q2") and BENCHMARK_LABEL not in sloos  # a net balance has no benchmark
     assert ('<strong><a href="#revolving_level" title="Go to the chart">Revolving consumer credit, all lenders (Fed G.19, SA)</a>:</strong> $1,357bn in Jul 2026' in html)
-    text = (tmp_paths.docs / "latest.txt").read_text(encoding="utf-8")
+    text = (session_paths.docs / "latest.txt").read_text(encoding="utf-8")  # written by the page fixture
     assert text.startswith("US credit card data, latest readings (") and "- Revolving consumer credit" in text
     assert 'href="latest.txt"' in html
 
@@ -290,7 +291,7 @@ def test_card_badge_and_last_attempt_when_a_source_is_not_ok(tmp_paths, fixture_
     assert by_id["nco_by_issuer"]["status"] == "failed" and by_id["nco_by_issuer"]["attempted"] == "2026-09-08"
     assert "data as of 2026-09-07" in by_id["nco_by_issuer"]["footer"]  # the data on the chart is still the last good load
     assert '<span class="badge st-failed"' in html and "last fetch attempt 2026-09-08" in html
-    assert "2 of 12 sources need attention (Failed)" in html
+    assert "2 of 13 sources need attention (Failed)" in html
 
 
 def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_facts):
@@ -353,7 +354,7 @@ def test_a_period_that_has_not_ended_is_never_the_latest(tmp_paths, fixture_fact
     assert "2099" not in html.split('<h2 id="changed">What changed</h2>')[0]  # neither the readings nor the cards call 2099 latest
 
 
-def test_thesis_watch_evaluates_every_falsification_test(page, tmp_paths, fixture_facts):
+def test_thesis_watch_evaluates_every_falsification_test(page, session_paths, fixture_facts):
     """The dated note names thresholds; the page checks them from the data and cannot pass one by default."""
     html, payload = page
     from carddash.render import THESIS_TESTS, _connect, thesis_status
@@ -376,7 +377,7 @@ def test_thesis_watch_evaluates_every_falsification_test(page, tmp_paths, fixtur
     # the page and the text file both carry it
     assert "Thesis watch" in html and "st-ok" in html.split("Thesis watch")[1][:400]
     assert "design/thesis-2026-09-08.html" in html
-    text = (tmp_paths.docs / "latest.txt").read_text(encoding="utf-8")
+    text = (session_paths.docs / "latest.txt").read_text(encoding="utf-8")  # written by the page fixture
     assert "Thesis of 2026-09-08 (holds)" in text and text.count("- [ok ]") == 3
 
 
@@ -482,7 +483,7 @@ def test_holder_and_sloos_demand_charts(page):
     assert by_size["data"][1][-1] == 0.0 and by_size["data"][2][-1] == 3.8
 
 
-def test_page_carries_link_previews_nav_and_next_release(page, tmp_paths, fixture_facts):
+def test_page_carries_link_previews_nav_and_next_release(page, session_paths, fixture_facts):
     html, payload = page
     head = html.split("</head>")[0]
     assert '<meta property="og:image" content="https://user5017.github.io/credit-card-data/img/revolving_level.png">' in head
@@ -495,7 +496,7 @@ def test_page_carries_link_previews_nav_and_next_release(page, tmp_paths, fixtur
         for c in panel["charts"]:
             assert f'<button type="button" class="link" data-link="{c["id"]}"' in html
     # the thesis note is served next to the page, not linked to the repository blob view
-    assert (tmp_paths.docs / "design" / "thesis-2026-09-08.html").exists()
+    assert (session_paths.docs / "design" / "thesis-2026-09-08.html").exists()
     assert 'href="design/thesis-2026-09-08.html"' in html and "blob/main/design" not in html
     # the thesis tests link to their charts
     assert '<a class="chartlink" href="#card_nco"' in html
@@ -699,3 +700,24 @@ def test_consumer_loan_rates_chart(page):
     auto = [v for v in rates["data"][3] if v is not None][-1]
     assert card > personal > auto  # 22.15, 11.86, 7.47
     assert len(rates["footer_lines"]) == 4
+
+
+def test_state_charts(page):
+    """The state-level source: a band from the lowest to the highest state around the national line."""
+    html, payload = page
+    ids = {c["id"]: c for c in payload["charts"]}
+    rng = ids["state_card_dq_range"]
+    assert rng["band"] == [1, 2] and rng["period_type"] == "A"
+    assert rng["series"][0]["last_period"] == "2025"
+    hi, lo, med, nat = (rng["data"][k][-1] for k in (1, 2, 3, 4))
+    assert hi > med > lo and lo < nat < hi
+    assert hi - lo > 8  # the range across states was 8.3 points in 2025
+    picked = ids["state_card_dq_selected"]
+    labels = [s["label"] for s in picked["series"]]
+    assert labels[0] == "National" and "Nevada" in labels and "Wisconsin" in labels
+    nv = picked["data"][labels.index("Nevada") + 1][-1]
+    wi = picked["data"][labels.index("Wisconsin") + 1][-1]
+    assert nv > wi + 5
+    debt = ids["state_card_debt_range"]
+    assert debt["unit"] == "usd" and debt["data"][4][-1] == 4350  # the national row, dollars per adult
+    assert "rose in every one of the 51 areas" in html

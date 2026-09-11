@@ -70,18 +70,24 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   come from sql/<source>_facts.sql, which the fetcher runs in memory: aggregation choices stay in SQL.
 - Keep this repo out of OneDrive.
 
-## Sources (twelve as of 2026-09-11)
+## Sources (thirteen as of 2026-09-11)
 fred, tccp, phillyfed, nyfed_hhdc, fdic, nyfed_sce (credit access, four-monthly), nyfed_sce_monthly (core survey),
 bea (PCE by type of product plus household interest payments and monthly DPI, keyless flat file), census (Monthly Retail
 Trade workbook), ncua (5300 call report quarterly zips, per-quarter extracts), dfa (Fed Distributional Financial Accounts
 zip: consumer credit, deposits, liabilities, net worth and household counts by wealth, income and age group, quarterly),
 cfpb_cct (CFPB Consumer Credit Trends CSVs: card originations, new credit lines by score tier and age, inquiry and
-tightness indexes, monthly). Each has a typical release lag in `RELEASE_RHYTHM` (render.py) that the health strip turns
+tightness indexes, monthly), nyfed_state (State Level Household Debt Statistics: card debt per capita and card 90+
+delinquency for the 50 states, DC, Puerto Rico and the nation, annual at Q4). Each has a typical release lag in
+`RELEASE_RHYTHM` (render.py) that the health strip turns
 into a 'next expected' date. After each G.19 release run `uv run python checks/verify_g19.py`; a revision that moves a
 live golden shows as fred `golden_mismatch` (amber, the job still passes) until the golden is re-based.
-The one exception to the golden rule is cfpb_cct: no release page states its numbers (the CFPB's biennial report counts
-from issuer data and does not reconcile), so the fetcher checks that the score and age files sum to within 6 percent of
-the total file every month and the fixture test pins the dashboard's January 2026 readings instead.
+Two sources have no golden entry because no release page states their numbers, and both say so in their module
+docstring and carry structural checks instead. cfpb_cct: the CFPB's biennial report counts from issuer data and does
+not reconcile, so the fetcher requires the score and age files to sum to within 6 percent of the total file every month
+and the fixture test pins the dashboard's January 2026 readings. nyfed_state: the fetcher requires the area list to be
+exactly the expected 53, the years to run from 2003 with no gap, and the national row to sit inside the range across
+areas, and a fixture test (`check_against_quarterly`) requires its national card delinquency row to track the Quarterly
+Report's own series to 0.6 points. Do not add a third without a very good reason.
 nyfed_hhdc reads the other five loan types (mortgage, home equity revolving, auto, student, other) beside the card
 columns, so card distress can be read against the other debts of the same households. Its sheets have four different
 first quarters and the student flows start a year late; `leading_gaps` in the sheet spec is the only concession, and it

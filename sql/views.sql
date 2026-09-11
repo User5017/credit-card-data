@@ -398,3 +398,23 @@ SELECT 'hh_interest_payments_saar' AS metric, 'US_HOUSEHOLDS' AS entity, 'aggreg
 FROM i
 LEFT JOIN c ON c.period_end = i.period_end
 LEFT JOIN d ON d.period_end = i.period_end;
+
+-- State card statistics: the national row of the state file with the range across areas beside it, so a chart can
+-- draw a band from the lowest to the highest state around the national line and the reader can see whether a move
+-- was broad or concentrated. Keyed on the national series (entity CCP_ALL, source nyfed_state) so render.py can
+-- select the band edges as fields. Puerto Rico ends in 2016 and simply drops out of the range after that, which is
+-- why n_areas is published as a field rather than assumed.
+CREATE OR REPLACE VIEW v_state_card AS
+WITH f AS (
+  SELECT metric, entity, entity_type, tier, period_type, source, CAST(period_end AS DATE) AS period_end, value
+  FROM facts WHERE source = 'nyfed_state'
+),
+areas AS (
+  SELECT metric, period_end, min(value) AS state_min, max(value) AS state_max,
+         median(value) AS state_median, count(*) AS n_areas
+  FROM f WHERE entity_type = 'state' GROUP BY metric, period_end
+)
+SELECT n.metric, n.entity, n.entity_type, n.tier, n.period_type, n.source, n.period_end,
+       n.value, a.state_min, a.state_max, a.state_median, a.n_areas
+FROM f n JOIN areas a ON a.metric = n.metric AND a.period_end = n.period_end
+WHERE n.entity = 'CCP_ALL';
