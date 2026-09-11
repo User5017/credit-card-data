@@ -17219,6 +17219,7 @@ cpi_all_urban_sa,US_ECONOMY,aggregate,all,2026-04-30,M,332.407,fred,2026-09-08T0
 cpi_all_urban_sa,US_ECONOMY,aggregate,all,2026-05-31,M,333.979,fred,2026-09-08T07:30:11Z
 cpi_all_urban_sa,US_ECONOMY,aggregate,all,2026-06-30,M,332.568,fred,2026-09-08T07:30:11Z
 cpi_all_urban_sa,US_ECONOMY,aggregate,all,2026-07-31,M,332.813,fred,2026-09-08T07:30:11Z
+cpi_all_urban_sa,US_ECONOMY,aggregate,all,2026-08-31,M,334.131,fred,2026-09-11T17:03:40Z
 debt_service_ratio_consumer,US_HOUSEHOLDS,aggregate,all,2005-03-31,Q,7.303833,fred,2026-09-08T07:30:11Z
 debt_service_ratio_consumer,US_HOUSEHOLDS,aggregate,all,2005-06-30,Q,7.239296,fred,2026-09-08T07:30:11Z
 debt_service_ratio_consumer,US_HOUSEHOLDS,aggregate,all,2005-09-30,Q,7.258264,fred,2026-09-08T07:30:11Z
