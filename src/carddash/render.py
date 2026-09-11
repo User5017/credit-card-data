@@ -25,7 +25,7 @@ from .issuers import ISSUER_TYPES
 from .loader import STATUS_RANK, read_facts, read_revisions
 from .paths import Paths
 from .png import write_png
-from .schema import PERIOD_WORDS, SERIES_KEY, shift_period
+from .schema import PERIOD_WORDS, SERIES_KEY, last_day, shift_period
 from .series import load_series, series_index
 
 VENDOR = Path(__file__).parent / "vendor"
@@ -255,6 +255,12 @@ LABOR_NOTE = (
     "Card charge-offs against the unemployment rate. Losses are historically a job-loss phenomenon more than an "
     "interest-rate one: every past charge-off peak followed an unemployment peak within a few quarters. Charge-offs "
     "well above what the labour market implies is the signal that underwriting, not the economy, is the cause."
+)
+SHUTDOWN_NOTE = (
+    "The break in the unemployment line at OCTOBER 2025 is a month that does not exist: the federal shutdown "
+    "stopped the household survey being collected, so no unemployment rate was ever published for it and none "
+    "ever will be. It is drawn as a gap rather than joined up, because joining it would put a reading on the "
+    "chart that nobody measured. The same month is missing from the CPI for the same reason."
 )
 FLOWS_NOTE = (
     "Two measures of how cardholders use the product, from the Y-14 series already loaded. The revolving share is the "
@@ -862,7 +868,7 @@ PANELS = [
                 "title": "Card charge-offs against unemployment",
                 "unit": "pct",
                 "step": True,
-                "notes": [LABOR_NOTE],
+                "notes": [LABOR_NOTE, SHUTDOWN_NOTE],
                 "series": [
                     S("card_nco_rate_sa", "COMBANKS_ALL", "Card charge-off rate, annualized", period_type="Q"),
                     S("unemployment_rate_sa", "US_ECONOMY", "Unemployment rate", period_type="M"),
@@ -1387,8 +1393,13 @@ PANELS = [
                 "notes": [
                     "University of Michigan index of consumer sentiment, 1966 Q1 = 100. On the page because stated "
                     "sentiment and card behaviour have diverged since 2022: sentiment near historic lows while payment "
-                    "rates and full-payer shares set records. One of the two is not describing the median cardholder."
+                    "rates and full-payer shares set records. One of the two is not describing the median cardholder.",
+                    "The survey was QUARTERLY until January 1978 and monthly from February 1978, so the readings "
+                    "before 1978 are three months apart. This is the one chart on the page drawn through its gaps, "
+                    "because they are a change of cadence rather than months that went unmeasured; everywhere else a "
+                    "gap is drawn as a break.",
                 ],
+                "span_gaps": True,
                 "series": [S("consumer_sentiment", "US_ECONOMY", "Index of consumer sentiment", period_type="M")],
             },
             {
@@ -1870,6 +1881,31 @@ def _benchmark(xs: list[dt.date], ys: list[float | None]) -> float | None:
     return sum(vals) / len(vals) if vals else None
 
 
+CADENCE_MONTHS = {"M": 1, "Q": 3, "A": 12}  # 'T' is left out: the SCE waves are four-monthly on purpose
+
+
+def _missing_periods(rows, period_type: str) -> list[dt.date]:
+    """Period ends a series skips INSIDE its own span, at the cadence its period_type implies.
+
+    Starting late is not a hole and is not reported here; only a month or quarter that the source published
+    either side of but not for. Of 754 loaded series exactly six have one, and the two that are drawn are the
+    unemployment rate and the CPI, both missing October 2025 because the shutdown stopped the survey.
+    """
+    step = CADENCE_MONTHS.get(period_type)
+    if step is None or len(rows) < 2:
+        return []
+    have = {d for d, _ in rows}
+    first, last = min(have), max(have)
+    out, cursor = [], first
+    while True:
+        months = cursor.year * 12 + (cursor.month - 1) + step
+        cursor = last_day(months // 12, months % 12 + 1)
+        if cursor >= last:
+            return out
+        if cursor not in have:
+            out.append(cursor)
+
+
 def _chart_payload(con, spec: dict, meta_idx: dict, health: dict, golden: dict, today: dt.date) -> dict:
     per_series = []
     all_rows = []
@@ -1903,7 +1939,15 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict, golden: dict, 
             for c in golden.get(_key(s), []):
                 if c["id"] not in {x["id"] for x in checks}:
                     checks.append({**c, "series_label": s["label"]})
-    xs = sorted({d for rows in all_rows for d, _ in rows})
+    # A period a series skips inside its own span is put on the grid as an explicit null, so the line breaks
+    # there instead of joining the two readings either side of it. Without this the x grid only ever holds
+    # dates that HAVE data, so a missing month is invisible: October 2025 is absent from the unemployment rate
+    # and the CPI (the federal shutdown stopped the survey being collected), and the chart drew a straight
+    # segment from September to November as though the months were consecutive. span_gaps then decides whether
+    # the break is shown or bridged.
+    holes = {d for rows, spec_s in zip(all_rows, spec["series"])
+             for d in _missing_periods(rows, spec_s["period_type"])}
+    xs = sorted({d for rows in all_rows for d, _ in rows} | holes)
     idx = {d: i for i, d in enumerate(xs)}
     data: list[list] = [[_epoch(d) for d in xs]]
     for rows in all_rows:
@@ -1969,7 +2013,11 @@ def _chart_payload(con, spec: dict, meta_idx: dict, health: dict, golden: dict, 
         "y_zero": bool(spec.get("y_zero", True)),
         # A short hole in a series is worth bridging; a long one is a lie. Charts where a series can go
         # missing for years opt out, so the gap is drawn as a gap. See nco_by_issuer.
-        "span_gaps": bool(spec.get("span_gaps", True)),
+        # Default False: a missing period means the thing was not measured, and joining across it draws a
+        # reading nobody published. The PNGs have never spanned gaps, so this is also what makes the page and
+        # the image of the same chart agree. Only a series whose gaps are a CADENCE CHANGE rather than missing
+        # data opts back in, and says so in its chart note (consumer_sentiment is the only one on the page).
+        "span_gaps": bool(spec.get("span_gaps", False)),
         "period_type": period_types.pop() if len(period_types) == 1 else None,
         "series": per_series,
         "data": data,

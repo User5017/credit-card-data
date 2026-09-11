@@ -23,6 +23,7 @@ from carddash.render import (
     _connect,
     PANELS,
     _benchmark,
+    _missing_periods,
     _new_periods,
     _recessions,
     _rel_display,
@@ -816,13 +817,54 @@ def test_fdic_ratios_need_a_card_book_worth_dividing_by(tmp_paths):
     assert rates["2020-12-31"] is not None and rates["2020-12-31"] < 0, "a real net recovery quarter is kept"
 
 
-def test_the_issuer_chart_draws_its_hole_instead_of_bridging_it(page):
-    """Bank of America has no rate for 2001 to 2013, and a line drawn across that would be a lie."""
+def test_a_hole_is_drawn_as_a_hole_on_every_chart_but_the_one_that_changed_cadence(page):
+    """A missing period means the thing was not measured, so no line is drawn across it.
+
+    The page used to span gaps everywhere while the PNG of the same chart never did, so the two disagreed
+    wherever a series had a hole. The default is now False and exactly one chart opts back in:
+    consumer_sentiment, whose gaps before 1978 are the survey being quarterly rather than months that went
+    unmeasured.
+    """
     _, payload = page
     ids = {c["id"]: c for c in payload["charts"]}
     assert ids["nco_by_issuer"]["span_gaps"] is False
-    assert ids["card_nco"]["span_gaps"] is True  # the default is unchanged
     assert any("FIA Card Services" in n for n in ids["nco_by_issuer"]["notes"])
+
+    spanning = [c["id"] for c in payload["charts"] if c["span_gaps"]]
+    assert spanning == ["sentiment"], f"only a cadence change may span gaps, got {spanning}"
+    assert any("QUARTERLY until January 1978" in n for n in ids["sentiment"]["notes"])
+
+
+def test_the_shutdown_month_missing_from_the_labour_data_is_left_open(page):
+    """October 2025 was never collected, so the unemployment line breaks there rather than joining up.
+
+    The flag alone is not enough and this is the part that actually bites: the x grid is built from the dates
+    that HAVE data, so a month no series holds is simply absent and the line joins September to November as
+    though they were consecutive. The missing period has to be put on the grid as an explicit null first.
+    """
+    _, payload = page
+    chart = {c["id"]: c for c in payload["charts"]}["losses_vs_labor"]
+    assert chart["span_gaps"] is False
+    assert any("OCTOBER 2025" in n for n in chart["notes"])
+
+    epoch = dt.date(1970, 1, 1)
+    unemployment = {epoch + dt.timedelta(seconds=t): v for t, v in zip(chart["data"][0], chart["data"][2])}
+    assert dt.date(2025, 10, 31) in unemployment, "the missing month is not even on the grid"
+    assert unemployment[dt.date(2025, 10, 31)] is None
+    assert unemployment[dt.date(2025, 9, 30)] is not None
+    assert unemployment[dt.date(2025, 11, 30)] is not None
+
+
+def test_a_series_that_merely_starts_late_is_not_treated_as_having_a_hole():
+    """Only periods INSIDE a series' own span are filled, or every chart would grow a run of leading nulls."""
+    rows = [(dt.date(2026, 1, 31), 1.0), (dt.date(2026, 2, 28), 2.0), (dt.date(2026, 4, 30), 3.0)]
+    assert _missing_periods(rows, "M") == [dt.date(2026, 3, 31)]
+    assert _missing_periods(rows[:2], "M") == []
+    assert _missing_periods([(dt.date(2026, 3, 31), 1.0)], "M") == []
+    # quarterly and annual step by their own cadence, and the four-monthly survey waves are left alone
+    quarters = [(dt.date(2025, 3, 31), 1.0), (dt.date(2025, 12, 31), 2.0)]
+    assert _missing_periods(quarters, "Q") == [dt.date(2025, 6, 30), dt.date(2025, 9, 30)]
+    assert _missing_periods(quarters, "T") == []
 
 def test_the_state_map_covers_every_area_on_a_grid_with_no_collisions(page):
     """A tile-grid cartogram: one equal square per area, so land area never stands in for population."""

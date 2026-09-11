@@ -501,6 +501,43 @@ which holds only revolve-eligible balances and computes its write-off rate on en
 balances. Amex's own filing says at length why the two are not comparable, so the trust table is skipped and the
 reason recorded here rather than discovered again.
 
+## v1.15: a missing month is drawn as missing (2026-09-11, the open item from the v1.9 handoff)
+
+| # | Task | Pass condition | Status |
+|---|------|----------------|--------|
+| 47 | Stop the page drawing through holes the PNGs leave open | `span_gaps` defaults to False so a missing period is drawn as a break on the page exactly as it already is in the PNGs; every series whose gaps are a CADENCE CHANGE rather than missing data opts back in explicitly and says so in its chart note; a test pins the one real hole | done 2026-09-11 (default flipped, `sentiment` is the only chart that opts back in, and the missing October 2025 is now an explicit null on the grid rather than an absent row) |
+
+Audited before deciding, because the previous handoff asked whether `span_gaps` should flip by default and the
+answer depends entirely on how many series actually have holes. Of 754 loaded series, SIX have a hole inside
+their own span, and only two of those are drawn on a chart:
+
+- `unemployment_rate_sa` (charted, losses_vs_labor) is missing OCTOBER 2025, and `cpi_all_urban_sa` (browser
+  only) is missing the same month. That is the federal shutdown: the household survey for October 2025 was
+  never collected, so BLS published no unemployment rate for it and never will. It is a real hole in a headline
+  series at a recent, prominent point on the chart, and the page has been drawing a straight line across it
+  while the PNG of the same chart leaves it open.
+- `consumer_sentiment` (charted, its own chart) has 92 "holes", and NONE of them are missing data: the
+  University of Michigan survey was QUARTERLY until January 1978 and monthly from February 1978. Every gap is
+  before 1978-01-31 and every period after it is consecutive.
+- The other three are `fdic_card_noncurrent` for three charters, browser only.
+
+So the honest default is False and the exception is narrow. A hole means "not measured", and joining across it
+invents a reading; a cadence change means "measured less often", which is a different statement and has to be
+declared rather than inferred. `consumer_sentiment` therefore carries `span_gaps: True` and a note saying why,
+which is the only series on the page that gets it.
+
+THE FLAG ALONE DID NOTHING, WHICH IS THE PART WORTH REMEMBERING. `span_gaps` only governs how uPlot treats a
+NULL, and the x grid is built from the dates that HAVE data (`xs = sorted({d for rows in all_rows for d, _ in
+rows})`). A month that no series on the chart holds is therefore not on the grid at all, so there was no null
+to span: the unemployment line ran straight from September to November 2025 with the flag set either way, and
+nothing about the chart said a month was missing. `_missing_periods` now walks each series' own span at its own
+cadence and puts anything skipped on the grid as an explicit null, and only then does span_gaps decide whether
+to bridge it. 'T' (the four-monthly SCE waves) is deliberately left out of the cadence table, and a series that
+merely starts late is never filled, or every chart would grow a run of leading nulls.
+
+The sentiment chart went from 675 points to 885 because its pre-1978 quarterly era now carries its skipped
+months as nulls; it spans them, so it draws exactly as it did before.
+
 ## v1.5 (after two green releases)
 - Order (from the 2026-09-07 scouting): NY Fed SCE Credit Access first (direct xlsx, no gate, about half a session), then CFPB complaints via the trends endpoint (one session), then BEA PCE detail via the keyless NipaDataM.txt flat file (the API needs a key; half to one session), then Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx (the API needs a key even at low volume; one session). Details, URLs and risks in design/handoff-2026-09-07.html §3.
 - Spend panel.
