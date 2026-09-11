@@ -339,6 +339,121 @@ traceable. One claim was cut in that check rather than softened, because nothing
 putting Capital One at "about a third of the large-bank subprime card market". Nothing on this dashboard measures
 any issuer's subprime share, and the note now says so where the claim used to be.
 
+## v1.14: three more issuers, so the monthly reading is an industry reading (2026-09-11)
+
+| # | Task | Pass condition | Status |
+|---|------|----------------|--------|
+| 45 | Synchrony, Bread Financial and American Express monthly 8-K credit metrics | `issuer_8k` carries a per-issuer registry instead of one hard-coded CIK; each issuer has its own parser and its own checked-in fixture; the six `cof_card_*` metrics become entity-keyed `issuer_card_*` so an issuer is an entity and not a metric name; at least one live golden per issuer traced to the filed document; the monthly charge-off and delinquency charts draw every issuer against the industry, with the definitional differences in the chart note; tests green | done 2026-09-11 for Synchrony and Bread, NOT for American Express (task 46). issuer_8k now loads three issuers, 1016 rows in 18 series: Capital One 2021-02 to 2026-07, Synchrony 2021-03 to 2026-07, Bread 2022-07 to 2026-07. 7 new goldens, all live, all passing (65 total). The two issuer charts draw three lenders against the all-commercial-bank rate. 381 tests green |
+| 46 | American Express: decide how to carry two populations under one issuer | Amex's readings are loaded without a fake step at the basis change, or the source is recorded as unavailable with the evidence | todo (parser, fixtures and tests already written and passing; the decision is what is missing) |
+
+WHAT THE THREE ISSUERS SHOW, which is the point of doing it. All three peaked in 2024 and all three have been
+falling since, and they are stacked in exactly the order their books would predict: Bread (private-label, the
+weakest borrowers) at 6.80 percent net loss and 5.35 percent 30+ delinquency in July 2026, Synchrony
+(private-label and co-brand) at 4.7 and 4.2, Capital One (general-purpose) at 4.12 and 3.48, the
+all-commercial-bank rate at 3.82 and 2.85. The ORDER never changes across the whole history and the SHAPE is
+the same for all three, which is what a common national cause looks like and is consistent with what the state
+map said in task 43. Bread's loss rate peaked around 8.9 percent in early 2024 and has given back most of it.
+
+FOUR THINGS WERE FOUND BY DOING THIS THAT NOBODY SHOULD REDISCOVER.
+
+1. THE ITEM TAG IS NOT A FILTER, and filtering on it silently loses the newest month. Synchrony filed its July
+   2026 credit statistics on 2026-08-17 under Item 2.02 while every other month of the same exhibit went out
+   under Item 7.01. The first version of this fetcher read only Item 7.01 filings and therefore thought
+   Synchrony's newest month was June, with no error anywhere: the source would just have sat one month behind
+   for ever. Every 8-K is now considered and the document decides. This is worth remembering for any future
+   EDGAR work: the item is the filer's description, not a property of the document.
+
+2. BREAD'S QUARTER-END MONTHS PUT A QUARTERLY RATE ON A MONTHLY SERIES, and it loaded silently. In March, June,
+   September and December the loss table drops the year-ago column and prints 'For the three months ended
+   September 30, 2023' beside 'For the month ended September 30, 2023'. The header states THE SAME DATE TWICE,
+   so reading the header as dates alone and assigning values by position puts the quarter's figure on the
+   month: September 2023 went in at 6.9 percent when the month was 6.7. Every quarter-end month in the series
+   was wrong. Columns headed 'N months ended' are now dropped, a header that still repeats a month raises, and
+   `bfh_8k_nco_rate_2023_09_monthly_not_quarterly` is a live golden pinning 6.7 so it cannot come back. Same
+   class of bug as task 41: the number was plausible, which is why it needed a check rather than a glance.
+
+3. A TRIM THAT FIXES HOLES CAN HIDE A MISSED FILING, so it is bounded. Bread's exhibits print a month and the
+   same month a year earlier, which hands over a free extra year of delinquency history, except in the
+   quarter-end months where that column is spent on the quarter instead. So Bread's delinquency series is
+   unbroken back to July 2022 while its loss series has four holes before July 2023. The page spans gaps, so a
+   line with a hole is drawn straight through it. Each series is therefore cut back to the unbroken run ending
+   at its newest reading, which is why Bread's two series start a year apart. The trap is that the same trim
+   would quietly swallow a genuinely missed filing and publish a series starting after the hole: a failed read
+   of one Capital One exhibit would have dropped five years of history without a word. So the trim only
+   applies BEFORE the issuer's `first_month`, where the source really does not publish monthly; a hole at or
+   after it raises.
+
+4. THE FOUR ISSUERS DO NOT MEASURE THE SAME THING, and the differences are bigger than most of the movements
+   on the chart. Capital One counts 30+ day PERFORMING delinquencies over period-end loans; Synchrony counts
+   over-30-day delinquencies over period-end receivables and its monthly charge-off rate saws up and down
+   purely because a calendar month holds 25 or 30 charge-off cycle dates; Bread divides delinquency by
+   period-end PRINCIPAL loans, a smaller denominator than its own end-of-period loan figure ($16,378mn against
+   $18,543mn in July 2026). The chart note says all of this and says to read direction rather than the gaps
+   between lines. Synchrony's own adjusted (non-GAAP) charge-off rate is loaded beside the unadjusted one but
+   is deliberately NOT the series on the chart, because no other issuer publishes anything like it.
+
+WHY AMERICAN EXPRESS IS PARSED, TESTED AND NOT LOADED (task 46). Between the filings of 2026-04-15 and
+2026-05-15 Amex stopped reporting 'Card Member loans' and started reporting 'Card balances', and the population
+changed with the words: the new measure includes pay-in-full charge-card balances the old one left out. On the
+same month, March 2026, the two bases read $97.5bn and $110.8bn for U.S. Consumer, a step of about 14 percent,
+and the delinquency rate moves the other way (1.4 against 1.3) because the added balances are almost never past
+due. Amex restated only the two overlapping months, not the history, so the newest statement of January 2026 is
+$97.2bn on the old basis and of February 2026 is $107.4bn on the new one: the break cannot be closed from the
+filings. Splicing them would put a fake 10 percent jump in the balances and a fake improvement in delinquency,
+which is the task 41 class of error; loading only the new basis leaves five months, which is not a series. The
+parser handles both vocabularies, the fixtures are checked in for both, and
+`test_the_amex_population_break_is_real_and_is_why_it_is_not_loaded` fails if the two bases ever agree, which
+is the signal that it can be enabled. Amex also has no separate exhibit at all (the table is in the 8-K body),
+so it is found by content, and its content test must read PARSED table text: Amex splits the row label across
+tags, so a substring search of the raw HTML answers False on filings that plainly carry the table.
+
+Cost and shape of the fetch, for the next person who worries about request counts: Synchrony's whole history is
+FIVE downloads because each exhibit carries thirteen months; Bread needs one per month (37) because its second
+column is a year earlier rather than the month before; Capital One's 66 were already there. The planner works
+in months, not filings: it parses what is on disk, works out which months are missing, and only then decides
+which filings can fill them, so a filing whose month is already held costs nothing, not even an index request.
+Raw storage is 1.2 MB for Bread and 440 KB for Synchrony on top of Capital One's 1.6 MB.
+
+
+Scouted 2026-09-11 before any code was written, from the dev machine (EDGAR answers it again). All three still file
+monthly, and no two of them file the same shape, which is most of the work:
+
+- **Synchrony Financial, CIK 0001601712.** One exhibit, always named `creditstatsfinancialtables.htm` (55 of 55
+  filings from 2022-01-28 to 2026-07-21 use that exact name, the only issuer here with a stable document name), and
+  each one carries **thirteen months** of history in a single table, so the whole series costs about six downloads
+  rather than sixty. Rows: period-end loan receivables, loan receivables held for sale, average loan receivables
+  including held for sale, 30+ delinquency rate, net charge-off rate, recovery adjustment, adjusted net charge-off
+  rate. Dollars are in BILLIONS here, unlike Capital One's millions.
+- **Bread Financial Holdings, CIK 0001101215.** The exhibit is named for its month and truncated the same way
+  Capital One's is (`july2026creditstatsex991-t.htm`, `august2025creditstatsex991.htm`), so it is matched on
+  "creditstats", which also happens to match Synchrony's. Only 36 of its 307 Item 7.01 filings carry one, and the
+  earliest is 2023-07-27: before that the numbers were not filed this way, so Bread's history starts mid-2023 and
+  that is a property of the source, not a gap to fix. Each exhibit prints the month AND the same month a year
+  earlier, which both halves the downloads and gives a free consistency check.
+- **American Express, CIK 0000004962.** There is NO separate exhibit: the statistics are in the body of the 8-K
+  itself (`axp-<filing date>.htm`), so a filing cannot be identified by a document name and has to be identified by
+  its content. Each one carries **three months**, and splits them into U.S. Consumer Card and U.S. Small Business
+  Card, which is two entities rather than one.
+
+The definitions are NOT the same across the four, and this is the thing most likely to be read wrong off a chart:
+- Capital One: 30+ day PERFORMING delinquencies over period-end loans; charge-offs over average loans.
+- Synchrony: over-30-day delinquencies over period-end receivables; charge-offs over average receivables including
+  held for sale. Its monthly charge-off rate is saw-toothed because charge-off cycle dates fall differently in each
+  calendar month (the exhibit prints the count of cycle dates per month for exactly this reason), which is why
+  Synchrony also publishes an "adjusted" rate that spreads recoveries evenly across the quarter. The unadjusted rate
+  is what is comparable with the others; the adjusted one is loaded too and labelled as the non-GAAP measure it is.
+- Bread: net principal losses over average loans; delinquency over period-end **principal** loans, which is a
+  smaller denominator than its own end-of-period loan figure ($16,378mn against $18,543mn in July 2026). Both are
+  loaded so the rate can be recomputed from the page's own numbers.
+- American Express: net write-off rate **principal only**, explicitly excluding interest and fees, and its card
+  balances include pay-in-full charge-card balances. Both push its rates far below everyone else's (1.1 percent 30+
+  in July 2026 against Synchrony's 4.2), and neither is a sign of a better book in the way a naive read suggests.
+
+Not loaded, on purpose: the second table in the Amex filing is the American Express Credit Account Master Trust,
+which holds only revolve-eligible balances and computes its write-off rate on end-of-period rather than average
+balances. Amex's own filing says at length why the two are not comparable, so the trust table is skipped and the
+reason recorded here rather than discovered again.
+
 ## v1.5 (after two green releases)
 - Order (from the 2026-09-07 scouting): NY Fed SCE Credit Access first (direct xlsx, no gate, about half a session), then CFPB complaints via the trends endpoint (one session), then BEA PCE detail via the keyless NipaDataM.txt flat file (the API needs a key; half to one session), then Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx (the API needs a key even at low volume; one session). Details, URLs and risks in design/handoff-2026-09-07.html §3.
 - Spend panel.

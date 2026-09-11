@@ -30,8 +30,10 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - unit, cadence, display name, scope note, value range, staleness limit, and period offset live in crosswalks/series.csv,
   one row per series. A fetcher may only emit series that exist there; validation rejects the rest. period_offset shifts a
   source's own dating by whole periods (SLOOS -1: the July survey asks about the quarter that just ended), applied in the fetcher.
-- Entities: prefixed ids (`ALL_HOLDERS`, `COMBANKS_TOP100`, `CERT:4297`, `FDIC_ALL_INSURED`, later `STATE:ME`), with
-  entity_type set. Views never parse prefixes.
+- Entities: prefixed ids (`ALL_HOLDERS`, `COMBANKS_TOP100`, `CERT:4297`, `FDIC_ALL_INSURED`, `STATE:ME`,
+  `ISSUER:SYNCHRONY`), with entity_type set. Views never parse prefixes. An issuer is an ENTITY, never part of a
+  metric name: `issuer_card_nco_rate` for every lender, keyed by entity, is what lets one chart draw four of them.
+  The first version of issuer_8k used `cof_card_*` and it was renamed on 2026-09-11 before the second issuer landed.
 - Sources finer than the fact key (TCCP card products, complaints) keep their own raw table and feed
   facts through a view. Aggregation choices go in SQL, not in fetchers.
 
@@ -42,6 +44,10 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   series.csv (header included, the file's own format) and parses the full file in memory; the NCUA call-report zips are
   about 8 MB for each of 41 quarters, so `fetchers/ncua.py` writes a per-quarter extract (the tracked credit unions plus
   the industry sums) under `raw_dir/quarters/` and downloads only quarters without an extract plus the newest two.
+  The third is issuer_8k, which keeps one document per FILING under `raw_dir/<issuer>/<newest month it states>.htm`
+  (Capital One's stay at `raw_dir/months/`) and plans downloads in MONTHS: it parses what it already holds, works out
+  which months are missing, and only then decides which filings can fill them, so a month already held costs nothing,
+  not even an index request. Synchrony's whole history is five downloads because each exhibit carries thirteen months.
 - Parse by header text, never by column position. Fail loudly on anything unexpected.
 - Never write facts.csv, health.json, or DuckDB. The loader does that.
 - Send the pipeline's own User-Agent (src/carddash/http.py). The CFPB's edge blocks browser-like agents sent from
@@ -75,16 +81,18 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   come from sql/<source>_facts.sql, which the fetcher runs in memory: aggregation choices stay in SQL.
 - Keep this repo out of OneDrive.
 
-## Sources (fourteen as of 2026-09-11)
+## Sources (fourteen as of 2026-09-11; issuer_8k carries three issuers)
 fred, tccp, phillyfed, nyfed_hhdc, fdic, nyfed_sce (credit access, four-monthly), nyfed_sce_monthly (core survey),
 bea (PCE by type of product plus household interest payments and monthly DPI, keyless flat file), census (Monthly Retail
 Trade workbook), ncua (5300 call report quarterly zips, per-quarter extracts), dfa (Fed Distributional Financial Accounts
 zip: consumer credit, deposits, liabilities, net worth and household counts by wealth, income and age group, quarterly),
 cfpb_cct (CFPB Consumer Credit Trends CSVs: card originations, new credit lines by score tier and age, inquiry and
 tightness indexes, monthly), nyfed_state (State Level Household Debt Statistics: card debt per capita and card 90+
-delinquency for the 50 states, DC, Puerto Rico and the nation, annual at Q4), issuer_8k (Capital One's own monthly
-charge-off and delinquency metrics from the Exhibit 99.1 it files with an 8-K under Item 7.01, monthly from
-February 2021, the only monthly issuer-level reading on the page). Each has a typical release lag in
+delinquency for the 50 states, DC, Puerto Rico and the nation, annual at Q4), issuer_8k (the monthly charge-off and delinquency metrics that Capital One, Synchrony and Bread Financial each
+file with an 8-K, the only monthly issuer-level readings on the page: Capital One from February 2021, Synchrony
+from March 2021, Bread from July 2022. American Express is parsed and tested in the same module but deliberately
+NOT loaded, because it changed the population it reports in May 2026 without restating the history; see
+AXP_POPULATION_BREAK and task 46). Each has a typical release lag in
 `RELEASE_RHYTHM` (render.py) that the health strip turns
 into a 'next expected' date. After each G.19 release run `uv run python checks/verify_g19.py`; a revision that moves a
 live golden shows as fred `golden_mismatch` (amber, the job still passes) until the golden is re-based.

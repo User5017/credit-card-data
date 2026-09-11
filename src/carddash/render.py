@@ -55,7 +55,7 @@ RELEASE_RHYTHM = {
     "ncua": ("ncua_card_loans", "NCUA_FICU", "Q", 65),  # a quarter's zip lands about two months after quarter end
     "dfa": ("dfa_consumer_credit", "DFA_ALL_HOUSEHOLDS", "Q", 80),  # about a week after the Z.1: 2026 Q1 on 2026-06-18
     "cfpb_cct": ("cct_card_inquiry_index_sa", "CFPB_CCP_ALL", "M", 105),  # the inquiry index runs about three months behind (originations seven)
-    "issuer_8k": ("cof_card_nco_rate", "ISSUER:CAPITAL_ONE", "M", 22),  # filed the 15th to the 22nd of the next month
+    "issuer_8k": ("issuer_card_nco_rate", "ISSUER:CAPITAL_ONE", "M", 22),  # filed the 15th to the 22nd of the next month
     "nyfed_state": ("state_card_dq90_rate_balances", "CCP_ALL", "A", 60),  # the 2025 file was published February 2026
 }
 
@@ -72,7 +72,7 @@ SOURCE_LABELS = {
     "ncua": "NCUA, 5300 Call Report quarterly data (credit unions)",
     "dfa": "Federal Reserve Board, Distributional Financial Accounts",
     "cfpb_cct": "CFPB Consumer Credit Trends (Consumer Credit Panel)",
-    "issuer_8k": "Capital One Financial Corporation, monthly charge-off and delinquency metrics (8-K Exhibit 99.1, SEC EDGAR)",
+    "issuer_8k": "Capital One, Synchrony and Bread Financial, each issuer's own monthly charge-off and delinquency metrics (8-K exhibits, SEC EDGAR)",
     "nyfed_state": "Federal Reserve Bank of New York, State Level Household Debt Statistics (Consumer Credit Panel/Equifax)",
 }
 STATUS_LABELS = {
@@ -172,13 +172,27 @@ LOAN_TYPE_NOTE = (
     "seasonally adjusted."
 )
 
-COF_8K_NOTE = (
-    "Capital One publishes this itself, about two weeks after each month ends, in an 8-K under Item 7.01. It is "
-    "the only issuer-level reading on this page that is monthly: the FDIC call report lands 55 to 58 days after "
-    "quarter end and the Y-14 about 3.5 months, so everything else here about a single lender can be four and a "
-    "half months old. Scope differs from the call report and the two are not comparable level for level: this is "
-    "Capital One's managed DOMESTIC CARD book, wider than the single bank charter the FDIC reports, and the "
-    "delinquency figure counts 30+ day PERFORMING balances. It is one issuer, not the industry."
+ISSUER_8K_NOTE = (
+    "Three lenders publish these themselves, about two to three weeks after each month ends, in an 8-K filed "
+    "with the SEC. They are the only issuer-level readings on this page that are monthly: the FDIC call report "
+    "lands 55 to 58 days after quarter end and the Y-14 about 3.5 months, so everything else here about a "
+    "single lender can be four and a half months old. THE LEVELS ARE NOT COMPARABLE WITH EACH OTHER. Each "
+    "issuer defines its own measure and the definitions differ by more than most of the movements shown here: "
+    "Capital One reports its managed domestic card book and counts 30+ day PERFORMING delinquencies against "
+    "period-end loans; Synchrony reports whole-company loan receivables, over 90 percent of them private-label "
+    "and co-brand cards, with delinquency against period-end receivables; Bread reports credit card and other "
+    "loans and divides its delinquency by period-end PRINCIPAL loans, a smaller denominator than its own "
+    "end-of-period loan figure. None of the three matches the call report scope either. Read the direction and "
+    "the turning points, not the gaps between the lines. Three issuers are also not the industry, which is what "
+    "the dashed all-commercial-bank line is there for."
+)
+
+SYF_SAWTOOTH_NOTE = (
+    "Synchrony's monthly charge-off rate saws up and down because charge-offs happen on cycle dates and a "
+    "calendar month can contain 25 or 30 of them; the exhibit prints the count per month for exactly this "
+    "reason. That is a calendar artefact, not the portfolio changing. Synchrony publishes an adjusted rate "
+    "that spreads recoveries evenly across each quarter, which is in the series browser at the foot of this "
+    "page; the unadjusted rate is drawn here because it is the one comparable with the other two issuers."
 )
 
 BOFA_CHARTER_NOTE = (
@@ -805,24 +819,28 @@ PANELS = [
                 ],
             },
             {
-                "id": "cof_monthly_nco",
-                "title": "Capital One card net charge-off rate, monthly, against the industry",
+                "id": "issuer_monthly_nco",
+                "title": "Monthly card net charge-off rates, three issuers and the industry",
                 "unit": "pct",
                 "step": True,
-                "notes": [COF_8K_NOTE],
+                "notes": [ISSUER_8K_NOTE, SYF_SAWTOOTH_NOTE],
                 "series": [
-                    S("cof_card_nco_rate", "ISSUER:CAPITAL_ONE", "Capital One, monthly", source="issuer_8k"),
+                    S("issuer_card_nco_rate", "ISSUER:CAPITAL_ONE", "Capital One, monthly", source="issuer_8k"),
+                    S("issuer_card_nco_rate", "ISSUER:SYNCHRONY", "Synchrony, monthly", source="issuer_8k"),
+                    S("issuer_card_nco_rate", "ISSUER:BREAD_FINANCIAL", "Bread Financial, monthly", source="issuer_8k"),
                     S("card_nco_rate_sa", "COMBANKS_ALL", "All commercial banks, quarterly", period_type="Q", dash=True),
                 ],
             },
             {
-                "id": "cof_monthly_dq",
-                "title": "Capital One card 30+ day delinquency rate, monthly, against the industry",
+                "id": "issuer_monthly_dq",
+                "title": "Monthly card 30+ day delinquency rates, three issuers and the industry",
                 "unit": "pct",
                 "step": True,
-                "notes": [COF_8K_NOTE],
+                "notes": [ISSUER_8K_NOTE],
                 "series": [
-                    S("cof_card_dq30_rate", "ISSUER:CAPITAL_ONE", "Capital One, monthly", source="issuer_8k"),
+                    S("issuer_card_dq30_rate", "ISSUER:CAPITAL_ONE", "Capital One, monthly", source="issuer_8k"),
+                    S("issuer_card_dq30_rate", "ISSUER:SYNCHRONY", "Synchrony, monthly", source="issuer_8k"),
+                    S("issuer_card_dq30_rate", "ISSUER:BREAD_FINANCIAL", "Bread Financial, monthly", source="issuer_8k"),
                     S("card_dq_rate_sa", "COMBANKS_ALL", "All commercial banks, quarterly", period_type="Q", dash=True),
                 ],
             },

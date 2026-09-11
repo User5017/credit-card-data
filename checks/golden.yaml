@@ -787,7 +787,7 @@
   origin_url: https://www.newyorkfed.org/newsevents/news/research/2026/20260811
 
 - id: cof_8k_nco_rate_2026_07
-  metric: cof_card_nco_rate
+  metric: issuer_card_nco_rate
   entity: ISSUER:CAPITAL_ONE
   tier: all
   period_type: M
@@ -800,7 +800,7 @@
   origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762826000093/ex991july2026creditmetrics.htm
 
 - id: cof_8k_dq30_rate_2026_07
-  metric: cof_card_dq30_rate
+  metric: issuer_card_dq30_rate
   entity: ISSUER:CAPITAL_ONE
   tier: all
   period_type: M
@@ -813,7 +813,7 @@
   origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762826000093/ex991july2026creditmetrics.htm
 
 - id: cof_8k_loans_eop_2026_07
-  metric: cof_card_loans_eop
+  metric: issuer_card_loans_eop
   entity: ISSUER:CAPITAL_ONE
   tier: all
   period_type: M
@@ -826,7 +826,7 @@
   origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762826000093/ex991july2026creditmetrics.htm
 
 - id: cof_8k_nco_rate_2025_06_combined
-  metric: cof_card_nco_rate
+  metric: issuer_card_nco_rate
   entity: ISSUER:CAPITAL_ONE
   tier: all
   period_type: M
@@ -837,3 +837,94 @@
   check_live: true
   origin: "Capital One Financial Corporation, 8-K filed 2025-07-22, Exhibit 99.1 for the month ended June 30, 2025, the one month the exhibit splits the section: 'Domestic Card' TOTAL row, Net Charge-Offs Rate 4.96 percent. The components that month are 'Capital One Domestic' 5.29 and 'Discover Domestic' 4.47; this entry pins the total, so a regression to a component fails"
   origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762825000212/ex991june2025creditmetrics.htm
+
+- id: syf_8k_nco_rate_2026_07
+  metric: issuer_card_nco_rate
+  entity: ISSUER:SYNCHRONY
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 4.7
+  tolerance: 0.001
+  check_live: true
+  origin: "Synchrony Financial, 8-K filed 2026-08-17, Exhibit 99.1 'SYNCHRONY FINANCIAL MONTHLY CHARGE-OFF AND DELINQUENCY STATISTICS', July 31, 2026 column, 'Net charge-off rate' row, 4.7 percent. This is the UNADJUSTED rate; the adjusted one in the row below it reads 4.9 that month, so this entry also pins which of the two the comparable series carries"
+  origin_url: https://www.sec.gov/Archives/edgar/data/1601712/000160171226000035/creditstatsfinancialtables.htm
+
+- id: syf_8k_dq30_rate_2026_07
+  metric: issuer_card_dq30_rate
+  entity: ISSUER:SYNCHRONY
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 4.2
+  tolerance: 0.001
+  check_live: true
+  origin: "Synchrony Financial, 8-K filed 2026-08-17, Exhibit 99.1 monthly statistics, July 31, 2026 column, '30+ delinquency rate' row, 4.2 percent. Over-30-day delinquencies as a percentage of period-end loan receivables, which is Synchrony's own definition in footnote (1)"
+  origin_url: https://www.sec.gov/Archives/edgar/data/1601712/000160171226000035/creditstatsfinancialtables.htm
+
+- id: syf_8k_loans_eop_2026_07
+  metric: issuer_card_loans_eop
+  entity: ISSUER:SYNCHRONY
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 102.6
+  tolerance: 0.001
+  check_live: true
+  origin: "Synchrony Financial, 8-K filed 2026-08-17, Exhibit 99.1 monthly statistics, July 31, 2026 column, 'Period-end loan receivables' row, $102.6 billion. Synchrony states dollars in BILLIONS, unlike Capital One and Bread, so this entry also pins the scale"
+  origin_url: https://www.sec.gov/Archives/edgar/data/1601712/000160171226000035/creditstatsfinancialtables.htm
+
+- id: bfh_8k_nco_rate_2026_07
+  metric: issuer_card_nco_rate
+  entity: ISSUER:BREAD_FINANCIAL
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 6.8
+  tolerance: 0.001
+  check_live: true
+  origin: "Bread Financial Holdings, 8-K filed 2026-08-17, Exhibit 99.1 'BREAD FINANCIAL PROVIDES PERFORMANCE UPDATE FOR JULY 2026', 'For the month ended July 31, 2026' column, 'Net principal loss rate' row, 6.80 percent"
+  origin_url: https://www.sec.gov/Archives/edgar/data/1101215/000110121526000076/july2026creditstatsex991-t.htm
+
+- id: bfh_8k_dq30_rate_2026_07
+  metric: issuer_card_dq30_rate
+  entity: ISSUER:BREAD_FINANCIAL
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 5.35
+  tolerance: 0.001
+  check_live: true
+  origin: "Bread Financial Holdings, 8-K filed 2026-08-17, Exhibit 99.1 for July 2026, 'As of July 31, 2026' column, 'Delinquency rate' row, 5.35 percent. Its denominator is the $16,378mn of period-end PRINCIPAL loans in the same table, not the $18,543mn end-of-period loan figure in the table above it"
+  origin_url: https://www.sec.gov/Archives/edgar/data/1101215/000110121526000076/july2026creditstatsex991-t.htm
+
+- id: bfh_8k_loans_eop_2026_07
+  metric: issuer_card_loans_eop
+  entity: ISSUER:BREAD_FINANCIAL
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 18.543
+  tolerance: 0.001
+  check_live: true
+  origin: "Bread Financial Holdings, 8-K filed 2026-08-17, Exhibit 99.1 for July 2026, 'End-of-period credit card and other loans', $18,543 million. Bread states dollars in MILLIONS, so this entry pins the scale to billions"
+  origin_url: https://www.sec.gov/Archives/edgar/data/1101215/000110121526000076/july2026creditstatsex991-t.htm
+
+- id: bfh_8k_nco_rate_2023_09_monthly_not_quarterly
+  metric: issuer_card_nco_rate
+  entity: ISSUER:BREAD_FINANCIAL
+  tier: all
+  period_type: M
+  period_end: 2023-09-30
+  source: issuer_8k
+  expected: 6.7
+  tolerance: 0.001
+  check_live: true
+  origin: "Bread Financial Holdings, 8-K filed 2023-10-26, Exhibit 99.1 for September 2023. In a QUARTER-END month the loss table drops the year-ago column and prints 'For the three months ended September 30, 2023' beside 'For the month ended September 30, 2023', so the header states the same date twice and the second figure is the QUARTER. The month is 6.7 percent and the quarter is 6.9; this entry pins the month, so reading the header as dates alone fails loudly instead of publishing a quarterly rate as a monthly one"
+  origin_url: https://www.sec.gov/Archives/edgar/data/1101215/000110121523000192/septembercreditstatsex991t.htm
