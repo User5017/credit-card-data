@@ -3,6 +3,53 @@
 One bounded task per session. Each has a pass condition written before work starts.
 Status: `todo` | `doing` | `done YYYY-MM-DD` | `blocked (why)`.
 
+## Handoff 2026-09-11 (late evening, task 45: three issuers on the monthly chart)
+
+One task this session, committed as e4c33fe and pushed: `issuer_8k` went from Capital One alone to Capital One,
+Synchrony and Bread Financial, and the Capital-One-specific metric names became entity-keyed ones. 1016 rows in
+18 series, 77 charts, 14 sources, 65 goldens, 381 tests green. The v1.14 section carries the evidence. Four
+things matter more than the task row.
+
+TASK 8 IS STILL 1 OF 2 AND THIS SESSION DID NOT MOVE IT. The second scheduled run was due about 22:00 UTC on
+2026-09-11 and had not happened when this session ended (20:13 UTC). Everything above is push-triggered and does
+not count. RUN `uv run python checks/verify_releases.py` FIRST NEXT SESSION and close v1 if it passes. Note that
+this session's push changed a source that the scheduled run will exercise, so the 2026-09-11 run is the first to
+carry three issuers in issuer_8k.
+
+TWO NUMBERS WERE WRONG ON THE WAY IN AND BOTH LOADED SILENTLY. Bread's quarter-end months put the QUARTER's loss
+rate on the month, because its loss table heads two columns with the same date and the second one is 'For the
+three months ended'; September 2023 went in at 6.9 when the month was 6.7, and every quarter-end month was wrong
+the same way. Separately, filtering filings on Item 7.01 (which is what these disclosures normally are) dropped
+Synchrony's newest month entirely, because Synchrony filed July 2026 under Item 2.02: no error, the source would
+simply have sat a month behind for ever. Both are fixed, both have a live golden or a test pinning them, and
+both are written up in the v1.14 section. If you take one lesson: on EDGAR the item tag is the filer's
+description of a filing, not a property of the document.
+
+AMERICAN EXPRESS IS DONE EXCEPT FOR ONE DECISION, which is now task 46. Its parser, both label vocabularies, two
+fixtures and five tests are checked in and passing; it is deliberately absent from `ISSUERS` and has no rows in
+series.csv. The blocker is real and is not a parsing problem: Amex changed the population it reports in May 2026
+(from 'Card Member loans' to 'Card balances', which adds pay-in-full charge-card balances), restated only two
+months, and the same month reads $97.5bn on one basis and $110.8bn on the other. Loading it as one series would
+put a fake 10 percent step in the balances and a fake improvement in the delinquency rate. Enabling it means
+deciding how to carry two populations under one issuer; `test_the_amex_population_break_is_real_and_is_why_it_is_not_loaded`
+fails if the two bases ever reconcile, which is the signal that the decision has been made for you.
+
+WHAT IS WORTH DOING NEXT, in the order I would do it:
+1. Close v1 (verify_releases), assuming the 22:00 UTC run is green.
+2. A third thesis note, or an edit to the second. The three-issuer chart is new evidence for leg 1 and the note
+   does not mention it: the ORDER of the three lenders never changes over five years and all three turn at the
+   same time, which is what a common national cause looks like and matches what the state map said in task 43.
+   Bread at 6.80 percent net loss against Capital One at 4.12 and the industry at 3.82 is the clearest picture
+   on the page yet of distress sitting with the weakest borrowers.
+3. Task 46, the Amex decision.
+4. Still not scheduled, still suggested: the page spans gaps on every chart except nco_by_issuer, and the PNGs
+   never do, so the two disagree wherever a series has a hole. The issuer_8k trim now means its own series never
+   have holes, which removes one source of that disagreement but not the others.
+
+Costs accepted this session: data/raw/issuer_8k is 3.6 MB (was 1.8), of which Bread is 1.2 MB because its
+exhibits carry one month each and Synchrony is 440 KB because its exhibits carry thirteen. The index cache is
+what keeps the nightly run at a handful of SEC requests rather than several hundred.
+
 ## Handoff 2026-09-11 (end of a long session: tasks 40 to 44)
 
 Five tasks landed, each committed separately and each green on the runner: 40 cursor sync, 41 the value audit and
