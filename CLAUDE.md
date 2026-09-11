@@ -46,6 +46,11 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
 - Never write facts.csv, health.json, or DuckDB. The loader does that.
 - Send the pipeline's own User-Agent (src/carddash/http.py). The CFPB's edge blocks browser-like agents sent from
   scripts and accepts ours. Never fake a browser.
+  ONE EXCEPTION, issuer_8k: the SEC's edge 403s any User-Agent containing a URL in parentheses, which is exactly the
+  shape of ours, with or without a contact appended (verified 2026-09-11 on every SEC host). That fetcher sends
+  `carddash/<version> <CARDDASH_CONTACT>` instead, which is the format the SEC asks for. Still honest identification,
+  still not a browser string. CARDDASH_CONTACT must be set locally (.env) and as an Actions secret or the source
+  fails loudly; it is not defaulted, because the SEC requires a real contact.
 - Before writing a parser: download the real file, print its headers and first rows, then write the parser.
   Check the raw file in under tests/fixtures/<source>/ and write a test that parses it.
 - Every fetcher ships with: a fixture test, at least one golden entry in checks/golden.yaml that traces to
@@ -70,14 +75,16 @@ Suggest them in the handoff instead. Definition of done for v1: five fetchers gr
   come from sql/<source>_facts.sql, which the fetcher runs in memory: aggregation choices stay in SQL.
 - Keep this repo out of OneDrive.
 
-## Sources (thirteen as of 2026-09-11)
+## Sources (fourteen as of 2026-09-11)
 fred, tccp, phillyfed, nyfed_hhdc, fdic, nyfed_sce (credit access, four-monthly), nyfed_sce_monthly (core survey),
 bea (PCE by type of product plus household interest payments and monthly DPI, keyless flat file), census (Monthly Retail
 Trade workbook), ncua (5300 call report quarterly zips, per-quarter extracts), dfa (Fed Distributional Financial Accounts
 zip: consumer credit, deposits, liabilities, net worth and household counts by wealth, income and age group, quarterly),
 cfpb_cct (CFPB Consumer Credit Trends CSVs: card originations, new credit lines by score tier and age, inquiry and
 tightness indexes, monthly), nyfed_state (State Level Household Debt Statistics: card debt per capita and card 90+
-delinquency for the 50 states, DC, Puerto Rico and the nation, annual at Q4). Each has a typical release lag in
+delinquency for the 50 states, DC, Puerto Rico and the nation, annual at Q4), issuer_8k (Capital One's own monthly
+charge-off and delinquency metrics from the Exhibit 99.1 it files with an 8-K under Item 7.01, monthly from
+February 2021, the only monthly issuer-level reading on the page). Each has a typical release lag in
 `RELEASE_RHYTHM` (render.py) that the health strip turns
 into a 'next expected' date. After each G.19 release run `uv run python checks/verify_g19.py`; a revision that moves a
 live golden shows as fred `golden_mismatch` (amber, the job still passes) until the golden is re-based.

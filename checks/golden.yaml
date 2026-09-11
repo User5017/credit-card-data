@@ -36,6 +36,14 @@
 #               the panel files). The fetcher checks the score and age files sum to within 6 percent of the total file
 #               instead, and the fixture test pins the January 2026 dashboard readings (8.2 million cards, $54.2bn).
 
+#   2026-09-11  issuer_8k: the golden entries ARE the release. Capital One's Exhibit 99.1 is its own primary
+#               disclosure, not a feed derived from one, so every number can be checked against the filed document
+#               rather than against a summary of it. July 2026 (filed 2026-08-17): net charge-off rate 4.12%, 30+
+#               performing delinquency rate 3.48%, average card loans $256,704mn, period-end $258,940mn. June 2025
+#               is kept as a second live entry because it is the one month the exhibit split Capital One from the
+#               newly acquired Discover, so it pins the choice of the 'Domestic Card' combined total (4.96% net
+#               charge-off) over the 'Capital One Domestic' component (5.29%); a regression to the component would
+#               fail loudly. Also checked, not golden: the 66 months load with no gap from February 2021.
 - id: g19_revolving_sa_2024_12
   metric: revolving_credit_sa
   entity: ALL_HOLDERS
@@ -777,3 +785,55 @@
   check_live: false
   origin: "Same release, transition into serious delinquency by loan type: student loan debt 7.83 percent. Fixture-only: the series is still settling after the federal payment pause and the 2024 reporting restart, so a restatement is likelier here than on the other loan types"
   origin_url: https://www.newyorkfed.org/newsevents/news/research/2026/20260811
+
+- id: cof_8k_nco_rate_2026_07
+  metric: cof_card_nco_rate
+  entity: ISSUER:CAPITAL_ONE
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 4.12
+  tolerance: 0.001
+  check_live: true
+  origin: "Capital One Financial Corporation, 8-K filed 2026-08-17 (Item 7.01), Exhibit 99.1 'Monthly Charge-Off and Delinquency Metrics, As of and for the month ended July 31, 2026', Credit Card / Domestic row, Net Charge-Offs Rate column, percent"
+  origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762826000093/ex991july2026creditmetrics.htm
+
+- id: cof_8k_dq30_rate_2026_07
+  metric: cof_card_dq30_rate
+  entity: ISSUER:CAPITAL_ONE
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 3.48
+  tolerance: 0.001
+  check_live: true
+  origin: "Capital One Financial Corporation, 8-K filed 2026-08-17 (Item 7.01), Exhibit 99.1 for the month ended July 31, 2026, Credit Card / Domestic row, 30+ Day Performing Delinquencies Rate column, percent"
+  origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762826000093/ex991july2026creditmetrics.htm
+
+- id: cof_8k_loans_eop_2026_07
+  metric: cof_card_loans_eop
+  entity: ISSUER:CAPITAL_ONE
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 258.94
+  tolerance: 0.001
+  check_live: true
+  origin: "Capital One Financial Corporation, 8-K filed 2026-08-17, Exhibit 99.1 for the month ended July 31, 2026, Credit Card / Domestic row, Loans Held for Investment Period-End column, $258,940 million"
+  origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762826000093/ex991july2026creditmetrics.htm
+
+- id: cof_8k_nco_rate_2025_06_combined
+  metric: cof_card_nco_rate
+  entity: ISSUER:CAPITAL_ONE
+  tier: all
+  period_type: M
+  period_end: 2025-06-30
+  source: issuer_8k
+  expected: 4.96
+  tolerance: 0.001
+  check_live: true
+  origin: "Capital One Financial Corporation, 8-K filed 2025-07-22, Exhibit 99.1 for the month ended June 30, 2025, the one month the exhibit splits the section: 'Domestic Card' TOTAL row, Net Charge-Offs Rate 4.96 percent. The components that month are 'Capital One Domestic' 5.29 and 'Discover Domestic' 4.47; this entry pins the total, so a regression to a component fails"
+  origin_url: https://www.sec.gov/Archives/edgar/data/927628/000092762825000212/ex991june2025creditmetrics.htm

@@ -38,6 +38,9 @@ jobs:
       - name: Refresh data and render
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          # The SEC requires a declaring contact address and refuses this pipeline's normal User-Agent because it
+          # contains a URL, so issuer_8k sends 'carddash/<version> <contact>'. Without this the source fails loudly.
+          CARDDASH_CONTACT: ${{ secrets.CARDDASH_CONTACT }}
         run: uv run carddash refresh
 
       - name: Commit data and site

@@ -6,7 +6,8 @@ import pandas as pd
 import pytest
 
 from carddash.fetchers import (
-    bea, census, cfpb_cct, dfa, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, nyfed_state, phillyfed, tccp,
+    bea, census, cfpb_cct, dfa, fdic, fred, issuer_8k, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly,
+    nyfed_state, phillyfed, tccp,
 )
 from carddash.paths import Paths
 from carddash.schema import coerce_facts
@@ -153,9 +154,24 @@ def state_facts() -> pd.DataFrame:
     return coerce_facts(nyfed_state.parse_workbook(STATE_FIXTURE, PULLED_AT))
 
 
+COF_8K_MONTHS = FIXTURES / "issuer_8k" / "months"  # three months, one per exhibit layout, NOT consecutive
+
+
+@pytest.fixture(scope="session")
+def cof_8k_facts(meta) -> pd.DataFrame:
+    """Facts from the checked-in Capital One 8-K exhibits, parsed once per session.
+
+    The three months are deliberately not consecutive (they are the three layouts), so the gap check that the
+    real fetcher runs is turned off here; tests/test_issuer_8k.py asserts that check separately.
+    """
+    return coerce_facts(issuer_8k.facts_from_months(
+        COF_8K_MONTHS, series_for_source(meta, issuer_8k.SOURCE), PULLED_AT, require_consecutive=False))
+
+
 @pytest.fixture(scope="session")
 def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, sce_facts, sce_monthly_facts,
-                  bea_facts, census_facts, ncua_facts, dfa_facts, cct_facts, state_facts) -> pd.DataFrame:
+                  bea_facts, census_facts, ncua_facts, dfa_facts, cct_facts, state_facts,
+                  cof_8k_facts) -> pd.DataFrame:
     """Facts from every checked-in raw file, all sources, the way the loader would see them."""
     return coerce_facts(
         pd.concat(
@@ -173,6 +189,7 @@ def fixture_facts(meta, tccp_products, phillyfed_facts, hhdc_facts, fdic_facts, 
                 dfa_facts,
                 cct_facts,
                 state_facts,
+                cof_8k_facts,
             ],
             ignore_index=True,
         )

@@ -134,6 +134,16 @@
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
+    },
+    "issuer_8k": {
+      "source": "issuer_8k",
+      "status": "ok",
+      "messages": [],
+      "last_period_end": "2026-07-31",
+      "pulled_at": "2026-09-11T17:12:05Z",
+      "rows": 396,
+      "n_series": 6,
+      "n_revisions": 0
     }
   }
 }

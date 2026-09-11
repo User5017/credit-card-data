@@ -134,7 +134,7 @@ Scouting for every row was verified live on 2026-09-08 before work started (FRED
 | 28 | Spend panel: BEA PCE and Census retail | BEA NipaDataM.txt (keyless, 36.7 MB: snapshot only the kept series, a documented deviation) for total PCE, goods, services and the card-heavy lines; Census mrtssales92-present.xlsx (keyless) for retail categories; goldens from the BEA and Census press releases; a Spend panel with 12-month growth | done 2026-09-08 (`fetchers/bea.py` 8 series 1959-2026 as a 165 KB subset snapshot, `fetchers/census.py` 12 series 1992-2026 SA and NSA; goldens: BEA monthly changes 36.3 / -49.9 / 86.2 / 77.4 via the new `change_from_prior` golden option, Census May and June NSA levels from the advance release's Table 1; five Spend charts incl. Y-14 purchase volume vs retail sales and the nonstore share (`v_retail_share`); 9 sources, 48 charts, 45 goldens) |
 | 29 | NCUA credit unions | Quarterly call-report zips (direct links) for the four TCCP top-25 credit unions: card loans and delinquency; depends on zip size being workable for a daily full pull | done 2026-09-10 (`fetchers/ncua.py`; the zips are about 8 MB each for 41 quarters, so the raw snapshot is a per-quarter extract under data/raw/ncua/quarters/ (41 files, 172 KB, 2016 Q1 to 2026 Q1) and a run downloads only quarters without an extract plus the newest two; the second documented exception in CLAUDE.md. 24 series: the industry sum over federally insured credit unions (FOICU CU_TYPE 1 and 2) plus Navy Federal, PenFed, BECU and America First, each with card loans, year-to-date charge-offs and recoveries, 60+ day delinquent balances and, per credit union, the reported card interest rate; 984 rows. `v_ncua_rates` de-cumulates the year-to-date accounts to a quarterly annualized net charge-off rate and the 60+ day share. Goldens 86.0 (2026 Q1, fixture-only) and 82.0 (2023 Q4, live) from the NCUA Quarterly Credit Union Data Summary. Three charts: card loans at credit unions (Growth), credit union rates against the bank APR (Pricing; Navy Federal sits on the 18 percent cap), credit union NCO rate against banks (Performance). 10 sources, 51 charts, 47 goldens. Built 2026-09-08 in the session that lost DNS mid-task; first live pull and commit 2026-09-10) |
 | 30 | FDIC realized card yield | Find the card interest-and-fee income field in the BankFind financials (Call Report RIAD B485); if it exists, a per-issuer realized yield view and an offered-vs-earned chart | todo |
-| 31 | Issuer monthly 8-K credit metrics (v2) | COF, SYF, BFC, AXP monthly NCO and 30+ DQ from EDGAR full-text search; must run from Actions (SEC blocks the home ISP), fixtures from the runner | blocked (no SEC access from the dev machine, see the open item) |
+| 31 | Issuer monthly 8-K credit metrics | Capital One's own Exhibit 99.1 monthly charge-off and delinquency metrics loaded as a source, with a golden traced to the filed exhibit, a fixture test per layout, and charts against the industry | done 2026-09-11, Capital One only (see v1.11 below; the blocker was this machine's IP, not the source) |
 
 ## v1.7: what the thesis still needs (2026-09-10 evening, the user's "what more do I need to prove this out, go get it")
 
@@ -185,6 +185,44 @@ Values that look wrong on the page and are not, checked 2026-09-11 so nobody re-
 - `y14_payment_flows` payment rate at 112.1%: charge-offs sit inside payments because the Y-14 publishes a charge-off rate rather than a dollar amount, which is already in the view's comment and the chart note.
 - Utilization at the 90th percentile (95.3%), debt current as a share of balances (97.5%), revolving share (80.3%): all genuinely near their ceilings.
 - `Card loans, Capital One, National Association` jumping from a median of $0.2bn to $256bn: the card book moved onto that charter. The roll-up exists precisely so the issuer line does not jump.
+
+## v1.11: the first monthly issuer reading (2026-09-11)
+
+THE BLOCKER ON TASK 31 WAS STALE. SEC EDGAR is reachable from this machine again: www.sec.gov, data.sec.gov,
+efts.sec.gov and the Archives all answer 200. The 2026-09-08 block was IP reputation against the ViaSat CGNAT
+address 99.196.128.3 and the machine is now on 104.229.10.138, so nothing about SEC policy changed and nothing
+needs to run from Actions. Before assuming a 403 is policy, check the public IP (`curl https://api.ipify.org`).
+
+| # | Task | Pass condition | Status |
+|---|------|----------------|--------|
+| 42 | Capital One monthly credit metrics (task 31, Capital One only) | `fetchers/issuer_8k.py` loads the Exhibit 99.1 that Capital One files with an 8-K under Item 7.01 each month; goldens traced to the filed exhibit itself; a fixture test per layout; charts against the industry | done 2026-09-11 (66 consecutive months, February 2021 to July 2026, 396 rows in 6 series, no gaps. Net charge-off rate 4.12% and 30+ performing delinquency 3.48% for July 2026, filed 2026-08-17, against the industry's 3.82% and 2.85% at 2026 Q2. This is the ONLY monthly issuer-level reading on the page: the FDIC call report lands 55 to 58 days after quarter end and the Y-14 about 3.5 months, so every other single-lender number here can be four and a half months old, and this one is about two weeks old. Two Performance charts, `cof_monthly_nco` and `cof_monthly_dq`, each against the Fed's all-commercial-bank rate. 77 charts, 14 sources, 58 goldens) |
+
+What the exhibits actually look like, so nobody rediscovers it:
+- The metrics exhibit is found through each filing's index.json, never by constructing its name. EDGAR truncates a
+  document name but NOT at a fixed width: `ex991april2026creditmetrics.htm` survives at 27 characters while
+  `ex991august2025creditmetri.htm` is cut to 26. Match on "credit", not on "metrics", or February and December
+  vanish. Filing indexes are cached under data/raw/issuer_8k/index/ because a filing is immutable once filed, so
+  after the first run only the one or two new filings a month cost a request instead of 97 every night.
+- The exhibit states its own period ("As of and for the month ended July 31, 2026") and that is what dates the
+  rows. The file name is only ever a hint for skipping a download.
+- FIVE layouts appear across the 55 exhibits from January 2022 to July 2026, and four of the differences are
+  Capital One moving footnote markers: 'Domestic' with Rate(1)/(2)/(3) in 43 filings, 'Domestic(5)' in 8,
+  'Credit Card:(4)(5)' in 2, one month of Rate(2)/(3)/(4), and one month with a footnote on a GROUP header
+  ('30+ Day Performing Delinquencies(5)'). Every label is therefore compared with its footnotes stripped.
+- The fifth difference is real: for June 2025, the first month after the Discover acquisition closed, the section
+  splits into 'Capital One Domestic' (5.29%), 'Discover Domestic' (4.47%) and a 'Domestic Card' total (4.96%).
+  The TOTAL is loaded so the series does not step at the merger, which is the same choice the FDIC roll-up makes
+  for this issuer, and a live golden pins that month so a regression to a component fails loudly.
+- Scope: managed DOMESTIC CARD, wider than the single FDIC charter, and the delinquency figure counts 30+ day
+  PERFORMING balances. Not comparable with the call report level for level; the chart note says so.
+- Some months carry a second Item 7.01 8-K with no exhibit (an investor conference), so a filing is identified by
+  its exhibit and never by counting one per month.
+- USER-AGENT: the SEC's edge 403s any User-Agent containing a URL in parentheses, which is exactly the shape of
+  this pipeline's own, with or without a contact appended. Verified all four combinations on 2026-09-11. This
+  fetcher sends `carddash/<version> <CARDDASH_CONTACT>` instead. CARDDASH_CONTACT is now a repo secret and is
+  passed to the refresh workflow; without it the source fails loudly rather than fetching anonymously.
+- Not done: Synchrony, Bread and American Express. Check whether they still file monthly before promising them;
+  each would need its own parser because the exhibit layout is per issuer.
 
 ## v1.5 (after two green releases)
 - Order (from the 2026-09-07 scouting): NY Fed SCE Credit Access first (direct xlsx, no gate, about half a session), then CFPB complaints via the trends endpoint (one session), then BEA PCE detail via the keyless NipaDataM.txt flat file (the API needs a key; half to one session), then Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx (the API needs a key even at low volume; one session). Details, URLs and risks in design/handoff-2026-09-07.html §3.

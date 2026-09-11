@@ -35,7 +35,7 @@ RUN2 = "2026-09-07T00:00:00Z"  # the fixtures' pulled_at
 TODAY = dt.date(2026, 9, 8)
 POST_CHARTS = {"revolving_level", "card_apr", "card_access", "card_nco", "hhdc_dq90_by_age", "debt_service", "dfa_credit_by_wealth"}
 ALL_SOURCES = ("fred", "tccp", "phillyfed", "nyfed_hhdc", "fdic", "nyfed_sce", "nyfed_sce_monthly", "bea", "census", "ncua",
-               "dfa", "cfpb_cct", "nyfed_state")
+               "dfa", "cfpb_cct", "nyfed_state", "issuer_8k")
 
 
 def _health(generated_at: str, sources=("fred",), status="ok") -> dict:
@@ -70,13 +70,13 @@ def test_page_is_self_contained_and_carries_every_chart(page):
         for c in panel["charts"]:
             assert f'data-chart="{c["id"]}"' in html
     assert [p["name"] for p in PANELS] == ["Growth", "Pricing", "Access", "Performance", "Borrowers", "Distribution", "Spend", "Context"]
-    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 75
+    assert len(payload["charts"]) == sum(len(p["charts"]) for p in PANELS) == 77
     assert html.index("<h2>Access</h2>") > html.index("<h2>Pricing</h2>")
     assert html.index("<h2>Context</h2>") > html.index("<h2>Borrowers</h2>")
     assert payload["default_years"] == 5 and len(payload["recessions"]) == 8
     # the health strip sits below the charts, a one-line summary sits at the top
     assert html.index('<h2 id="health">Source health</h2>') > html.index("<h2>Context</h2>")
-    assert "13 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
+    assert "14 sources OK" in html.split('<h2 id="readings">Latest readings</h2>')[0]
     assert "Sources: Federal Reserve Board, via FRED; CFPB Terms of Credit Card Plans survey" in html
 
 
@@ -294,7 +294,7 @@ def test_card_badge_and_last_attempt_when_a_source_is_not_ok(tmp_paths, fixture_
     assert by_id["nco_by_issuer"]["status"] == "failed" and by_id["nco_by_issuer"]["attempted"] == "2026-09-08"
     assert "data as of 2026-09-07" in by_id["nco_by_issuer"]["footer"]  # the data on the chart is still the last good load
     assert '<span class="badge st-failed"' in html and "last fetch attempt 2026-09-08" in html
-    assert "2 of 13 sources need attention (Failed)" in html
+    assert "2 of 14 sources need attention (Failed)" in html
 
 
 def test_png_export_is_byte_stable_and_carries_no_pull_date(tmp_paths, fixture_facts):

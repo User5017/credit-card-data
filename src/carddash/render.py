@@ -55,6 +55,7 @@ RELEASE_RHYTHM = {
     "ncua": ("ncua_card_loans", "NCUA_FICU", "Q", 65),  # a quarter's zip lands about two months after quarter end
     "dfa": ("dfa_consumer_credit", "DFA_ALL_HOUSEHOLDS", "Q", 80),  # about a week after the Z.1: 2026 Q1 on 2026-06-18
     "cfpb_cct": ("cct_card_inquiry_index_sa", "CFPB_CCP_ALL", "M", 105),  # the inquiry index runs about three months behind (originations seven)
+    "issuer_8k": ("cof_card_nco_rate", "ISSUER:CAPITAL_ONE", "M", 22),  # filed the 15th to the 22nd of the next month
     "nyfed_state": ("state_card_dq90_rate_balances", "CCP_ALL", "A", 60),  # the 2025 file was published February 2026
 }
 
@@ -71,6 +72,7 @@ SOURCE_LABELS = {
     "ncua": "NCUA, 5300 Call Report quarterly data (credit unions)",
     "dfa": "Federal Reserve Board, Distributional Financial Accounts",
     "cfpb_cct": "CFPB Consumer Credit Trends (Consumer Credit Panel)",
+    "issuer_8k": "Capital One Financial Corporation, monthly charge-off and delinquency metrics (8-K Exhibit 99.1, SEC EDGAR)",
     "nyfed_state": "Federal Reserve Bank of New York, State Level Household Debt Statistics (Consumer Credit Panel/Equifax)",
 }
 STATUS_LABELS = {
@@ -168,6 +170,15 @@ LOAN_TYPE_NOTE = (
     "cards and consumer finance loans sit in 'Other'. Mortgages and home equity lines are secured and belong on the "
     "chart as the floor, not as a comparison. New York Fed Consumer Credit Panel/Equifax, quarterly, not "
     "seasonally adjusted."
+)
+
+COF_8K_NOTE = (
+    "Capital One publishes this itself, about two weeks after each month ends, in an 8-K under Item 7.01. It is "
+    "the only issuer-level reading on this page that is monthly: the FDIC call report lands 55 to 58 days after "
+    "quarter end and the Y-14 about 3.5 months, so everything else here about a single lender can be four and a "
+    "half months old. Scope differs from the call report and the two are not comparable level for level: this is "
+    "Capital One's managed DOMESTIC CARD book, wider than the single bank charter the FDIC reports, and the "
+    "delinquency figure counts 30+ day PERFORMING balances. It is one issuer, not the industry."
 )
 
 BOFA_CHARTER_NOTE = (
@@ -791,6 +802,28 @@ PANELS = [
                     S("card_dq_rate_sa", "COMBANKS_ALL", "All commercial banks", period_type="Q"),
                     S("card_dq_rate_sa", "COMBANKS_TOP100", "Top 100 banks", period_type="Q"),
                     S("card_dq_rate_sa", "COMBANKS_OTHER", "Banks outside top 100", period_type="Q"),
+                ],
+            },
+            {
+                "id": "cof_monthly_nco",
+                "title": "Capital One card net charge-off rate, monthly, against the industry",
+                "unit": "pct",
+                "step": True,
+                "notes": [COF_8K_NOTE],
+                "series": [
+                    S("cof_card_nco_rate", "ISSUER:CAPITAL_ONE", "Capital One, monthly", source="issuer_8k"),
+                    S("card_nco_rate_sa", "COMBANKS_ALL", "All commercial banks, quarterly", period_type="Q", dash=True),
+                ],
+            },
+            {
+                "id": "cof_monthly_dq",
+                "title": "Capital One card 30+ day delinquency rate, monthly, against the industry",
+                "unit": "pct",
+                "step": True,
+                "notes": [COF_8K_NOTE],
+                "series": [
+                    S("cof_card_dq30_rate", "ISSUER:CAPITAL_ONE", "Capital One, monthly", source="issuer_8k"),
+                    S("card_dq_rate_sa", "COMBANKS_ALL", "All commercial banks, quarterly", period_type="Q", dash=True),
                 ],
             },
             {

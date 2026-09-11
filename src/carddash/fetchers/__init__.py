@@ -9,7 +9,8 @@ never touches facts.csv or DuckDB (the loader does); parses by header text, neve
 """
 
 from . import (
-    bea, census, cfpb_cct, dfa, fdic, fred, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, nyfed_state, phillyfed, tccp,
+    bea, census, cfpb_cct, dfa, fdic, fred, issuer_8k, ncua, nyfed_hhdc, nyfed_sce, nyfed_sce_monthly, nyfed_state,
+    phillyfed, tccp,
 )
 
 FETCHERS = {
@@ -26,4 +27,5 @@ FETCHERS = {
     dfa.SOURCE: dfa,
     cfpb_cct.SOURCE: cfpb_cct,
     nyfed_state.SOURCE: nyfed_state,
+    issuer_8k.SOURCE: issuer_8k,
 }
