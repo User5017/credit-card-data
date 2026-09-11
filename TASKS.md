@@ -3,6 +3,43 @@
 One bounded task per session. Each has a pass condition written before work starts.
 Status: `todo` | `doing` | `done YYYY-MM-DD` | `blocked (why)`.
 
+## Handoff 2026-09-11 (end of a long session: tasks 40 to 44)
+
+Five tasks landed, each committed separately and each green on the runner: 40 cursor sync, 41 the value audit and
+its fix, 42/31 Capital One's monthly 8-K metrics, 43 the state tile map, 44 the second thesis note. Their own
+sections carry the evidence. Four things matter more than the task list.
+
+THE PAGE WAS PUBLISHING A WRONG NUMBER and had been for as long as the issuer chart existed: a 182.9 percent
+annualised charge-off rate for Bank of America, with -5,969 percent reachable on charters the page does not draw.
+It was a collapsed denominator, it is fixed at source with a materiality floor, and the class of bug is now closed
+by VIEW_BOUNDS plus a test that forces every new derived field to be either bounded or exempted with a reason. If
+you read one section of this board, read task 41.
+
+SEC EDGAR IS NOT BLOCKED ANY MORE. The 2026-09-08 note said never to plan EDGAR fetches from this machine; that
+was an IP-reputation block on the retired ViaSat address and the machine is now on a different one. Task 31 had
+been sitting blocked for a reason that had expired. Before believing a 403 is policy, check the public IP.
+
+TASK 8 IS STILL AT 1 OF 2 and this session did not move it. Every run above is push-triggered and
+`verify_releases.py` counts only scheduled ones. The second scheduled run is due about 22:00 UTC on 2026-09-11,
+which had not happened when this session ended (17:32 UTC). RUN `uv run python checks/verify_releases.py` FIRST
+NEXT SESSION and close v1 if it passes. Note that the 2026-09-11 scheduled run will be the first to carry
+fourteen sources, so issuer_8k has not yet been through a scheduled run, only push-triggered ones.
+
+WHAT IS WORTH DOING NEXT, in the order I would do it:
+1. Close v1 (verify_releases), assuming the scheduled run is green.
+2. Synchrony, Bread Financial and American Express monthly 8-Ks. The route is proven and the fetcher is built; each
+   needs its own parser because the exhibit layout is per issuer, and whether they still file monthly should be
+   checked before promising them. Two issuers would turn task 42's single-lender caveat into an industry read.
+3. The thesis note's new open item: nothing reconciles Capital One's managed domestic card book (4.12 percent in
+   July) with the FDIC's charter figure for the same issuer (4.83 percent at 2026 Q2). Both are right; the monthly
+   series is a good read on direction and a bad one on level, and that limits what it can be used for.
+4. Not scheduled, suggested: the page still spans gaps on every chart except nco_by_issuer, and the PNGs never do,
+   so the two disagree wherever a series has a hole. Auditing which series actually have holes would say whether
+   span_gaps should flip to False by default.
+
+Known cost accepted this session: data/raw/issuer_8k is 1.8 MB (66 exhibits at about 24 KB plus 97 cached filing
+indexes). The cache is what keeps the nightly run at two or three SEC requests instead of ninety-seven.
+
 ## Handoff 2026-09-11 (late, after the cursor work)
 
 Task 40 is done and is the whole session: the 75 panel charts now share one cursor, so hovering any
