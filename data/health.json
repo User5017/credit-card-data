@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-12T00:00:23Z",
+  "generated_at": "2026-09-12T00:06:32Z",
   "sources": {
     "bea": {
       "source": "bea",
@@ -71,9 +71,9 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-07-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
-      "rows": 1016,
-      "n_series": 18,
+      "pulled_at": "2026-09-12T00:06:32Z",
+      "rows": 1376,
+      "n_series": 34,
       "n_revisions": 0
     },
     "ncua": {
