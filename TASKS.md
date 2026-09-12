@@ -10,10 +10,12 @@ period is drawn as missing), 46 (American Express, carried as two populations). 
 goldens, 383 tests green, 1376 issuer_8k rows in 34 series across four lenders. Their own sections carry the
 evidence. Four things matter more than the task list.
 
-TASK 8 IS ONE RUN FROM CLOSING AND THE RUN IS IN FLIGHT. The 2026-09-10 23:57 UTC scheduled run was GREEN with
-every source ok. The next one started 2026-09-12 00:04 UTC, pushed its refresh commit (bfc12d2) with all
-fourteen sources ok, and was still `in_progress` when this session ended, so `verify_releases.py` could not
-grade it and still reports 1 of 2. RUN `uv run python checks/verify_releases.py` FIRST NEXT SESSION: if that run
+TASK 8 WENT BACKWARDS AND THIS SESSION IS WHY. The 2026-09-10 23:57 UTC scheduled run was GREEN with every
+source ok, so the count stood at 1 of 2. The 2026-09-12 00:04 UTC run then did everything right as well (tests
+passed, all fourteen sources ok, rendered and committed) and FAILED anyway, because this session pushed three
+commits while it was in flight and its own `git push` came back a non-fast-forward. A failed run is not a
+green one, so the newest scheduled run is now a failure and the check needs TWO fresh green scheduled runs,
+not one. Task 48 fixed the cause; the wait is the cost. RUN `uv run python checks/verify_releases.py` FIRST NEXT SESSION: if that run
 finished green, v1 closes. Two things about the timing, because they have now misled two handoffs. The cron IS
 `0 22 * * *`, 22:00 UTC, exactly as the workflow says; GitHub simply runs scheduled jobs LATE, and the last
 three landed at 00:08, 23:57 and 00:04. So do not expect a run at 22:00 and do not conclude the cron changed.
