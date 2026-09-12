@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-12T00:06:32Z",
+  "generated_at": "2026-09-12T01:34:25Z",
   "sources": {
     "bea": {
       "source": "bea",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-07-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 8110,
       "n_series": 10,
       "n_revisions": 0
@@ -16,7 +16,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 4968,
       "n_series": 12,
       "n_revisions": 0
@@ -26,7 +26,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-05-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 6206,
       "n_series": 26,
       "n_revisions": 0
@@ -36,7 +36,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 11760,
       "n_series": 80,
       "n_revisions": 0
@@ -48,7 +48,7 @@
         "issuer crosswalk: all 35 charter names match the FDIC institution records"
       ],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 28942,
       "n_series": 216,
       "n_revisions": 0
@@ -56,22 +56,19 @@
     "fred": {
       "source": "fred",
       "status": "ok",
-      "messages": [
-        "3 revised value(s) since last load",
-        "2 new row(s)"
-      ],
+      "messages": [],
       "last_period_end": "2026-09-09",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 22239,
       "n_series": 40,
-      "n_revisions": 3
+      "n_revisions": 0
     },
     "issuer_8k": {
       "source": "issuer_8k",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-07-31",
-      "pulled_at": "2026-09-12T00:06:32Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 1376,
       "n_series": 34,
       "n_revisions": 0
@@ -81,7 +78,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 984,
       "n_series": 24,
       "n_revisions": 0
@@ -91,7 +88,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 6744,
       "n_series": 68,
       "n_revisions": 0
@@ -101,7 +98,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 2006,
       "n_series": 52,
       "n_revisions": 0
@@ -111,7 +108,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-08-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 5724,
       "n_series": 36,
       "n_revisions": 0
@@ -121,7 +118,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 2420,
       "n_series": 106,
       "n_revisions": 0
@@ -131,7 +128,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 2804,
       "n_series": 51,
       "n_revisions": 0
@@ -143,7 +140,7 @@
         "issuer crosswalk: 4 of 28 top-25 institution names in the 2025-12-31 TCCP file are not in issuers.csv: America First Federal Credit Union, Boeing Employees' Credit Union, Navy Federal Credit Union, Pentagon Federal Credit Union"
       ],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-09-12T00:00:23Z",
+      "pulled_at": "2026-09-12T01:34:25Z",
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
