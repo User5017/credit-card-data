@@ -72,7 +72,7 @@ SOURCE_LABELS = {
     "ncua": "NCUA, 5300 Call Report quarterly data (credit unions)",
     "dfa": "Federal Reserve Board, Distributional Financial Accounts",
     "cfpb_cct": "CFPB Consumer Credit Trends (Consumer Credit Panel)",
-    "issuer_8k": "Capital One, Synchrony and Bread Financial, each issuer's own monthly charge-off and delinquency metrics (8-K exhibits, SEC EDGAR)",
+    "issuer_8k": "Capital One, Synchrony, Bread Financial and American Express, each issuer's own monthly charge-off and delinquency metrics (8-K filings, SEC EDGAR)",
     "nyfed_state": "Federal Reserve Bank of New York, State Level Household Debt Statistics (Consumer Credit Panel/Equifax)",
 }
 STATUS_LABELS = {

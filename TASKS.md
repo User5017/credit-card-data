@@ -3,6 +3,56 @@
 One bounded task per session. Each has a pass condition written before work starts.
 Status: `todo` | `doing` | `done YYYY-MM-DD` | `blocked (why)`.
 
+## Handoff 2026-09-12 (tasks 45, 47 and 46: four issuers, and holes drawn as holes)
+
+Three tasks landed, each committed separately and pushed: 45 (Synchrony and Bread join issuer_8k), 47 (a missing
+period is drawn as missing), 46 (American Express, carried as two populations). 78 charts, 14 sources, 68
+goldens, 383 tests green, 1376 issuer_8k rows in 34 series across four lenders. Their own sections carry the
+evidence. Four things matter more than the task list.
+
+TASK 8 IS ONE RUN FROM CLOSING AND THE RUN IS IN FLIGHT. The 2026-09-10 23:57 UTC scheduled run was GREEN with
+every source ok. The next one started 2026-09-12 00:04 UTC, pushed its refresh commit (bfc12d2) with all
+fourteen sources ok, and was still `in_progress` when this session ended, so `verify_releases.py` could not
+grade it and still reports 1 of 2. RUN `uv run python checks/verify_releases.py` FIRST NEXT SESSION: if that run
+finished green, v1 closes. Note the cron fires at about 00:00 UTC, not 22:00 as an earlier handoff said, and a
+full run takes roughly fifty minutes.
+
+THREE NUMBERS WERE SILENTLY WRONG AND ALL THREE CAME OUT OF THE SAME KIND OF PLACE: a document that looks
+regular and is not. Bread's quarter-end months head two columns with the SAME date, the second being 'For the
+three months ended', so assigning by position put the QUARTER's loss rate on the month and every quarter-end
+month in the series was wrong (September 2023 at 6.9 when the month was 6.7). Amex printed two months' write-off
+rates as '2.5%(b)' and '1.7%(b)', with the footnote marker inside the VALUE cell, so both parsed as nothing and
+vanished. And filtering filings on Item 7.01, which is what these disclosures normally are, silently dropped
+Synchrony's newest month, because Synchrony filed July 2026 under Item 2.02 instead. Each is now pinned by a
+live golden or a test. The lesson that generalises: on EDGAR the item tag is the filer's description rather than
+a property of the document, and a table header is not a list of dates.
+
+THE GAP CHECK IS WHAT FOUND THE THIRD ONE, which is the argument for keeping it strict. Task 45 added a rule that
+each series is cut back to the unbroken run ending at its newest reading, because the page spans gaps and would
+draw through a hole. The trim is deliberately BOUNDED: it only applies before an issuer's `first_month`, where
+the source genuinely does not publish monthly, and a hole at or after it raises. Amex's two missing months were
+after it, so the run refused to publish and named them. An unbounded trim would have quietly shipped a shorter
+series and nobody would have known.
+
+WHAT IS WORTH DOING NEXT, in the order I would do it:
+1. Close v1 (verify_releases), assuming the run that was in flight finished green.
+2. A third thesis note, or an edit to the second. This is now the biggest gap between what the page knows and
+   what the note says. Four issuers spanning the whole credit spectrum turn at the same time and never change
+   ORDER over five years (July 2026 30+ delinquency: Amex 1.10, Capital One 3.48, Synchrony 4.20, Bread 5.35),
+   which is the strongest evidence yet for leg 1 and matches what the state map said in task 43. The note
+   mentions none of it.
+3. Not scheduled, suggested: `issuer_card_nco_rate` now exists for four issuers on one metric, so a view that
+   ranks lenders at a given month, or charts the SPREAD between the best and worst, is cheap and would say the
+   thing the four-line chart only implies.
+4. Not scheduled, suggested: Amex's old basis stops at January 2026 rather than March because the planner works
+   in months and the filing covering those two months was already redundant by the time the walk reached it. The
+   overlap is preserved in the fixtures and asserted in a test, but the PAGE shows two lines that abut without
+   overlapping. Planning per entity rather than per month would recover it; it is not obviously worth it.
+
+Costs accepted: data/raw/issuer_8k is 4.8 MB (Capital One 1.6, Bread 1.2, Amex 1.4, Synchrony 0.44, plus the
+index cache). The cache is what keeps the nightly run at a handful of SEC requests instead of several hundred,
+and the month-driven planner is what keeps Synchrony's whole history at five downloads.
+
 ## Handoff 2026-09-11 (late evening, task 45: three issuers on the monthly chart)
 
 One task this session, committed as e4c33fe and pushed: `issuer_8k` went from Capital One alone to Capital One,
