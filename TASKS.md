@@ -14,8 +14,12 @@ TASK 8 IS ONE RUN FROM CLOSING AND THE RUN IS IN FLIGHT. The 2026-09-10 23:57 UT
 every source ok. The next one started 2026-09-12 00:04 UTC, pushed its refresh commit (bfc12d2) with all
 fourteen sources ok, and was still `in_progress` when this session ended, so `verify_releases.py` could not
 grade it and still reports 1 of 2. RUN `uv run python checks/verify_releases.py` FIRST NEXT SESSION: if that run
-finished green, v1 closes. Note the cron fires at about 00:00 UTC, not 22:00 as an earlier handoff said, and a
-full run takes roughly fifty minutes.
+finished green, v1 closes. Two things about the timing, because they have now misled two handoffs. The cron IS
+`0 22 * * *`, 22:00 UTC, exactly as the workflow says; GitHub simply runs scheduled jobs LATE, and the last
+three landed at 00:08, 23:57 and 00:04. So do not expect a run at 22:00 and do not conclude the cron changed.
+A full run then takes roughly fifty minutes, so the result is not gradable until about 01:00 UTC. Pushing
+during one is safe: the workflow sets `concurrency: {group: refresh, cancel-in-progress: false}`, so a push run
+queues behind the scheduled run instead of cancelling it.
 
 THREE NUMBERS WERE SILENTLY WRONG AND ALL THREE CAME OUT OF THE SAME KIND OF PLACE: a document that looks
 regular and is not. Bread's quarter-end months head two columns with the SAME date, the second being 'For the
