@@ -51,10 +51,26 @@ jobs:
           git add data docs checks/restatement_ack.yaml
           if git diff --cached --quiet; then
             echo "nothing to commit"
-          else
-            git commit -m "refresh: $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push
+            exit 0
           fi
+          git commit -m "refresh: $(date -u +%Y-%m-%dT%H:%MZ)"
+          # A person pushing while the nightly is mid-flight used to fail the whole job on a non-fast-forward
+          # and throw the refresh commit away. That happened on 2026-09-12 and cost a day of the
+          # two-consecutive-green-scheduled-runs check, because a failed run is not a green one. The
+          # concurrency group does not help: it stops a second run starting, not someone pushing to main.
+          # So rebase onto whatever landed and try again. On a conflict the freshly rendered files win
+          # (-X theirs favours the commit being replayed, which is this one), because they are generated
+          # output and the next run regenerates all of it anyway.
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rejected on attempt $attempt; rebasing onto origin/main and retrying"
+            git fetch origin main
+            git rebase -X theirs origin/main || { git rebase --abort || true; exit 1; }
+          done
+          echo "could not push the refresh commit after three attempts"
+          exit 1
 
       - name: Fail the job if any source is red
         run: uv run carddash health --fail-on-red

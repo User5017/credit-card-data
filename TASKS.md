@@ -17,9 +17,17 @@ grade it and still reports 1 of 2. RUN `uv run python checks/verify_releases.py`
 finished green, v1 closes. Two things about the timing, because they have now misled two handoffs. The cron IS
 `0 22 * * *`, 22:00 UTC, exactly as the workflow says; GitHub simply runs scheduled jobs LATE, and the last
 three landed at 00:08, 23:57 and 00:04. So do not expect a run at 22:00 and do not conclude the cron changed.
-A full run then takes roughly fifty minutes, so the result is not gradable until about 01:00 UTC. Pushing
-during one is safe: the workflow sets `concurrency: {group: refresh, cancel-in-progress: false}`, so a push run
-queues behind the scheduled run instead of cancelling it.
+A full run then takes roughly fifty minutes (the 2026-09-12 one took four), so the result is not gradable for
+a while after it starts.
+
+DO NOT PUSH WHILE A SCHEDULED RUN IS IN FLIGHT, and this session learned it the hard way. The 2026-09-12 run
+did everything right: tests passed, all fourteen sources came back ok, it rendered and committed. Then its
+`git push` was REJECTED as a non-fast-forward, because this session had pushed three commits while it ran, and
+a rejected push failed the whole job. The run is recorded as `failure`, its refresh commit 4f7fc0c never
+landed, and a failed run is not a green one, so the two-green-runs count went back to needing two fresh runs.
+The concurrency group does not protect against this: `cancel-in-progress: false` stops a second RUN starting,
+and says nothing about a person pushing to main. Task 48 makes the runner rebase and retry so it cannot happen
+again, but the habit is still worth keeping: check `gh run list --limit 3` before pushing late in the day.
 
 THREE NUMBERS WERE SILENTLY WRONG AND ALL THREE CAME OUT OF THE SAME KIND OF PLACE: a document that looks
 regular and is not. Bread's quarter-end months head two columns with the SAME date, the second being 'For the
@@ -620,6 +628,28 @@ merely starts late is never filled, or every chart would grow a run of leading n
 
 The sentiment chart went from 675 points to 885 because its pre-1978 quarterly era now carries its skipped
 months as nulls; it spans them, so it draws exactly as it did before.
+
+## v1.17: the nightly stops losing a race it should not be in (2026-09-12)
+
+| # | Task | Pass condition | Status |
+|---|------|----------------|--------|
+| 48 | The refresh job survives someone pushing while it runs | The 'Commit data and site' step rebases onto whatever landed and retries instead of failing the job on a non-fast-forward; the reason is written where the next person will read it | done 2026-09-12 |
+
+Caused, not found: this session pushed three commits while the 2026-09-12 scheduled run was in flight, its
+`git push` was rejected as a non-fast-forward, and that failed the job after everything else in it had
+succeeded. The refresh commit was thrown away and the run counts as `failure`, which reset the
+two-consecutive-green-scheduled-runs check that task 8 is waiting on. The job had a bare `git push` with no
+retry, so any push to main during its window would have done the same thing; the only reason it had not
+happened before is that nobody had pushed at the right moment.
+
+The step now retries up to three times, rebasing onto `origin/main` between attempts with `-X theirs`, which
+favours the commit being replayed: on a conflict in the generated files the freshly rendered ones win. That is
+the right side to take, because they are generated output and the next run rebuilds all of it from scratch
+anyway. A conflict it cannot resolve still aborts and fails, so this makes the job survive a race, not paper
+over a real problem.
+
+Not chosen, and worth knowing why: `workflow_dispatch` cannot be used to make up the lost run, because
+`verify_releases.py` counts only runs whose event is `schedule`. There is no way to shortcut the wait.
 
 ## v1.5 (after two green releases)
 - Order (from the 2026-09-07 scouting): NY Fed SCE Credit Access first (direct xlsx, no gate, about half a session), then CFPB complaints via the trends endpoint (one session), then BEA PCE detail via the keyless NipaDataM.txt flat file (the API needs a key; half to one session), then Census Monthly Retail Trade via the keyless mrtssales92-present.xlsx (the API needs a key even at low volume; one session). Details, URLs and risks in design/handoff-2026-09-07.html §3.
