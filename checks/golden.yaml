@@ -928,3 +928,42 @@
   check_live: true
   origin: "Bread Financial Holdings, 8-K filed 2023-10-26, Exhibit 99.1 for September 2023. In a QUARTER-END month the loss table drops the year-ago column and prints 'For the three months ended September 30, 2023' beside 'For the month ended September 30, 2023', so the header states the same date twice and the second figure is the QUARTER. The month is 6.7 percent and the quarter is 6.9; this entry pins the month, so reading the header as dates alone fails loudly instead of publishing a quarterly rate as a monthly one"
   origin_url: https://www.sec.gov/Archives/edgar/data/1101215/000110121523000192/septembercreditstatsex991t.htm
+
+- id: axp_8k_dq30_rate_2026_07_balances
+  metric: issuer_card_dq30_rate
+  entity: ISSUER:AMEX_US_CONSUMER
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 1.1
+  tolerance: 0.001
+  check_live: true
+  origin: "American Express Company, 8-K filed 2026-08-17 (Item 7.01), the delinquency and write-off statistics in the BODY of the filing rather than an exhibit, 'U.S. Consumer Card balances' section, July 31, 2026 column, '30 days past due as a % of total', 1.1 percent. This is the CURRENT basis, 'Card balances', which includes pay-in-full charge-card balances"
+  origin_url: https://www.sec.gov/Archives/edgar/data/4962/000000496226000345/axp-20260817.htm
+
+- id: axp_8k_nco_rate_2026_07_balances
+  metric: issuer_card_nco_rate
+  entity: ISSUER:AMEX_US_CONSUMER
+  tier: all
+  period_type: M
+  period_end: 2026-07-31
+  source: issuer_8k
+  expected: 1.7
+  tolerance: 0.001
+  check_live: true
+  origin: "Same filing, 'U.S. Consumer Card balances', July 31, 2026 column, 'Net write-off rate - principal only', 1.7 percent. Principal only: it excludes interest and fees, which is why it sits far below every other issuer on the page"
+  origin_url: https://www.sec.gov/Archives/edgar/data/4962/000000496226000345/axp-20260817.htm
+
+- id: axp_8k_loans_eop_2026_01_card_member_loans
+  metric: issuer_card_loans_eop
+  entity: ISSUER:AMEX_US_CONSUMER_LOANS
+  tier: all
+  period_type: M
+  period_end: 2026-01-31
+  source: issuer_8k
+  expected: 97.2
+  tolerance: 0.001
+  check_live: true
+  origin: "American Express Company, 8-K filed 2026-02-17, 'U.S. Consumer Card Member loans' section, January 31, 2026 column, 'Total loans', $97.2 billion. This is the RETIRED basis, which EXCLUDES pay-in-full charge-card balances and which Amex stopped reporting after March 2026. The month after it, on the new 'Card balances' basis, is $107.4bn: the step between the two lines is a change of measure, not of the book, and this entry pins the old side of it"
+  origin_url: https://www.sec.gov/Archives/edgar/data/4962/000000496226000102/axp-20260217.htm

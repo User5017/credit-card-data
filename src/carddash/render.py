@@ -184,7 +184,25 @@ ISSUER_8K_NOTE = (
     "loans and divides its delinquency by period-end PRINCIPAL loans, a smaller denominator than its own "
     "end-of-period loan figure. None of the three matches the call report scope either. Read the direction and "
     "the turning points, not the gaps between the lines. Three issuers are also not the industry, which is what "
-    "the dashed all-commercial-bank line is there for."
+    "the dashed all-commercial-bank line is there for. American Express, the prime end of the same market, is "
+    "on its own chart below, because it changed what it counts in May 2026 and needs two lines."
+)
+
+AMEX_NOTE = (
+    "American Express is the prime end of the same market, and the distance is the point: 1.1 percent of its "
+    "U.S. consumer card balances were 30 days past due in July 2026 against 3.5 percent at Capital One, 4.2 at "
+    "Synchrony and 5.4 at Bread Financial. Some of that distance is definitional rather than credit. Amex "
+    "counts 30 days past due over TOTAL card balances, and those balances include pay-in-full charge-card "
+    "balances that are almost never late, so the denominator is much less revolver-heavy than any other "
+    "issuer's here.",
+    "TWO LINES PER SEGMENT, BECAUSE AMEX CHANGED WHAT IT COUNTS. Until March 2026 it reported 'Card Member "
+    "loans'; from the filing of 2026-05-15 it reports 'Card balances', which adds the pay-in-full balances the "
+    "old measure left out. On March 2026, the last month it published both ways, the two read $97.5bn and "
+    "$110.8bn for U.S. consumer. Amex restated only two months, so the break cannot be closed, and joining the "
+    "two into one line would draw a 10 percent jump in the book and an improvement in the delinquency rate "
+    "that never happened. They are drawn as separate lines instead: the older one ends at January 2026 and "
+    "never gains another month, the newer one starts at February 2026, and the step between them is a change "
+    "of measure and not of the borrowers.",
 )
 
 SYF_SAWTOOTH_NOTE = (
@@ -848,6 +866,23 @@ PANELS = [
                     S("issuer_card_dq30_rate", "ISSUER:SYNCHRONY", "Synchrony, monthly", source="issuer_8k"),
                     S("issuer_card_dq30_rate", "ISSUER:BREAD_FINANCIAL", "Bread Financial, monthly", source="issuer_8k"),
                     S("card_dq_rate_sa", "COMBANKS_ALL", "All commercial banks, quarterly", period_type="Q", dash=True),
+                ],
+            },
+            {
+                "id": "amex_prime_end",
+                "title": "Monthly card delinquency at the prime end, American Express",
+                "unit": "pct",
+                "step": True,
+                "notes": list(AMEX_NOTE),
+                "series": [
+                    S("issuer_card_dq30_rate", "ISSUER:AMEX_US_CONSUMER_LOANS",
+                      "US consumer, Card Member loans (to Jan 2026)", source="issuer_8k"),
+                    S("issuer_card_dq30_rate", "ISSUER:AMEX_US_CONSUMER",
+                      "US consumer, Card balances (from Feb 2026)", source="issuer_8k"),
+                    S("issuer_card_dq30_rate", "ISSUER:AMEX_US_SMALL_BUSINESS_LOANS",
+                      "US small business, Card Member loans (to Jan 2026)", source="issuer_8k"),
+                    S("issuer_card_dq30_rate", "ISSUER:AMEX_US_SMALL_BUSINESS",
+                      "US small business, Card balances (from Feb 2026)", source="issuer_8k"),
                 ],
             },
             {

@@ -105,8 +105,16 @@ M_DQ30_AMOUNT = "issuer_card_dq30_amount"
 E_COF = "ISSUER:CAPITAL_ONE"
 E_SYF = "ISSUER:SYNCHRONY"
 E_BFH = "ISSUER:BREAD_FINANCIAL"
-E_AXP_CONSUMER = "ISSUER:AMEX_US_CONSUMER"
+# American Express reports two segments on two BASES, and the basis is part of the population rather than a
+# label on it, so it is part of the entity. Amex stopped reporting 'Card Member loans' in May 2026 and started
+# reporting 'Card balances', which adds pay-in-full charge-card balances the old measure left out; the two
+# overlap for February and March 2026 and disagree by about 14 percent on the same month. Carrying them as one
+# series would invent a step. The retired pair therefore ends in March 2026 and never updates again, the way
+# the FDIC merged-out charters do, and the current pair starts in February 2026.
+E_AXP_CONSUMER = "ISSUER:AMEX_US_CONSUMER"                       # Card balances, February 2026 on
+E_AXP_CONSUMER_LOANS = "ISSUER:AMEX_US_CONSUMER_LOANS"           # Card Member loans, retired March 2026
 E_AXP_SMALL_BUSINESS = "ISSUER:AMEX_US_SMALL_BUSINESS"
+E_AXP_SMALL_BUSINESS_LOANS = "ISSUER:AMEX_US_SMALL_BUSINESS_LOANS"
 
 MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
           "november", "december"]
@@ -154,7 +162,17 @@ def _number(cell: str) -> float | None:
 
     Parentheses are the accounting minus sign: Synchrony's recovery adjustment prints '(0.1)'.
     """
-    raw = _clean(cell).replace(",", "").replace("$", "").replace("%", "").strip()
+    raw = _clean(cell)
+    # A footnote marker can be stuck on the END of a VALUE: Amex printed '2.5%(b)' and '1.7%(b)' for November
+    # and December 2023, where a settlement timing note applied to those two months, and a straight parse of
+    # that is not a number, so both months went missing without a word until the gap check caught them. This
+    # is not the same shape as '(0.1)', where the parentheses wrap the WHOLE cell and mean minus, so a cell
+    # that opens with one is left alone.
+    if not raw.startswith("("):
+        note = FOOTNOTE_RE.search(raw)
+        if note is not None and note.start() > 0:
+            raw = raw[:note.start()].strip()
+    raw = raw.replace(",", "").replace("$", "").replace("%", "").strip()
     if raw in MISSING:
         return None
     negative = raw.startswith("(") and raw.endswith(")")
@@ -469,11 +487,13 @@ def parse_bfh(html: str) -> dict[dt.date, dict[tuple[str, str], float]]:
 
 # Amex renamed every one of these rows in the 2026-05-15 filing, and the rename was not only a rename: see
 # AXP_POPULATION_BREAK below.
+# The section label already says which basis the filing is on, so it is the whole of the mapping: no date
+# cutoff is hard-coded anywhere, and if Amex ever reverts the wording the rows follow the wording.
 AXP_SECTIONS = {
     "U.S. Consumer Card balances": E_AXP_CONSUMER,
-    "U.S. Consumer Card Member loans": E_AXP_CONSUMER,
+    "U.S. Consumer Card Member loans": E_AXP_CONSUMER_LOANS,
     "U.S. Small Business Card balances": E_AXP_SMALL_BUSINESS,
-    "U.S. Small Business Card Member loans": E_AXP_SMALL_BUSINESS,
+    "U.S. Small Business Card Member loans": E_AXP_SMALL_BUSINESS_LOANS,
 }
 AXP_ROWS = {
     "Total Card balances": M_LOANS_EOP,
@@ -486,7 +506,12 @@ AXP_ROWS = {
 }
 AXP_MARKER = "Net write-off rate"
 
-# WHY AMERICAN EXPRESS IS PARSED HERE BUT NOT LOADED (2026-09-11).
+# HOW AMERICAN EXPRESS'S TWO POPULATIONS ARE CARRIED (decided 2026-09-11, task 46).
+#
+# The break below is real and cannot be closed from the filings, so it is not closed: each basis is its own
+# entity and the two are drawn as two lines that overlap for the two months Amex reported both. The reader sees
+# the size of the break instead of a step in one line, which is the only honest way to show it and is also the
+# most informative, because the gap between the lines IS the pay-in-full balance that the old measure omitted.
 #
 # Between the filings of 2026-04-15 and 2026-05-15 Amex stopped reporting "Card Member loans" and started
 # reporting "Card balances", and the population changed with the words: the new measure includes pay-in-full
@@ -503,8 +528,10 @@ AXP_MARKER = "Net write-off rate"
 # is the same class of error as the collapsed denominator task 41 removed. Loading only the new basis leaves
 # five months, which is not a series.
 #
-# So Amex is scouted, parsed and tested here, and is NOT in ISSUERS. Enabling it means deciding how to carry
-# two populations under one issuer, which is a decision worth making on its own rather than in passing.
+# The retired pair (ISSUER:AMEX_US_*_LOANS) ends in March 2026 and will never gain another month, so its
+# series.csv rows carry max_age_days 36500 and say so, exactly as the FDIC merged-out charters do. Nothing
+# hard-codes the changeover date: the section label in each filing says which basis it is on, so the rows
+# follow the document.
 AXP_POPULATION_BREAK = dt.date(2026, 2, 28)
 
 
@@ -564,8 +591,15 @@ def parse_axp(html: str) -> dict[dt.date, dict[tuple[str, str], float]]:
 
     if not periods:
         raise ValueError("Amex filing has no dated header row of month ends")
-    wanted = {(e, m) for e in AXP_SECTIONS.values() for m in AXP_ROWS.values()}
-    missing = wanted - found
+    # A filing is on ONE basis, so it carries two of the four entities: one consumer, one small business. The
+    # check is that both segments are there with every metric, not that all four entities are, or every filing
+    # would fail for lacking the basis it is not written on.
+    entities = {e for e, _ in found}
+    if len(entities) != 2 or not any("SMALL_BUSINESS" in e for e in entities) \
+            or not any("SMALL_BUSINESS" not in e for e in entities):
+        raise ValueError(f"Amex filing does not carry one consumer and one small business section: "
+                         f"{sorted(entities)!r}")
+    missing = {(e, m) for e in entities for m in AXP_ROWS.values()} - found
     if missing:
         raise ValueError(f"Amex filing is missing rows this parser requires: {sorted(missing)!r}")
     return {p: v for p, v in out.items() if v}
@@ -622,17 +656,16 @@ ISSUERS: tuple[Issuer, ...] = (
     Issuer(key="bfh", cik="0001101215", name="Bread Financial", entities=(E_BFH,),
            pick=_pick_by(EXHIBIT_CREDITSTATS_RE), parse=parse_bfh, raw_subdir="bfh",
            first_month=dt.date(2023, 7, 31)),
+    # Amex has no exhibit to name, so its filings are found by content and the verdict is cached. The floor is
+    # January 2023 rather than earlier: each filing carries three months and its own 8-K body is 70 to 100 KB,
+    # so reaching further back costs raw storage faster than it buys history.
+    Issuer(key="axp", cik="0000004962", name="American Express",
+           entities=(E_AXP_CONSUMER, E_AXP_CONSUMER_LOANS, E_AXP_SMALL_BUSINESS, E_AXP_SMALL_BUSINESS_LOANS),
+           pick=_pick_by(AXP_PRIMARY_RE), parse=parse_axp, raw_subdir="axp",
+           first_month=dt.date(2023, 1, 31), confirm=looks_like_axp_metrics),
 )
 
-# Parsed and tested, deliberately not loaded: see AXP_POPULATION_BREAK above for why, and TASKS.md for the
-# decision it is waiting on. It is kept in the same shape as a loaded issuer so that enabling it is a one-line
-# change once that decision is made.
-HELD_BACK: tuple[Issuer, ...] = (
-    Issuer(key="axp", cik="0000004962", name="American Express",
-           entities=(E_AXP_CONSUMER, E_AXP_SMALL_BUSINESS),
-           pick=_pick_by(AXP_PRIMARY_RE), parse=parse_axp, raw_subdir="axp",
-           first_month=dt.date(2022, 1, 31), confirm=looks_like_axp_metrics),
-)
+HELD_BACK: tuple[Issuer, ...] = ()
 BY_KEY = {i.key: i for i in ISSUERS + HELD_BACK}
 
 # Kept so the module still answers to the single-issuer names the first version used.

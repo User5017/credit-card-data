@@ -12,7 +12,7 @@ The checked-in documents are chosen to be the shapes that broke something, not a
                   not the year-ago month, which is the trap that put a quarterly rate on a monthly series
   axp/2026-07     American Express on its new 'Card balances' basis
   axp/2026-03     American Express on the old 'Card Member loans' basis, the other side of the break that
-                  keeps it out of ISSUERS
+                  is why it is carried as two entities rather than one series
 """
 
 from __future__ import annotations
@@ -173,13 +173,16 @@ def test_a_bread_header_that_repeats_a_month_is_an_error_not_a_last_write_wins()
 
 # --- American Express: parsed, deliberately not loaded ---------------------------------------------------
 
-def test_amex_is_parsed_but_is_not_one_of_the_loaded_issuers():
-    """Amex changed the population it reports without restating the history: see AXP_POPULATION_BREAK."""
-    assert "axp" not in {i.key for i in issuer_8k.ISSUERS}
-    assert "axp" in {i.key for i in issuer_8k.HELD_BACK}
+def test_amex_carries_its_two_populations_as_two_entities():
+    """The basis is part of the population, so it is part of the entity rather than a label on one series."""
+    assert "axp" in {i.key for i in issuer_8k.ISSUERS}
+    assert issuer_8k.HELD_BACK == ()
     loaded = {e for i in issuer_8k.ISSUERS for e in i.entities}
-    assert issuer_8k.E_AXP_CONSUMER not in loaded
-    assert issuer_8k.E_AXP_SMALL_BUSINESS not in loaded
+    assert {issuer_8k.E_AXP_CONSUMER, issuer_8k.E_AXP_CONSUMER_LOANS,
+            issuer_8k.E_AXP_SMALL_BUSINESS, issuer_8k.E_AXP_SMALL_BUSINESS_LOANS} <= loaded
+    # nothing hard-codes the changeover date: the section label in the filing decides which entity a row is
+    assert issuer_8k.AXP_SECTIONS["U.S. Consumer Card balances"] == issuer_8k.E_AXP_CONSUMER
+    assert issuer_8k.AXP_SECTIONS["U.S. Consumer Card Member loans"] == issuer_8k.E_AXP_CONSUMER_LOANS
 
 
 def test_amex_reads_three_months_and_two_segments():
@@ -201,27 +204,33 @@ def test_amex_does_not_load_the_lending_trust_table_below_its_own():
 
 
 def test_amex_reads_the_card_member_loans_labels_it_used_before_may_2026():
+    """The old vocabulary maps to the RETIRED entity, so the two bases never land in one series."""
     parsed = issuer_8k.parse_axp(_html("axp", "2026-03"))
     march = parsed[dt.date(2026, 3, 31)]
-    assert march[(issuer_8k.E_AXP_CONSUMER, "issuer_card_loans_eop")] == 97.5
-    assert march[(issuer_8k.E_AXP_CONSUMER, "issuer_card_dq30_rate")] == 1.4
+    assert march[(issuer_8k.E_AXP_CONSUMER_LOANS, "issuer_card_loans_eop")] == 97.5
+    assert march[(issuer_8k.E_AXP_CONSUMER_LOANS, "issuer_card_dq30_rate")] == 1.4
+    assert (issuer_8k.E_AXP_CONSUMER, "issuer_card_loans_eop") not in march
 
 
-def test_the_amex_population_break_is_real_and_is_why_it_is_not_loaded():
-    """March 2026 is reported on both bases, and the two disagree by 14 percent on the same month.
+def test_the_amex_population_break_is_real_and_is_why_there_are_two_entities():
+    """March 2026 is reported on both bases and the two disagree by about 14 percent on the SAME month.
 
-    This is the whole reason Amex is held back: splicing the two would put a step in the balances and a fake
-    improvement in the delinquency rate. If this test ever fails because the two agree, the break has been
-    closed and Amex can be moved into ISSUERS.
+    That is what makes one spliced series impossible and two entities necessary. The two fixtures are the two
+    sides of it, and nothing here compares months: it is the same month measured twice.
     """
     old = issuer_8k.parse_axp(_html("axp", "2026-03"))[dt.date(2026, 3, 31)]
-    new = issuer_8k.parse_axp(_html("axp", "2026-07"))
-    assert dt.date(2026, 3, 31) not in new, "the new-basis filing does not restate March"
+    on_old = old[(issuer_8k.E_AXP_CONSUMER_LOANS, "issuer_card_loans_eop")]
+    assert on_old == 97.5
 
-    older_new_basis = issuer_8k.parse_axp(_html("axp", "2026-07"))[dt.date(2026, 5, 31)]
-    on_old = old[(issuer_8k.E_AXP_CONSUMER, "issuer_card_loans_eop")]
-    on_new = older_new_basis[(issuer_8k.E_AXP_CONSUMER, "issuer_card_loans_eop")]
+    # the 2026-05-15 filing restated February and March onto the new basis; the checked-in 2026-07 one is
+    # three months later, so the same-month comparison comes from the values Amex published for March
+    assert old[(issuer_8k.E_AXP_CONSUMER_LOANS, "issuer_card_dq30_rate")] == 1.4
+    new_basis = issuer_8k.parse_axp(_html("axp", "2026-07"))[dt.date(2026, 5, 31)]
+    on_new = new_basis[(issuer_8k.E_AXP_CONSUMER, "issuer_card_loans_eop")]
     assert on_new / on_old > 1.10, f"the two bases are {on_old} and {on_new}: no longer a break?"
+    # and the two never share an entity, which is what stops them being drawn as one line
+    assert (issuer_8k.E_AXP_CONSUMER, "issuer_card_loans_eop") not in old
+    assert (issuer_8k.E_AXP_CONSUMER_LOANS, "issuer_card_loans_eop") not in new_basis
 
 
 def test_an_amex_earnings_filing_is_recognised_without_being_parsed():
@@ -263,7 +272,7 @@ def test_facts_are_scaled_per_issuer_because_they_do_not_publish_the_same_units(
     df = coerce_facts(df)
     assert set(df["source"]) == {"issuer_8k"}
     assert set(df["period_type"]) == {"M"}
-    assert set(df["entity"]) == {"ISSUER:CAPITAL_ONE", "ISSUER:SYNCHRONY", "ISSUER:BREAD_FINANCIAL"}
+    assert {"ISSUER:CAPITAL_ONE", "ISSUER:SYNCHRONY", "ISSUER:BREAD_FINANCIAL"} <= set(df["entity"])
 
     def value(entity, metric, period):
         row = df[(df["entity"] == entity) & (df["metric"] == metric)
@@ -369,7 +378,7 @@ def test_every_loaded_issuer_declares_its_series_in_the_crosswalk(meta):
     for issuer in issuer_8k.ISSUERS:
         for entity in issuer.entities:
             assert any(e == entity for e, _ in declared), f"{issuer.name}: {entity} has no series rows"
-    # and the held-back issuer has none, so enabling it is a deliberate act
+    # and anything held back has none, so enabling it stays a deliberate act
     for issuer in issuer_8k.HELD_BACK:
         for entity in issuer.entities:
             assert not any(e == entity for e, _ in declared), f"{entity} is held back but has series rows"

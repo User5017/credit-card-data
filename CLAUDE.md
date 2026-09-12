@@ -90,9 +90,11 @@ cfpb_cct (CFPB Consumer Credit Trends CSVs: card originations, new credit lines 
 tightness indexes, monthly), nyfed_state (State Level Household Debt Statistics: card debt per capita and card 90+
 delinquency for the 50 states, DC, Puerto Rico and the nation, annual at Q4), issuer_8k (the monthly charge-off and delinquency metrics that Capital One, Synchrony and Bread Financial each
 file with an 8-K, the only monthly issuer-level readings on the page: Capital One from February 2021, Synchrony
-from March 2021, Bread from July 2022. American Express is parsed and tested in the same module but deliberately
-NOT loaded, because it changed the population it reports in May 2026 without restating the history; see
-AXP_POPULATION_BREAK and task 46). Each has a typical release lag in
+from March 2021, Bread from July 2022. American Express from November 2022, carried as FOUR entities because it
+changed the population it reports in May 2026 without restating the history: 'Card Member loans' (retired, ends
+January 2026, max_age_days 36500 so it never turns stale) and 'Card balances' (current, from February 2026), for
+each of its U.S. consumer and U.S. small business segments. Nothing hard-codes the changeover date; the section
+label in each filing decides. See AXP_POPULATION_BREAK). Each has a typical release lag in
 `RELEASE_RHYTHM` (render.py) that the health strip turns
 into a 'next expected' date. After each G.19 release run `uv run python checks/verify_g19.py`; a revision that moves a
 live golden shows as fred `golden_mismatch` (amber, the job still passes) until the golden is re-based.

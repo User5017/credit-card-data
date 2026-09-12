@@ -391,7 +391,36 @@ any issuer's subprime share, and the note now says so where the claim used to be
 | # | Task | Pass condition | Status |
 |---|------|----------------|--------|
 | 45 | Synchrony, Bread Financial and American Express monthly 8-K credit metrics | `issuer_8k` carries a per-issuer registry instead of one hard-coded CIK; each issuer has its own parser and its own checked-in fixture; the six `cof_card_*` metrics become entity-keyed `issuer_card_*` so an issuer is an entity and not a metric name; at least one live golden per issuer traced to the filed document; the monthly charge-off and delinquency charts draw every issuer against the industry, with the definitional differences in the chart note; tests green | done 2026-09-11 for Synchrony and Bread, NOT for American Express (task 46). issuer_8k now loads three issuers, 1016 rows in 18 series: Capital One 2021-02 to 2026-07, Synchrony 2021-03 to 2026-07, Bread 2022-07 to 2026-07. 7 new goldens, all live, all passing (65 total). The two issuer charts draw three lenders against the all-commercial-bank rate. 381 tests green |
-| 46 | American Express: decide how to carry two populations under one issuer | Amex's readings are loaded without a fake step at the basis change, or the source is recorded as unavailable with the evidence | todo (parser, fixtures and tests already written and passing; the decision is what is missing) |
+| 46 | American Express: decide how to carry two populations under one issuer | Amex's readings are loaded without a fake step at the basis change, or the source is recorded as unavailable with the evidence | done 2026-09-11 (four entities, two segments x two bases; 1376 rows in 34 series across four issuers; a dedicated chart draws both bases as separate lines; 3 new live goldens, 68 total; 383 tests green) |
+
+THE DECISION: the basis is part of the POPULATION, not a label on it, so it is part of the entity.
+`ISSUER:AMEX_US_CONSUMER` is the current 'Card balances' measure and `ISSUER:AMEX_US_CONSUMER_LOANS` the retired
+'Card Member loans' one, and the same for small business. Nothing hard-codes the changeover date: the section
+label in each filing says which basis it is on, so `AXP_SECTIONS` maps the wording to the entity and the rows
+follow the document. The retired pair carries `max_age_days` 36500 and never turns stale, the treatment the
+merged-out FDIC charters already get. They are drawn as separate lines on `amex_prime_end`, so a reader sees the
+change of measure instead of a step in one line.
+
+What the chart is for: Amex is the prime end of the same market and the distance is the finding. In July 2026,
+1.1 percent of its U.S. consumer card balances were 30 days past due, against 3.48 at Capital One, 4.2 at
+Synchrony and 5.35 at Bread Financial, a five-fold range across four lenders in the same month. Part of that is
+definitional and the note says so: Amex's denominator includes pay-in-full charge-card balances that are almost
+never late, and its write-off rate excludes interest and fees.
+
+The old basis stops at JANUARY 2026 rather than March, so the two lines abut and do not overlap on the page. The
+filing that reported February and March 2026 on the old basis was never downloaded, because by the time the walk
+reached it those months were already covered by the new-basis filing, and the planner works in months. The
+same-month comparison is not lost: both fixtures are checked in and
+`test_the_amex_population_break_is_real_and_is_why_there_are_two_entities` asserts March 2026 at $97.5bn on the
+old basis against $110.8bn on the new one, so the evidence lives in the tests even though the page shows the
+adjacent months (January $97.2bn, February $107.4bn) instead.
+
+A THIRD SILENT DROP, caught by the bounded trim from task 45 rather than by looking. Amex printed its November
+and December 2023 consumer write-off rates as `2.5%(b)` and `1.7%(b)`, with the footnote marker inside the VALUE
+cell, and `_number` deliberately does not strip footnotes because `(5)` as a value is minus five. So both months
+parsed as nothing and vanished, and the only reason anyone knows is that the gap check refused to publish a
+series with a hole in it. `_number` now strips a trailing marker when it FOLLOWS a number and leaves a cell that
+opens with a parenthesis alone.
 
 WHAT THE THREE ISSUERS SHOW, which is the point of doing it. All three peaked in 2024 and all three have been
 falling since, and they are stacked in exactly the order their books would predict: Bread (private-label, the
