@@ -153,3 +153,12 @@ allows an empty cell before a column's first reading, never after.
 ## Verification standard
 "Should work" is not done. Done means: the test passes, the command ran, and the output was shown,
 with the golden number compared against its release page.
+
+## Session handoff (every session, both assistants)
+
+- **Start:** read this file, then `HANDOFF.md` for what is true right now. For anything spanning more than one
+  project, read `workspace/CONTEXT.md` too.
+- **End:** **rewrite** `HANDOFF.md` — never append. It stays under 150 lines: what is true now, what is next,
+  what is unverified. A dated narrative belongs in a separate archive file, not in the handoff.
+- It is the only channel Codex and Claude Code share; neither can see the other's memory. A finding that is not
+  written there before the session ends is a finding lost.

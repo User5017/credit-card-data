@@ -41,3 +41,5 @@ rule is what stops the drift.
 The remote is `User5017/credit-card-data`, but the active `gh` account is **SamuelJWebber**, which is the only
 one holding the `workflow` scope. Editing anything under `.github/workflows/` needs that account. A move of the
 repo to SamuelJWebber is planned but deferred — check with the user before attempting it.
+
+After CLAUDE.md, read `HANDOFF.md` for what is true right now — and **rewrite HANDOFF.md before the session ends**, never append to it. It is the only channel Codex and Claude Code share.
