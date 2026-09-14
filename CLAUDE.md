@@ -135,9 +135,20 @@ allows an empty cell before a column's first reading, never after.
 - `SamuelJWebber` (the user's 2020 real-name account) is an admin collaborator and the **active** `gh` account, with
   `workflow` scope. Push everything as this account. `gh auth status` shows both; `gh auth switch --user <name>` flips.
 - In Git Bash, prefix `gh api` calls with `MSYS_NO_PATHCONV=1` or omit the leading slash, or the path becomes `C:/Program Files/Git/...`.
-- Transfer to SamuelJWebber: wanted, deferred by the user on 2026-09-07. A transfer request was initiated and may still
-  be pending in the GitHub UI. When it goes through, update the owner in: src/carddash/http.py, src/carddash/render.py,
-  checks/verify_g19.py, README.md, this section, the git remote, and the OneDrive README-moved.md note. Pages URL changes.
+- Transfer to SamuelJWebber: wanted. **Blocked on one click in the GitHub UI, not on anything in this repo.**
+  Retried 2026-09-14 as User5017 via `gh api -X POST repos/User5017/credit-card-data/transfer -f
+  new_owner=SamuelJWebber` and it returns HTTP 422 "Repository has already been taken". No
+  `SamuelJWebber/credit-card-data` exists (404), no repository invitation is listed, and no notification is
+  pending -- so the 2026-09-07 transfer request is still holding the name on the target account. GitHub has no
+  REST endpoint to accept or cancel a repository transfer and `gh` has no subcommand for it, so this cannot be
+  finished from the CLI by either account. The user must open
+  https://github.com/User5017/credit-card-data/settings , cancel the stale pending transfer, and either re-run
+  the command above or transfer from that page.
+  Only AFTER it goes through, update the owner in: src/carddash/http.py, src/carddash/render.py,
+  checks/verify_g19.py, README.md, this section, the git remote, and the OneDrive README-moved.md note. Doing
+  any of those first breaks live URLs. Pages moves to https://samueljwebber.github.io/credit-card-data/ and may
+  need re-enabling; the two Actions secrets (CARDDASH_CONTACT, FRED_API_KEY) should be re-checked after, and
+  their values are in the local .env if they need re-adding.
 
 ## Verification standard
 "Should work" is not done. Done means: the test passes, the command ran, and the output was shown,
