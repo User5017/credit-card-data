@@ -8,7 +8,9 @@ Nothing here replaces CLAUDE.md. These few are repeated because they are the one
 
 ## The ritual
 
-- **Start:** read `TASKS.md`, run `python -m uv run pytest`, report status before doing anything else.
+- **Start:** read `HANDOFF.md`, run `python -m uv run pytest`, report status before doing anything else.
+  Open `TASKS.md` only for the task you are actually doing — at 725 lines it is the archive as much as
+  the board, and reading it end to end costs about 29,000 tokens before any work starts.
 - **One bounded task per session**, with its pass condition written into `TASKS.md` before work starts.
 - **End:** tests green, `git commit` with a plain message, `TASKS.md` updated, one-paragraph handoff.
 

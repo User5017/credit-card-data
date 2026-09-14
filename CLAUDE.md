@@ -4,7 +4,9 @@ Self-updating dashboard of US credit card data from public sources. One person, 
 Design: PLAN.md. Reasoning behind the design: design/PLAN-review.md. Task board: TASKS.md.
 
 ## Start and end of every session
-- Start: read TASKS.md, run `python -m uv run pytest`, report status before doing anything.
+- Start: read `HANDOFF.md`, run `python -m uv run pytest`, report status before doing anything.
+  Open `TASKS.md` only for the task you are actually doing — it is 725 lines and is the archive as much
+  as the board, so reading it end to end costs about 29,000 tokens before any work starts.
 - One bounded task per session, with the pass condition written in TASKS.md before work starts.
 - End: tests green, `git commit` with a plain message, TASKS.md updated, one-paragraph handoff.
 
