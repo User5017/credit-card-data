@@ -70277,6 +70277,7 @@ issuer_card_dq30_rate,ISSUER:SYNCHRONY,issuer,all,2026-04-30,M,4.3,issuer_8k,202
 issuer_card_dq30_rate,ISSUER:SYNCHRONY,issuer,all,2026-05-31,M,4.2,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:SYNCHRONY,issuer,all,2026-06-30,M,4.2,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:SYNCHRONY,issuer,all,2026-07-31,M,4.2,issuer_8k,2026-09-11T19:53:50Z
+issuer_card_dq30_rate,ISSUER:SYNCHRONY,issuer,all,2026-08-31,M,4.2,issuer_8k,2026-09-15T00:30:02Z
 issuer_card_loans_avg,ISSUER:AMEX_US_CONSUMER,issuer,all,2026-02-28,M,108.7,issuer_8k,2026-09-11T23:59:04Z
 issuer_card_loans_avg,ISSUER:AMEX_US_CONSUMER,issuer,all,2026-03-31,M,109.1,issuer_8k,2026-09-11T23:59:04Z
 issuer_card_loans_avg,ISSUER:AMEX_US_CONSUMER,issuer,all,2026-04-30,M,111.1,issuer_8k,2026-09-11T23:59:04Z
@@ -70535,6 +70536,7 @@ issuer_card_loans_avg,ISSUER:SYNCHRONY,issuer,all,2026-04-30,M,100.2,issuer_8k,2
 issuer_card_loans_avg,ISSUER:SYNCHRONY,issuer,all,2026-05-31,M,100.6,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_avg,ISSUER:SYNCHRONY,issuer,all,2026-06-30,M,101.3,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_avg,ISSUER:SYNCHRONY,issuer,all,2026-07-31,M,101.9,issuer_8k,2026-09-11T19:53:50Z
+issuer_card_loans_avg,ISSUER:SYNCHRONY,issuer,all,2026-08-31,M,102.3,issuer_8k,2026-09-15T00:30:02Z
 issuer_card_loans_eop,ISSUER:AMEX_US_CONSUMER,issuer,all,2026-02-28,M,107.4,issuer_8k,2026-09-11T23:59:04Z
 issuer_card_loans_eop,ISSUER:AMEX_US_CONSUMER,issuer,all,2026-03-31,M,110.8,issuer_8k,2026-09-11T23:59:04Z
 issuer_card_loans_eop,ISSUER:AMEX_US_CONSUMER,issuer,all,2026-04-30,M,111.4,issuer_8k,2026-09-11T23:59:04Z
@@ -70793,6 +70795,7 @@ issuer_card_loans_eop,ISSUER:SYNCHRONY,issuer,all,2026-04-30,M,100.9,issuer_8k,2
 issuer_card_loans_eop,ISSUER:SYNCHRONY,issuer,all,2026-05-31,M,101.7,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop,ISSUER:SYNCHRONY,issuer,all,2026-06-30,M,102.2,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop,ISSUER:SYNCHRONY,issuer,all,2026-07-31,M,102.6,issuer_8k,2026-09-11T19:53:50Z
+issuer_card_loans_eop,ISSUER:SYNCHRONY,issuer,all,2026-08-31,M,103,issuer_8k,2026-09-15T00:30:02Z
 issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2022-07-31,M,16.885,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2022-08-31,M,16.95,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2022-09-30,M,17.029,issuer_8k,2026-09-11T19:53:50Z
@@ -71203,6 +71206,7 @@ issuer_card_nco_rate,ISSUER:SYNCHRONY,issuer,all,2026-04-30,M,5.5,issuer_8k,2026
 issuer_card_nco_rate,ISSUER:SYNCHRONY,issuer,all,2026-05-31,M,5.5,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate,ISSUER:SYNCHRONY,issuer,all,2026-06-30,M,5.3,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate,ISSUER:SYNCHRONY,issuer,all,2026-07-31,M,4.7,issuer_8k,2026-09-11T19:53:50Z
+issuer_card_nco_rate,ISSUER:SYNCHRONY,issuer,all,2026-08-31,M,4.9,issuer_8k,2026-09-15T00:30:02Z
 issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2021-03-31,M,3.8,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2021-04-30,M,3.7,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2021-05-31,M,3.7,issuer_8k,2026-09-11T19:53:50Z
@@ -71268,6 +71272,7 @@ issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2026-04-30,M,5.6,issuer_8k,
 issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2026-05-31,M,5.4,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2026-06-30,M,5.2,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2026-07-31,M,4.9,issuer_8k,2026-09-11T19:53:50Z
+issuer_card_nco_rate_adj,ISSUER:SYNCHRONY,issuer,all,2026-08-31,M,4.9,issuer_8k,2026-09-15T00:30:02Z
 mortgage_dq_rate_sa,COMBANKS_ALL,aggregate,all,1991-03-31,Q,3.1,fred,2026-09-11T05:03:24Z
 mortgage_dq_rate_sa,COMBANKS_ALL,aggregate,all,1991-06-30,Q,3.17,fred,2026-09-11T05:03:24Z
 mortgage_dq_rate_sa,COMBANKS_ALL,aggregate,all,1991-09-30,Q,3.22,fred,2026-09-11T05:03:24Z
@@ -71593,6 +71598,7 @@ ncua_card_charge_offs_ytd,NCUA:AMERICA_FIRST,credit_union,all,2025-06-30,Q,0.024
 ncua_card_charge_offs_ytd,NCUA:AMERICA_FIRST,credit_union,all,2025-09-30,Q,0.037587893,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:AMERICA_FIRST,credit_union,all,2025-12-31,Q,0.050651108,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:AMERICA_FIRST,credit_union,all,2026-03-31,Q,0.013304673,ncua,2026-09-10T21:54:11Z
+ncua_card_charge_offs_ytd,NCUA:AMERICA_FIRST,credit_union,all,2026-06-30,Q,0.025755661,ncua,2026-09-15T00:30:02Z
 ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2016-03-31,Q,0.003897818,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2016-06-30,Q,0.008148811,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2016-09-30,Q,0.012042012,ncua,2026-09-10T21:54:11Z
@@ -71634,6 +71640,7 @@ ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2025-06-30,Q,0.04055219,ncu
 ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2025-09-30,Q,0.06066588,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2025-12-31,Q,0.081821747,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2026-03-31,Q,0.021425102,ncua,2026-09-10T21:54:11Z
+ncua_card_charge_offs_ytd,NCUA:BECU,credit_union,all,2026-06-30,Q,0.04039182,ncua,2026-09-15T00:30:02Z
 ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2016-03-31,Q,0.112763392,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2016-06-30,Q,0.231607474,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2016-09-30,Q,0.340981875,ncua,2026-09-10T21:54:11Z
@@ -71675,6 +71682,7 @@ ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2025-06-30,Q,1.2143
 ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2025-09-30,Q,1.777223767,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2025-12-31,Q,2.380858942,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2026-03-31,Q,0.646143961,ncua,2026-09-10T21:54:11Z
+ncua_card_charge_offs_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2026-06-30,Q,1.275002652,ncua,2026-09-15T00:30:02Z
 ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2016-03-31,Q,0.011029902,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2016-06-30,Q,0.022509036,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2016-09-30,Q,0.034825701,ncua,2026-09-10T21:54:11Z
@@ -71716,6 +71724,7 @@ ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2025-06-30,Q,0.118584636,
 ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2025-09-30,Q,0.167828985,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2025-12-31,Q,0.213911682,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2026-03-31,Q,0.042109396,ncua,2026-09-10T21:54:11Z
+ncua_card_charge_offs_ytd,NCUA:PENFED,credit_union,all,2026-06-30,Q,0.082748307,ncua,2026-09-15T00:30:02Z
 ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2016-03-31,Q,0.312357745,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2016-06-30,Q,0.625976002,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2016-09-30,Q,0.940221303,ncua,2026-09-10T21:54:11Z
@@ -71757,6 +71766,7 @@ ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2025-06-30,Q,2.448650023,ncua,
 ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2025-09-30,Q,3.612308469,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2025-12-31,Q,4.85144158,ncua,2026-09-10T21:54:11Z
 ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2026-03-31,Q,1.30013453,ncua,2026-09-10T21:54:11Z
+ncua_card_charge_offs_ytd,NCUA_FICU,aggregate,all,2026-06-30,Q,2.542736888,ncua,2026-09-15T00:30:02Z
 ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2016-03-31,Q,0.001966935,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2016-06-30,Q,0.001979237,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2016-09-30,Q,0.001976633,ncua,2026-09-10T21:54:11Z
@@ -71798,6 +71808,7 @@ ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2025-06-30,Q,0.0
 ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2025-09-30,Q,0.013766323,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2025-12-31,Q,0.01620493,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2026-03-31,Q,0.014275358,ncua,2026-09-10T21:54:11Z
+ncua_card_delinquent_60plus,NCUA:AMERICA_FIRST,credit_union,all,2026-06-30,Q,0.015995057,ncua,2026-09-15T00:30:02Z
 ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2016-03-31,Q,0.001576893,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2016-06-30,Q,0.001571703,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2016-09-30,Q,0.002281603,ncua,2026-09-10T21:54:11Z
@@ -71839,6 +71850,7 @@ ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2025-06-30,Q,0.024428483,
 ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2025-09-30,Q,0.024662737,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2025-12-31,Q,0.026672265,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2026-03-31,Q,0.024835908,ncua,2026-09-10T21:54:11Z
+ncua_card_delinquent_60plus,NCUA:BECU,credit_union,all,2026-06-30,Q,0.023006826,ncua,2026-09-15T00:30:02Z
 ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2016-03-31,Q,0.154090845,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2016-06-30,Q,0.151030594,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2016-09-30,Q,0.181603204,ncua,2026-09-10T21:54:11Z
@@ -71880,6 +71892,7 @@ ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2025-06-30,Q,0.77
 ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2025-09-30,Q,0.839177916,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2025-12-31,Q,0.910383108,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2026-03-31,Q,0.855466548,ncua,2026-09-10T21:54:11Z
+ncua_card_delinquent_60plus,NCUA:NAVY_FEDERAL,credit_union,all,2026-06-30,Q,0.779815169,ncua,2026-09-15T00:30:02Z
 ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2016-03-31,Q,0.021295311,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2016-06-30,Q,0.022569569,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2016-09-30,Q,0.025665185,ncua,2026-09-10T21:54:11Z
@@ -71921,6 +71934,7 @@ ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2025-06-30,Q,0.06033084
 ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2025-09-30,Q,0.055100993,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2025-12-31,Q,0.054010136,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2026-03-31,Q,0.049038834,ncua,2026-09-10T21:54:11Z
+ncua_card_delinquent_60plus,NCUA:PENFED,credit_union,all,2026-06-30,Q,0.041946902,ncua,2026-09-15T00:30:02Z
 ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2016-03-31,Q,0.452872659,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2016-06-30,Q,0.458126763,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2016-09-30,Q,0.524846496,ncua,2026-09-10T21:54:11Z
@@ -71962,6 +71976,7 @@ ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2025-06-30,Q,1.645742066,ncu
 ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2025-09-30,Q,1.750748397,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2025-12-31,Q,1.888403828,ncua,2026-09-10T21:54:11Z
 ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2026-03-31,Q,1.752691823,ncua,2026-09-10T21:54:11Z
+ncua_card_delinquent_60plus,NCUA_FICU,aggregate,all,2026-06-30,Q,1.668239509,ncua,2026-09-15T00:30:02Z
 ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2016-03-31,Q,0.441674737,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2016-06-30,Q,0.452366161,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2016-09-30,Q,0.460398005,ncua,2026-09-10T21:54:11Z
@@ -72003,6 +72018,7 @@ ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2025-06-30,Q,0.979618196,ncu
 ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2025-09-30,Q,0.999865806,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2025-12-31,Q,1.031307178,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2026-03-31,Q,0.992304746,ncua,2026-09-10T21:54:11Z
+ncua_card_loans,NCUA:AMERICA_FIRST,credit_union,all,2026-06-30,Q,1.016215533,ncua,2026-09-15T00:30:02Z
 ncua_card_loans,NCUA:BECU,credit_union,all,2016-03-31,Q,0.876380971,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:BECU,credit_union,all,2016-06-30,Q,0.902893846,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:BECU,credit_union,all,2016-09-30,Q,0.920975175,ncua,2026-09-10T21:54:11Z
@@ -72044,6 +72060,7 @@ ncua_card_loans,NCUA:BECU,credit_union,all,2025-06-30,Q,1.689448464,ncua,2026-09
 ncua_card_loans,NCUA:BECU,credit_union,all,2025-09-30,Q,1.668178144,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:BECU,credit_union,all,2025-12-31,Q,1.667976738,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:BECU,credit_union,all,2026-03-31,Q,1.64168818,ncua,2026-09-10T21:54:11Z
+ncua_card_loans,NCUA:BECU,credit_union,all,2026-06-30,Q,1.647167788,ncua,2026-09-15T00:30:02Z
 ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2016-03-31,Q,10.72473723,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2016-06-30,Q,11.19128585,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2016-09-30,Q,11.65219948,ncua,2026-09-10T21:54:11Z
@@ -72085,6 +72102,7 @@ ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2025-06-30,Q,31.8304835,ncua,
 ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2025-09-30,Q,32.4081274,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2025-12-31,Q,33.03885654,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2026-03-31,Q,32.68687748,ncua,2026-09-10T21:54:11Z
+ncua_card_loans,NCUA:NAVY_FEDERAL,credit_union,all,2026-06-30,Q,33.37623959,ncua,2026-09-15T00:30:02Z
 ncua_card_loans,NCUA:PENFED,credit_union,all,2016-03-31,Q,1.581828623,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:PENFED,credit_union,all,2016-06-30,Q,1.60959976,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:PENFED,credit_union,all,2016-09-30,Q,1.635019058,ncua,2026-09-10T21:54:11Z
@@ -72126,6 +72144,7 @@ ncua_card_loans,NCUA:PENFED,credit_union,all,2025-06-30,Q,1.851010813,ncua,2026-
 ncua_card_loans,NCUA:PENFED,credit_union,all,2025-09-30,Q,1.795943595,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:PENFED,credit_union,all,2025-12-31,Q,1.796573381,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA:PENFED,credit_union,all,2026-03-31,Q,1.701941785,ncua,2026-09-10T21:54:11Z
+ncua_card_loans,NCUA:PENFED,credit_union,all,2026-06-30,Q,1.681234648,ncua,2026-09-15T00:30:02Z
 ncua_card_loans,NCUA_FICU,aggregate,all,2016-03-31,Q,47.85353569,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA_FICU,aggregate,all,2016-06-30,Q,49.08620178,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA_FICU,aggregate,all,2016-09-30,Q,50.22619376,ncua,2026-09-10T21:54:11Z
@@ -72167,6 +72186,7 @@ ncua_card_loans,NCUA_FICU,aggregate,all,2025-06-30,Q,85.06691043,ncua,2026-09-10
 ncua_card_loans,NCUA_FICU,aggregate,all,2025-09-30,Q,85.98707577,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA_FICU,aggregate,all,2025-12-31,Q,87.83094379,ncua,2026-09-10T21:54:11Z
 ncua_card_loans,NCUA_FICU,aggregate,all,2026-03-31,Q,86.03858079,ncua,2026-09-10T21:54:11Z
+ncua_card_loans,NCUA_FICU,aggregate,all,2026-06-30,Q,87.20365885,ncua,2026-09-15T00:30:02Z
 ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2016-03-31,Q,10.5,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2016-06-30,Q,10.5,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2016-09-30,Q,10.5,ncua,2026-09-10T21:54:11Z
@@ -72208,6 +72228,7 @@ ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2025-06-30,Q,15.24,ncua,2026-
 ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2025-09-30,Q,15.24,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2025-12-31,Q,14.99,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2026-03-31,Q,14.99,ncua,2026-09-10T21:54:11Z
+ncua_card_rate,NCUA:AMERICA_FIRST,credit_union,all,2026-06-30,Q,14.99,ncua,2026-09-15T00:30:02Z
 ncua_card_rate,NCUA:BECU,credit_union,all,2016-03-31,Q,9.15,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:BECU,credit_union,all,2016-06-30,Q,9.15,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:BECU,credit_union,all,2016-09-30,Q,9.15,ncua,2026-09-10T21:54:11Z
@@ -72249,6 +72270,7 @@ ncua_card_rate,NCUA:BECU,credit_union,all,2025-06-30,Q,13.24,ncua,2026-09-10T21:
 ncua_card_rate,NCUA:BECU,credit_union,all,2025-09-30,Q,13.24,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:BECU,credit_union,all,2025-12-31,Q,12.99,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:BECU,credit_union,all,2026-03-31,Q,12.49,ncua,2026-09-10T21:54:11Z
+ncua_card_rate,NCUA:BECU,credit_union,all,2026-06-30,Q,12.49,ncua,2026-09-15T00:30:02Z
 ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2016-03-31,Q,14.9,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2016-06-30,Q,14.9,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2016-09-30,Q,14.9,ncua,2026-09-10T21:54:11Z
@@ -72290,6 +72312,7 @@ ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2025-06-30,Q,18,ncua,2026-09-1
 ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2025-09-30,Q,18,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2025-12-31,Q,18,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2026-03-31,Q,18,ncua,2026-09-10T21:54:11Z
+ncua_card_rate,NCUA:NAVY_FEDERAL,credit_union,all,2026-06-30,Q,18,ncua,2026-09-15T00:30:02Z
 ncua_card_rate,NCUA:PENFED,credit_union,all,2016-03-31,Q,10.24,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:PENFED,credit_union,all,2016-06-30,Q,10.24,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:PENFED,credit_union,all,2016-09-30,Q,10.24,ncua,2026-09-10T21:54:11Z
@@ -72331,6 +72354,7 @@ ncua_card_rate,NCUA:PENFED,credit_union,all,2025-06-30,Q,17.99,ncua,2026-09-10T2
 ncua_card_rate,NCUA:PENFED,credit_union,all,2025-09-30,Q,17.99,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:PENFED,credit_union,all,2025-12-31,Q,17.99,ncua,2026-09-10T21:54:11Z
 ncua_card_rate,NCUA:PENFED,credit_union,all,2026-03-31,Q,17.99,ncua,2026-09-10T21:54:11Z
+ncua_card_rate,NCUA:PENFED,credit_union,all,2026-06-30,Q,17.99,ncua,2026-09-15T00:30:02Z
 ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2016-03-31,Q,0.000478888,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2016-06-30,Q,0.000961803,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2016-09-30,Q,0.001365679,ncua,2026-09-10T21:54:11Z
@@ -72372,6 +72396,7 @@ ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2025-06-30,Q,0.0030
 ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2025-09-30,Q,0.004824366,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2025-12-31,Q,0.006566313,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2026-03-31,Q,0.002125999,ncua,2026-09-10T21:54:11Z
+ncua_card_recoveries_ytd,NCUA:AMERICA_FIRST,credit_union,all,2026-06-30,Q,0.004223626,ncua,2026-09-15T00:30:02Z
 ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2016-03-31,Q,0.000877871,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2016-06-30,Q,0.001784549,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2016-09-30,Q,0.002674756,ncua,2026-09-10T21:54:11Z
@@ -72413,6 +72438,7 @@ ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2025-06-30,Q,0.003531041,ncu
 ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2025-09-30,Q,0.005397419,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2025-12-31,Q,0.007268915,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2026-03-31,Q,0.00205213,ncua,2026-09-10T21:54:11Z
+ncua_card_recoveries_ytd,NCUA:BECU,credit_union,all,2026-06-30,Q,0.004670193,ncua,2026-09-15T00:30:02Z
 ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2016-03-31,Q,0.006626274,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2016-06-30,Q,0.013465005,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2016-09-30,Q,0.020347112,ncua,2026-09-10T21:54:11Z
@@ -72454,6 +72480,7 @@ ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2025-06-30,Q,0.08902
 ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2025-09-30,Q,0.157123863,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2025-12-31,Q,0.204928795,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2026-03-31,Q,0.059237763,ncua,2026-09-10T21:54:11Z
+ncua_card_recoveries_ytd,NCUA:NAVY_FEDERAL,credit_union,all,2026-06-30,Q,0.11945792,ncua,2026-09-15T00:30:02Z
 ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2016-03-31,Q,0.00105361,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2016-06-30,Q,0.002069952,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2016-09-30,Q,0.003283993,ncua,2026-09-10T21:54:11Z
@@ -72495,6 +72522,7 @@ ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2025-06-30,Q,0.011627023,n
 ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2025-09-30,Q,0.016525501,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2025-12-31,Q,0.020954445,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2026-03-31,Q,0.00438408,ncua,2026-09-10T21:54:11Z
+ncua_card_recoveries_ytd,NCUA:PENFED,credit_union,all,2026-06-30,Q,0.008072001,ncua,2026-09-15T00:30:02Z
 ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2016-03-31,Q,0.045294713,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2016-06-30,Q,0.092176468,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2016-09-30,Q,0.136376685,ncua,2026-09-10T21:54:11Z
@@ -72536,6 +72564,7 @@ ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2025-06-30,Q,0.246076387,ncua,2
 ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2025-09-30,Q,0.396115937,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2025-12-31,Q,0.524686806,ncua,2026-09-10T21:54:11Z
 ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2026-03-31,Q,0.149198602,ncua,2026-09-10T21:54:11Z
+ncua_card_recoveries_ytd,NCUA_FICU,aggregate,all,2026-06-30,Q,0.302705371,ncua,2026-09-15T00:30:02Z
 nonrevolving_credit_sa,ALL_HOLDERS,aggregate,all,1943-01-31,M,6.57783,fred,2026-09-08T07:30:11Z
 nonrevolving_credit_sa,ALL_HOLDERS,aggregate,all,1943-02-28,M,6.46304,fred,2026-09-08T07:30:11Z
 nonrevolving_credit_sa,ALL_HOLDERS,aggregate,all,1943-03-31,M,6.23421,fred,2026-09-08T07:30:11Z
