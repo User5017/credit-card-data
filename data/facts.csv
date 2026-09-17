@@ -81640,7 +81640,8 @@ retail_sales_nsa,NAICS:445,naics,all,2026-02-28,M,75.965,census,2026-09-08T19:42
 retail_sales_nsa,NAICS:445,naics,all,2026-03-31,M,83.508,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:445,naics,all,2026-04-30,M,83.2,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:445,naics,all,2026-05-31,M,88.817,census,2026-09-08T19:42:42Z
-retail_sales_nsa,NAICS:445,naics,all,2026-06-30,M,84.421,census,2026-09-08T19:42:42Z
+retail_sales_nsa,NAICS:445,naics,all,2026-06-30,M,84.344,census,2026-09-17T00:20:21Z
+retail_sales_nsa,NAICS:445,naics,all,2026-07-31,M,87.838,census,2026-09-17T00:20:21Z
 retail_sales_nsa,NAICS:447,naics,all,1992-01-31,M,11.918,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:447,naics,all,1992-02-29,M,11.407,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:447,naics,all,1992-03-31,M,12.089,census,2026-09-08T19:42:42Z
@@ -82054,7 +82055,8 @@ retail_sales_nsa,NAICS:447,naics,all,2026-02-28,M,45.182,census,2026-09-08T19:42
 retail_sales_nsa,NAICS:447,naics,all,2026-03-31,M,59.101,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:447,naics,all,2026-04-30,M,63.549,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:447,naics,all,2026-05-31,M,68.82,census,2026-09-08T19:42:42Z
-retail_sales_nsa,NAICS:447,naics,all,2026-06-30,M,64.358,census,2026-09-08T19:42:42Z
+retail_sales_nsa,NAICS:447,naics,all,2026-06-30,M,64.342,census,2026-09-17T00:20:21Z
+retail_sales_nsa,NAICS:447,naics,all,2026-07-31,M,65.896,census,2026-09-17T00:20:21Z
 retail_sales_nsa,NAICS:448,naics,all,1992-01-31,M,6.734,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:448,naics,all,1992-02-29,M,7.302,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:448,naics,all,1992-03-31,M,8.245,census,2026-09-08T19:42:42Z
@@ -82468,7 +82470,8 @@ retail_sales_nsa,NAICS:448,naics,all,2026-02-28,M,22.418,census,2026-09-08T19:42
 retail_sales_nsa,NAICS:448,naics,all,2026-03-31,M,26.69,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:448,naics,all,2026-04-30,M,25.869,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:448,naics,all,2026-05-31,M,29.282,census,2026-09-08T19:42:42Z
-retail_sales_nsa,NAICS:448,naics,all,2026-06-30,M,26.291,census,2026-09-08T19:42:42Z
+retail_sales_nsa,NAICS:448,naics,all,2026-06-30,M,26.295,census,2026-09-17T00:20:21Z
+retail_sales_nsa,NAICS:448,naics,all,2026-07-31,M,27.951,census,2026-09-17T00:20:21Z
 retail_sales_nsa,NAICS:44X72,naics,all,1992-01-31,M,142.051,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:44X72,naics,all,1992-02-29,M,142.498,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:44X72,naics,all,1992-03-31,M,154.439,census,2026-09-08T19:42:42Z
@@ -82882,7 +82885,8 @@ retail_sales_nsa,NAICS:44X72,naics,all,2026-02-28,M,656.082,census,2026-09-08T19
 retail_sales_nsa,NAICS:44X72,naics,all,2026-03-31,M,761.135,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:44X72,naics,all,2026-04-30,M,755.742,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:44X72,naics,all,2026-05-31,M,796.14,census,2026-09-08T19:42:42Z
-retail_sales_nsa,NAICS:44X72,naics,all,2026-06-30,M,777.641,census,2026-09-08T19:42:42Z
+retail_sales_nsa,NAICS:44X72,naics,all,2026-06-30,M,776.516,census,2026-09-17T00:20:21Z
+retail_sales_nsa,NAICS:44X72,naics,all,2026-07-31,M,784.603,census,2026-09-17T00:20:21Z
 retail_sales_nsa,NAICS:454,naics,all,1992-01-31,M,5.864,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:454,naics,all,1992-02-29,M,5.127,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:454,naics,all,1992-03-31,M,5.323,census,2026-09-08T19:42:42Z
@@ -83296,7 +83300,8 @@ retail_sales_nsa,NAICS:454,naics,all,2026-02-28,M,120.317,census,2026-09-08T19:4
 retail_sales_nsa,NAICS:454,naics,all,2026-03-31,M,134.958,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:454,naics,all,2026-04-30,M,133.181,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:454,naics,all,2026-05-31,M,134.767,census,2026-09-08T19:42:42Z
-retail_sales_nsa,NAICS:454,naics,all,2026-06-30,M,138.02,census,2026-09-08T19:42:42Z
+retail_sales_nsa,NAICS:454,naics,all,2026-06-30,M,137.284,census,2026-09-17T00:20:21Z
+retail_sales_nsa,NAICS:454,naics,all,2026-07-31,M,136.194,census,2026-09-17T00:20:21Z
 retail_sales_nsa,NAICS:722,naics,all,1992-01-31,M,15.334,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:722,naics,all,1992-02-29,M,15.476,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:722,naics,all,1992-03-31,M,16.461,census,2026-09-08T19:42:42Z
@@ -83710,7 +83715,8 @@ retail_sales_nsa,NAICS:722,naics,all,2026-02-28,M,91.419,census,2026-09-08T19:42
 retail_sales_nsa,NAICS:722,naics,all,2026-03-31,M,103.549,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:722,naics,all,2026-04-30,M,101.672,census,2026-09-08T19:42:42Z
 retail_sales_nsa,NAICS:722,naics,all,2026-05-31,M,110.59,census,2026-09-08T19:42:42Z
-retail_sales_nsa,NAICS:722,naics,all,2026-06-30,M,105.284,census,2026-09-08T19:42:42Z
+retail_sales_nsa,NAICS:722,naics,all,2026-06-30,M,105.407,census,2026-09-17T00:20:21Z
+retail_sales_nsa,NAICS:722,naics,all,2026-07-31,M,107.354,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:445,naics,all,1992-01-31,M,29.841,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,1992-02-29,M,29.766,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,1992-03-31,M,29.755,census,2026-09-08T19:42:42Z
@@ -84113,8 +84119,8 @@ retail_sales_sa,NAICS:445,naics,all,2025-03-31,M,84.583,census,2026-09-08T19:42:
 retail_sales_sa,NAICS:445,naics,all,2025-04-30,M,84.431,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,2025-05-31,M,83.772,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,2025-06-30,M,84.565,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:445,naics,all,2025-07-31,M,84.749,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:445,naics,all,2025-08-31,M,85.258,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:445,naics,all,2025-07-31,M,84.755,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:445,naics,all,2025-08-31,M,85.168,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:445,naics,all,2025-09-30,M,85.111,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,2025-10-31,M,85.116,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,2025-11-30,M,84.854,census,2026-09-08T19:42:42Z
@@ -84124,7 +84130,8 @@ retail_sales_sa,NAICS:445,naics,all,2026-02-28,M,84.066,census,2026-09-08T19:42:
 retail_sales_sa,NAICS:445,naics,all,2026-03-31,M,84.983,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,2026-04-30,M,85.455,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:445,naics,all,2026-05-31,M,85.588,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:445,naics,all,2026-06-30,M,85.487,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:445,naics,all,2026-06-30,M,85.408,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:445,naics,all,2026-07-31,M,85.214,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:447,naics,all,1992-01-31,M,12.652,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,1992-02-29,M,12.399,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,1992-03-31,M,12.45,census,2026-09-08T19:42:42Z
@@ -84527,8 +84534,8 @@ retail_sales_sa,NAICS:447,naics,all,2025-03-31,M,51.342,census,2026-09-08T19:42:
 retail_sales_sa,NAICS:447,naics,all,2025-04-30,M,50.887,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,2025-05-31,M,50.267,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,2025-06-30,M,50.745,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:447,naics,all,2025-07-31,M,51.546,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:447,naics,all,2025-08-31,M,51.744,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:447,naics,all,2025-07-31,M,51.641,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:447,naics,all,2025-08-31,M,51.506,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:447,naics,all,2025-09-30,M,52.78,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,2025-10-31,M,52.067,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,2025-11-30,M,52.739,census,2026-09-08T19:42:42Z
@@ -84538,7 +84545,8 @@ retail_sales_sa,NAICS:447,naics,all,2026-02-28,M,52.66,census,2026-09-08T19:42:4
 retail_sales_sa,NAICS:447,naics,all,2026-03-31,M,60.123,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,2026-04-30,M,62.364,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:447,naics,all,2026-05-31,M,64.138,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:447,naics,all,2026-06-30,M,60.43,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:447,naics,all,2026-06-30,M,60.586,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:447,naics,all,2026-07-31,M,60.455,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:448,naics,all,1992-01-31,M,9.459,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,1992-02-29,M,9.444,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,1992-03-31,M,9.325,census,2026-09-08T19:42:42Z
@@ -84941,8 +84949,8 @@ retail_sales_sa,NAICS:448,naics,all,2025-03-31,M,26.029,census,2026-09-08T19:42:
 retail_sales_sa,NAICS:448,naics,all,2025-04-30,M,26.209,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,2025-05-31,M,26.307,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,2025-06-30,M,26.647,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:448,naics,all,2025-07-31,M,26.953,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:448,naics,all,2025-08-31,M,27.14,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:448,naics,all,2025-07-31,M,26.962,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:448,naics,all,2025-08-31,M,27.195,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:448,naics,all,2025-09-30,M,26.921,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,2025-10-31,M,27.298,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,2025-11-30,M,27.393,census,2026-09-08T19:42:42Z
@@ -84952,7 +84960,8 @@ retail_sales_sa,NAICS:448,naics,all,2026-02-28,M,27.797,census,2026-09-08T19:42:
 retail_sales_sa,NAICS:448,naics,all,2026-03-31,M,27.854,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,2026-04-30,M,27.706,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:448,naics,all,2026-05-31,M,27.986,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:448,naics,all,2026-06-30,M,27.786,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:448,naics,all,2026-06-30,M,27.792,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:448,naics,all,2026-07-31,M,28.163,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:44X72,naics,all,1992-01-31,M,159.177,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,1992-02-29,M,159.189,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,1992-03-31,M,158.647,census,2026-09-08T19:42:42Z
@@ -85355,8 +85364,8 @@ retail_sales_sa,NAICS:44X72,naics,all,2025-03-31,M,723.339,census,2026-09-08T19:
 retail_sales_sa,NAICS:44X72,naics,all,2025-04-30,M,722.442,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,2025-05-31,M,714.513,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,2025-06-30,M,719.484,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:44X72,naics,all,2025-07-31,M,727.176,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:44X72,naics,all,2025-08-31,M,731.7,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:44X72,naics,all,2025-07-31,M,727.837,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:44X72,naics,all,2025-08-31,M,730.037,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:44X72,naics,all,2025-09-30,M,732.192,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,2025-10-31,M,731.051,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,2025-11-30,M,734.718,census,2026-09-08T19:42:42Z
@@ -85366,7 +85375,8 @@ retail_sales_sa,NAICS:44X72,naics,all,2026-02-28,M,741.278,census,2026-09-08T19:
 retail_sales_sa,NAICS:44X72,naics,all,2026-03-31,M,754.013,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,2026-04-30,M,759.097,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:44X72,naics,all,2026-05-31,M,766.192,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:44X72,naics,all,2026-06-30,M,768.072,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:44X72,naics,all,2026-06-30,M,768.587,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:44X72,naics,all,2026-07-31,M,764.462,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:454,naics,all,1992-01-31,M,5.416,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,1992-02-29,M,5.096,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,1992-03-31,M,5.038,census,2026-09-08T19:42:42Z
@@ -85769,8 +85779,8 @@ retail_sales_sa,NAICS:454,naics,all,2025-03-31,M,123.014,census,2026-09-08T19:42
 retail_sales_sa,NAICS:454,naics,all,2025-04-30,M,123.959,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,2025-05-31,M,124.786,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,2025-06-30,M,124.574,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:454,naics,all,2025-07-31,M,127.11,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:454,naics,all,2025-08-31,M,129.257,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:454,naics,all,2025-07-31,M,127.192,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:454,naics,all,2025-08-31,M,128.636,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:454,naics,all,2025-09-30,M,128.369,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,2025-10-31,M,129.286,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,2025-11-30,M,130.174,census,2026-09-08T19:42:42Z
@@ -85780,7 +85790,8 @@ retail_sales_sa,NAICS:454,naics,all,2026-02-28,M,134.926,census,2026-09-08T19:42
 retail_sales_sa,NAICS:454,naics,all,2026-03-31,M,136.03,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,2026-04-30,M,138.035,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:454,naics,all,2026-05-31,M,138.76,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:454,naics,all,2026-06-30,M,140.047,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:454,naics,all,2026-06-30,M,140.207,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:454,naics,all,2026-07-31,M,137.772,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:722,naics,all,1992-01-31,M,16.758,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,1992-02-29,M,16.605,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,1992-03-31,M,16.527,census,2026-09-08T19:42:42Z
@@ -86183,8 +86194,8 @@ retail_sales_sa,NAICS:722,naics,all,2025-03-31,M,97.919,census,2026-09-08T19:42:
 retail_sales_sa,NAICS:722,naics,all,2025-04-30,M,98.17,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,2025-05-31,M,97.973,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,2025-06-30,M,98.693,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:722,naics,all,2025-07-31,M,98.595,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:722,naics,all,2025-08-31,M,99.551,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:722,naics,all,2025-07-31,M,98.691,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:722,naics,all,2025-08-31,M,99.267,census,2026-09-17T00:20:21Z
 retail_sales_sa,NAICS:722,naics,all,2025-09-30,M,99.797,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,2025-10-31,M,99.705,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,2025-11-30,M,100.241,census,2026-09-08T19:42:42Z
@@ -86194,7 +86205,8 @@ retail_sales_sa,NAICS:722,naics,all,2026-02-28,M,100.24,census,2026-09-08T19:42:
 retail_sales_sa,NAICS:722,naics,all,2026-03-31,M,100.241,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,2026-04-30,M,101.267,census,2026-09-08T19:42:42Z
 retail_sales_sa,NAICS:722,naics,all,2026-05-31,M,102.588,census,2026-09-08T19:42:42Z
-retail_sales_sa,NAICS:722,naics,all,2026-06-30,M,103.018,census,2026-09-08T19:42:42Z
+retail_sales_sa,NAICS:722,naics,all,2026-06-30,M,103.34,census,2026-09-17T00:20:21Z
+retail_sales_sa,NAICS:722,naics,all,2026-07-31,M,103.824,census,2026-09-17T00:20:21Z
 revolving_credit_nsa,ALL_HOLDERS,aggregate,all,1968-01-31,M,1.401,fred,2026-09-07T17:34:59Z
 revolving_credit_nsa,ALL_HOLDERS,aggregate,all,1968-02-29,M,1.418,fred,2026-09-07T17:34:59Z
 revolving_credit_nsa,ALL_HOLDERS,aggregate,all,1968-03-31,M,1.439,fred,2026-09-07T17:34:59Z
