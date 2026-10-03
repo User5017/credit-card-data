@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-02T01:34:13Z",
+  "generated_at": "2026-10-03T01:04:46Z",
   "sources": {
     "bea": {
       "source": "bea",
@@ -8,7 +8,7 @@
         "golden check failed: bea_pce_change_2026_06: got 68.303, expected 77.4 +/-0.06 (Same release, 'Historical Comparisons' workbook (pi0726-hist.xlsx), PCE dollar change: last period with a larger value than July's 36.3 was 2026M06 at 77.4)"
       ],
       "last_period_end": "2026-08-31",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 8120,
       "n_series": 10,
       "n_revisions": 0
@@ -21,7 +21,7 @@
         "golden check failed: census_food_services_nsa_2026_05: got 96.336, expected 110.59 +/-0.0006 (Same table, 722 Food services & drinking places, May 2026 (r): 110,590)"
       ],
       "last_period_end": "2026-07-31",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 4980,
       "n_series": 12,
       "n_revisions": 0
@@ -31,7 +31,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 6232,
       "n_series": 26,
       "n_revisions": 0
@@ -41,7 +41,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 11840,
       "n_series": 80,
       "n_revisions": 0
@@ -53,7 +53,7 @@
         "issuer crosswalk: all 35 charter names match the FDIC institution records"
       ],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 28942,
       "n_series": 216,
       "n_revisions": 0
@@ -62,21 +62,21 @@
       "source": "fred",
       "status": "ok",
       "messages": [
-        "2 revised value(s) since last load",
-        "4 new row(s)"
+        "102 revised value(s) since last load",
+        "2 new row(s)"
       ],
       "last_period_end": "2026-09-30",
-      "pulled_at": "2026-10-02T01:34:13Z",
-      "rows": 22255,
+      "pulled_at": "2026-10-03T01:04:46Z",
+      "rows": 22257,
       "n_series": 40,
-      "n_revisions": 2
+      "n_revisions": 102
     },
     "issuer_8k": {
       "source": "issuer_8k",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-08-31",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 1402,
       "n_series": 34,
       "n_revisions": 0
@@ -86,7 +86,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 1008,
       "n_series": 24,
       "n_revisions": 0
@@ -96,7 +96,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 6744,
       "n_series": 68,
       "n_revisions": 0
@@ -106,7 +106,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 2006,
       "n_series": 52,
       "n_revisions": 0
@@ -116,7 +116,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-08-31",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 5724,
       "n_series": 36,
       "n_revisions": 0
@@ -126,7 +126,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 2420,
       "n_series": 106,
       "n_revisions": 0
@@ -136,7 +136,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-03-31",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 2804,
       "n_series": 51,
       "n_revisions": 0
@@ -148,7 +148,7 @@
         "issuer crosswalk: 4 of 28 top-25 institution names in the 2025-12-31 TCCP file are not in issuers.csv: America First Federal Credit Union, Boeing Employees' Credit Union, Navy Federal Credit Union, Pentagon Federal Credit Union"
       ],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-10-02T01:34:13Z",
+      "pulled_at": "2026-10-03T01:04:46Z",
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
