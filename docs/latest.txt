@@ -1,4 +1,4 @@
-US credit card data, latest readings (2026-10-08)
+US credit card data, latest readings (2026-10-09)
 
 - Revolving consumer credit, all lenders (Fed G.19, SA): $1,352bn in Aug 2026, +3.4% on the year
 - Card balances on credit reports (NY Fed): $1,263bn in 2026 Q2, +4.5% on the year
@@ -15,7 +15,7 @@ US credit card data, latest readings (2026-10-08)
 - Households' stated chance of missing a debt payment in the next 3 months (NY Fed survey): 12.20% in Sep 2026, -0.45 pp on the year, 2015-2019 average 12.31%
 - Consumer credit owed by the bottom half of households by wealth (Fed DFA): $2,644bn in 2026 Q2, +2.6% on the year, highest on record (since 1989 Q3)
 - New credit cards opened in the month, all lenders (CFPB, SA): 8.17 million in Feb 2026, +13.1% on the year
-- Initial jobless claims, week ending (DOL, SA): 197 thousand in 2026-09-26, -12.4% on the year
+- Initial jobless claims, week ending (DOL, SA): 197 thousand in 2026-10-03, -15.5% on the year
 
 Thesis of 2026-09-08 (holds): US card credit is re-segmenting, not cycling: the 2022-24 loss surge was a vintage event, and the repricing that came with it is structural.
 - [ok ] Flow into 90+ day delinquency stays below 7.5% -> 6.97% in 2026 Q2

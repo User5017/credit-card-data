@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T01:46:47Z",
+  "generated_at": "2026-10-09T01:59:06Z",
   "sources": {
     "bea": {
       "source": "bea",
@@ -8,7 +8,7 @@
         "golden check failed: bea_pce_change_2026_06: got 68.303, expected 77.4 +/-0.06 (Same release, 'Historical Comparisons' workbook (pi0726-hist.xlsx), PCE dollar change: last period with a larger value than July's 36.3 was 2026M06 at 77.4)"
       ],
       "last_period_end": "2026-08-31",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 8120,
       "n_series": 10,
       "n_revisions": 0
@@ -21,7 +21,7 @@
         "golden check failed: census_food_services_nsa_2026_05: got 96.336, expected 110.59 +/-0.0006 (Same table, 722 Food services & drinking places, May 2026 (r): 110,590)"
       ],
       "last_period_end": "2026-07-31",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 4980,
       "n_series": 12,
       "n_revisions": 0
@@ -31,7 +31,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 6232,
       "n_series": 26,
       "n_revisions": 0
@@ -41,7 +41,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 11840,
       "n_series": 80,
       "n_revisions": 0
@@ -53,7 +53,7 @@
         "issuer crosswalk: all 35 charter names match the FDIC institution records"
       ],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 28942,
       "n_series": 216,
       "n_revisions": 0
@@ -62,21 +62,21 @@
       "source": "fred",
       "status": "ok",
       "messages": [
-        "35 revised value(s) since last load",
-        "11 new row(s)"
+        "2 revised value(s) since last load",
+        "3 new row(s)"
       ],
-      "last_period_end": "2026-09-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
-      "rows": 22268,
+      "last_period_end": "2026-10-07",
+      "pulled_at": "2026-10-09T01:59:06Z",
+      "rows": 22271,
       "n_series": 40,
-      "n_revisions": 35
+      "n_revisions": 2
     },
     "issuer_8k": {
       "source": "issuer_8k",
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-08-31",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 1402,
       "n_series": 34,
       "n_revisions": 0
@@ -86,7 +86,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 1008,
       "n_series": 24,
       "n_revisions": 0
@@ -96,7 +96,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 6744,
       "n_series": 68,
       "n_revisions": 0
@@ -106,7 +106,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2026-06-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 2006,
       "n_series": 52,
       "n_revisions": 0
@@ -114,11 +114,9 @@
     "nyfed_sce_monthly": {
       "source": "nyfed_sce_monthly",
       "status": "ok",
-      "messages": [
-        "36 new row(s)"
-      ],
+      "messages": [],
       "last_period_end": "2026-09-30",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 5760,
       "n_series": 36,
       "n_revisions": 0
@@ -128,7 +126,7 @@
       "status": "ok",
       "messages": [],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 2420,
       "n_series": 106,
       "n_revisions": 0
@@ -140,7 +138,7 @@
         "fetch error: ValueError: CreditCardBalances: headers missing: ['Average Purchase Volume by Credit Score Group: <660 Credit Score', 'Average Purchase Volume by Credit Score Group: >=720 Credit Score']. Found: ['Total Balances ($Billions)', 'Number of Accounts (Millions)', 'Total Commitments ($Billions)', 'Account Balance (Active Accounts Only) (50th percentile)', 'Account Balance (Active Accounts Only) (75th percentile)', 'Account Balance (Active Accounts Only) (90th percentile)', 'Current Credit Limit (50th Percentile)', 'Current Credit Limit (75th Percentile)', 'Current Credit Limit (90th Percentile)', 'Current Credit Score (10th percentile)', 'Current Credit Score (25th percentile)', 'Current Credit Score (50th percentile)', 'Utilization (Active Accounts Only) (50th percentile)', 'Utilization (Active Accounts Only) (75th percentile)', 'Utilization (Active Accounts Only) (90th percentile)', 'Percentage of Accounts with Credit Line Decrease', 'Percentage of Accounts with Credit Line Increase', '30+ Days Past Due Rates: Accounts Based', '30+ Days Past Due Rates: Balances Based', '60+ Days Past Due Rates: Accounts Based', '60+ Days Past Due Rates: Balances Based', '90+ Days Past Due Rates: Accounts Based', '90+ Days Past Due Rates: Balances Based', 'Share of Accounts Making the Minimum Payment', 'Share of Accounts Making Greater Than the Minimum Payment but Less Than the Full Balance', 'Share of Accounts Making the Full Balance Payment', 'Revolving Balances Only ($Billions)', 'Net Charge-Off Rate', 'Average Purchase APR: General Purpose', 'Average Purchase APR: Private Label', 'Total Purchase Volume ($Billions)', 'Average Purchase Volume by Credit Score Group: < 660 Credit Score', 'Average Purchase Volume by Credit Score Group: 660-719 Credit Score', 'Average Purchase Volume by Credit Score Group: >= 720 Credit Score', 'Percentage of Accounts Subject to Promotional APR: Percentage APR Accounts']"
       ],
       "last_period_end": null,
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 0,
       "n_series": 0,
       "n_revisions": 0
@@ -152,7 +150,7 @@
         "issuer crosswalk: 4 of 28 top-25 institution names in the 2025-12-31 TCCP file are not in issuers.csv: America First Federal Credit Union, Boeing Employees' Credit Union, Navy Federal Credit Union, Pentagon Federal Credit Union"
       ],
       "last_period_end": "2025-12-31",
-      "pulled_at": "2026-10-08T01:46:47Z",
+      "pulled_at": "2026-10-09T01:59:06Z",
       "rows": 82,
       "n_series": 15,
       "n_revisions": 0
