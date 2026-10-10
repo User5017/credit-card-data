@@ -2233,7 +2233,9 @@ bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-08-31,M,1089.3613,fred,2026-1
 bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-09-02,W,1083.8179,fred,2026-10-03T01:04:46Z
 bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-09-09,W,1092.1771,fred,2026-10-03T01:04:46Z
 bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-09-16,W,1092.4937,fred,2026-10-03T01:04:46Z
-bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-09-23,W,1092.8301,fred,2026-10-03T01:04:46Z
+bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-09-23,W,1092.8291,fred,2026-10-10T01:41:29Z
+bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-09-30,M,1092.8294,fred,2026-10-10T01:41:29Z
+bank_card_loans_sa,COMBANKS_ALL,aggregate,all,2026-09-30,W,1096.3924,fred,2026-10-10T01:41:29Z
 card_apr_advertised,BANKRATE_SURVEY,aggregate,all,1997-03-26,W,16.23,fred,2026-09-08T07:30:11Z
 card_apr_advertised,BANKRATE_SURVEY,aggregate,all,1997-04-02,W,16.23,fred,2026-09-08T07:30:11Z
 card_apr_advertised,BANKRATE_SURVEY,aggregate,all,1997-04-09,W,16.23,fred,2026-09-08T07:30:11Z

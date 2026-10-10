@@ -1,4 +1,4 @@
-US credit card data, latest readings (2026-10-09)
+US credit card data, latest readings (2026-10-10)
 
 - Revolving consumer credit, all lenders (Fed G.19, SA): $1,352bn in Aug 2026, +3.4% on the year
 - Card balances on credit reports (NY Fed): $1,263bn in 2026 Q2, +4.5% on the year
