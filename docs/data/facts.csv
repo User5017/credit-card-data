@@ -3780,6 +3780,7 @@ card_apr_advertised,BANKRATE_SURVEY,aggregate,all,2026-09-23,W,19.61,fred,2026-0
 card_apr_advertised,BANKRATE_SURVEY,aggregate,all,2026-09-30,W,19.63,fred,2026-10-02T01:34:13Z
 card_apr_advertised,BANKRATE_SURVEY,aggregate,all,2026-10-07,W,19.65,fred,2026-10-09T01:59:06Z
 card_apr_advertised,BANKRATE_SURVEY,aggregate,all,2026-10-14,W,19.67,fred,2026-10-16T00:16:53Z
+card_apr_advertised,BANKRATE_SURVEY,aggregate,all,2026-10-21,W,19.7,fred,2026-10-23T00:34:31Z
 card_apr_all_accounts,COMBANKS_ALL,aggregate,all,1994-12-31,Q,15.69,fred,2026-09-07T17:34:59Z
 card_apr_all_accounts,COMBANKS_ALL,aggregate,all,1995-03-31,Q,16.1,fred,2026-09-07T17:34:59Z
 card_apr_all_accounts,COMBANKS_ALL,aggregate,all,1995-06-30,Q,16.14,fred,2026-09-07T17:34:59Z
@@ -16339,7 +16340,8 @@ continuing_claims_sa,US_ECONOMY,aggregate,all,2026-09-05,W,1717,fred,2026-09-25T
 continuing_claims_sa,US_ECONOMY,aggregate,all,2026-09-12,W,1712,fred,2026-10-02T01:34:13Z
 continuing_claims_sa,US_ECONOMY,aggregate,all,2026-09-19,W,1699,fred,2026-10-09T01:59:06Z
 continuing_claims_sa,US_ECONOMY,aggregate,all,2026-09-26,W,1714,fred,2026-10-16T00:16:53Z
-continuing_claims_sa,US_ECONOMY,aggregate,all,2026-10-03,W,1710,fred,2026-10-16T00:16:53Z
+continuing_claims_sa,US_ECONOMY,aggregate,all,2026-10-03,W,1703,fred,2026-10-23T00:34:31Z
+continuing_claims_sa,US_ECONOMY,aggregate,all,2026-10-10,W,1728,fred,2026-10-23T00:34:31Z
 cpi_all_urban_sa,US_ECONOMY,aggregate,all,1947-01-31,M,21.48,fred,2026-09-08T07:30:11Z
 cpi_all_urban_sa,US_ECONOMY,aggregate,all,1947-02-28,M,21.62,fred,2026-09-08T07:30:11Z
 cpi_all_urban_sa,US_ECONOMY,aggregate,all,1947-03-31,M,22,fred,2026-09-08T07:30:11Z
@@ -70054,7 +70056,8 @@ initial_claims_sa,US_ECONOMY,aggregate,all,2026-09-12,W,198,fred,2026-09-25T00:2
 initial_claims_sa,US_ECONOMY,aggregate,all,2026-09-19,W,198,fred,2026-10-02T01:34:13Z
 initial_claims_sa,US_ECONOMY,aggregate,all,2026-09-26,W,199,fred,2026-10-09T01:59:06Z
 initial_claims_sa,US_ECONOMY,aggregate,all,2026-10-03,W,198,fred,2026-10-16T00:16:53Z
-initial_claims_sa,US_ECONOMY,aggregate,all,2026-10-10,W,199,fred,2026-10-16T00:16:53Z
+initial_claims_sa,US_ECONOMY,aggregate,all,2026-10-10,W,200,fred,2026-10-23T00:34:31Z
+initial_claims_sa,US_ECONOMY,aggregate,all,2026-10-17,W,194,fred,2026-10-23T00:34:31Z
 issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2022-07-31,M,0.81,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2022-08-31,M,0.9,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2022-09-30,M,0.97,issuer_8k,2026-09-11T19:53:50Z
@@ -70105,6 +70108,7 @@ issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-05-31,M,0.853,iss
 issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-06-30,M,0.859,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-07-31,M,0.876,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-08-31,M,0.885,issuer_8k,2026-09-16T00:09:34Z
+issuer_card_dq30_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-09-30,M,0.923,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_dq30_amount,ISSUER:CAPITAL_ONE,issuer,all,2021-02-28,M,2.265,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_amount,ISSUER:CAPITAL_ONE,issuer,all,2021-03-31,M,2.04,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_amount,ISSUER:CAPITAL_ONE,issuer,all,2021-04-30,M,1.746,issuer_8k,2026-09-11T19:53:50Z
@@ -70305,7 +70309,7 @@ issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-05-31,M,5.71,issuer
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-06-30,M,5.73,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-07-31,M,5.82,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-08-31,M,5.84,issuer_8k,2026-09-16T00:09:34Z
-issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-09-30,M,6,issuer_8k,2026-09-11T19:53:50Z
+issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-09-30,M,6.04,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-10-31,M,6.1,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-11-30,M,6,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2025-12-31,M,5.8,issuer_8k,2026-09-11T19:53:50Z
@@ -70317,6 +70321,7 @@ issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-05-31,M,5.24,issuer
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-06-30,M,5.25,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-07-31,M,5.35,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-08-31,M,5.36,issuer_8k,2026-09-16T00:09:34Z
+issuer_card_dq30_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-09-30,M,5.57,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_dq30_rate,ISSUER:CAPITAL_ONE,issuer,all,2021-02-28,M,2.45,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:CAPITAL_ONE,issuer,all,2021-03-31,M,2.24,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_dq30_rate,ISSUER:CAPITAL_ONE,issuer,all,2021-04-30,M,1.92,issuer_8k,2026-09-11T19:53:50Z
@@ -70584,6 +70589,7 @@ issuer_card_loans_avg,ISSUER:BREAD_FINANCIAL,issuer,all,2026-05-31,M,18.169,issu
 issuer_card_loans_avg,ISSUER:BREAD_FINANCIAL,issuer,all,2026-06-30,M,18.357,issuer_8k,2026-09-11T19:55:06Z
 issuer_card_loans_avg,ISSUER:BREAD_FINANCIAL,issuer,all,2026-07-31,M,18.449,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_avg,ISSUER:BREAD_FINANCIAL,issuer,all,2026-08-31,M,18.588,issuer_8k,2026-09-16T00:09:34Z
+issuer_card_loans_avg,ISSUER:BREAD_FINANCIAL,issuer,all,2026-09-30,M,18.74,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_loans_avg,ISSUER:CAPITAL_ONE,issuer,all,2021-02-28,M,92.411,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_avg,ISSUER:CAPITAL_ONE,issuer,all,2021-03-31,M,90.671,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_avg,ISSUER:CAPITAL_ONE,issuer,all,2021-04-30,M,89.944,issuer_8k,2026-09-11T19:53:50Z
@@ -70851,6 +70857,7 @@ issuer_card_loans_eop,ISSUER:BREAD_FINANCIAL,issuer,all,2026-05-31,M,18.363,issu
 issuer_card_loans_eop,ISSUER:BREAD_FINANCIAL,issuer,all,2026-06-30,M,18.477,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop,ISSUER:BREAD_FINANCIAL,issuer,all,2026-07-31,M,18.543,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop,ISSUER:BREAD_FINANCIAL,issuer,all,2026-08-31,M,18.73,issuer_8k,2026-09-16T00:09:34Z
+issuer_card_loans_eop,ISSUER:BREAD_FINANCIAL,issuer,all,2026-09-30,M,18.85,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_loans_eop,ISSUER:CAPITAL_ONE,issuer,all,2021-02-28,M,92.621,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop,ISSUER:CAPITAL_ONE,issuer,all,2021-03-31,M,91.099,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop,ISSUER:CAPITAL_ONE,issuer,all,2021-04-30,M,90.881,issuer_8k,2026-09-11T19:53:50Z
@@ -71036,6 +71043,7 @@ issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2026-05-31,M,1
 issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2026-06-30,M,16.355,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2026-07-31,M,16.378,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2026-08-31,M,16.512,issuer_8k,2026-09-16T00:09:34Z
+issuer_card_loans_eop_principal,ISSUER:BREAD_FINANCIAL,issuer,all,2026-09-30,M,16.584,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2023-07-31,M,0.108,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2023-08-31,M,0.099,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2023-09-30,M,0.098,issuer_8k,2026-09-11T19:55:06Z
@@ -71074,6 +71082,7 @@ issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-05-31,M,0.108,issu
 issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-06-30,M,0.104,issuer_8k,2026-09-11T19:55:06Z
 issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-07-31,M,0.106,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-08-31,M,0.101,issuer_8k,2026-09-16T00:09:34Z
+issuer_card_nco_amount,ISSUER:BREAD_FINANCIAL,issuer,all,2026-09-30,M,0.092,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_nco_amount,ISSUER:CAPITAL_ONE,issuer,all,2021-02-28,M,0.204,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_amount,ISSUER:CAPITAL_ONE,issuer,all,2021-03-31,M,0.182,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_amount,ISSUER:CAPITAL_ONE,issuer,all,2021-04-30,M,0.18,issuer_8k,2026-09-11T19:53:50Z
@@ -71274,6 +71283,7 @@ issuer_card_nco_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-05-31,M,6.98,issuer_
 issuer_card_nco_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-06-30,M,6.88,issuer_8k,2026-09-11T19:55:06Z
 issuer_card_nco_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-07-31,M,6.8,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-08-31,M,6.4,issuer_8k,2026-09-16T00:09:34Z
+issuer_card_nco_rate,ISSUER:BREAD_FINANCIAL,issuer,all,2026-09-30,M,5.99,issuer_8k,2026-10-23T00:34:31Z
 issuer_card_nco_rate,ISSUER:CAPITAL_ONE,issuer,all,2021-02-28,M,2.66,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate,ISSUER:CAPITAL_ONE,issuer,all,2021-03-31,M,2.41,issuer_8k,2026-09-11T19:53:50Z
 issuer_card_nco_rate,ISSUER:CAPITAL_ONE,issuer,all,2021-04-30,M,2.4,issuer_8k,2026-09-11T19:53:50Z
